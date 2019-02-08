@@ -350,9 +350,9 @@ async function listSingleToken(
     })
 
     // If token could not be found.
-    if(t === undefined) {
+    if (t === undefined) {
       t = {
-        id: 'not found'
+        id: "not found"
       }
     }
 
@@ -603,12 +603,22 @@ async function validateBulk(
 
     // Validate each txid
     const validatePromises = txids.map(async txid => {
-      const isValid = await isValidSlpTxid(txid)
-      let tmp: any = {
-        txid: txid,
-        valid: isValid ? true : false
+      try {
+        // Dev note: must call module.exports to allow stubs in unit tests.
+        const isValid = await module.exports.testableComponents.isValidSlpTxid(
+          txid
+        )
+
+        let tmp: any = {
+          txid: txid,
+          valid: isValid ? true : false
+        }
+        return tmp
+      } catch (err) {
+        //console.log(`err obj: ${util.inspect(err)}`)
+        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
+        throw err
       }
-      return tmp
     })
 
     // Filter array to only valid txid results

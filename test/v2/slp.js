@@ -13,9 +13,11 @@
 
 const chai = require("chai")
 const assert = chai.assert
-const slpRoute = require("../../dist/routes/v2/slp")
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
+
+// Prepare the slpRoute for stubbing dependcies on slpjs.
+const slpRoute = require("../../dist/routes/v2/slp")
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
@@ -409,12 +411,36 @@ describe("#SLP", () => {
       assert.include(result.error, "Array too large")
     })
 
-    it("should validate array with single element", async () => {
-      // Mock the RPC call for unit tests.
+    it("should error appropriately for mainnet tx on testnet", async () => {
+      // Stub out dependencies for unit tests.
       if (process.env.TEST === "unit") {
-        //nock(mockServerUrl)
-        //  .get(uri => uri.includes("/"))
-        //  .reply(200, mockData.mockSingleToken)
+        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
+          response: {
+            status: 500,
+            data: {
+              result: null,
+              error: {
+                message: "No such mempool"
+              }
+            }
+          }
+        })
+      }
+
+      req.body.txids = [
+        "88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa"
+      ]
+
+      const result = await validateBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "No such mempool")
+    })
+
+    it("should validate array with single element", async () => {
+      // Stub out dependencies for unit tests.
+      if (process.env.TEST === "unit") {
         sandbox
           .stub(slpRoute.testableComponents, "isValidSlpTxid")
           .resolves(true)
@@ -429,6 +455,27 @@ describe("#SLP", () => {
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
+    })
+
+    it("should validate array with two elements", async () => {
+      // Stub out dependencies for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
+      }
+
+      req.body.txids = [
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091",
+        "82d996847a861b08b1601284ef7d40a1777d019154a6c4ed11571609dd3555ac"
+      ]
+
+      const result = await validateBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["txid", "valid"])
+      assert.equal(result.length, 2)
     })
   })
 })

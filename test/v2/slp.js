@@ -438,6 +438,31 @@ describe("#SLP", () => {
       assert.include(result.error, "No such mempool")
     })
 
+    it("should error appropriately for nonsensical txid", async () => {
+      // Stub out dependencies for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
+          response: {
+            status: 500,
+            data: {
+              result: null,
+              error: {
+                message: "parameter 1 must be of length 64"
+              }
+            }
+          }
+        })
+      }
+
+      req.body.txids = ["abc123"]
+
+      const result = await validateBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "parameter 1 must be of length 64")
+    })
+
     it("should validate array with single element", async () => {
       // Stub out dependencies for unit tests.
       if (process.env.TEST === "unit") {

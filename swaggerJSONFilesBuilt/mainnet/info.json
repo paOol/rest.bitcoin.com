@@ -2,7 +2,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "2.1.6",
+		"version": "2.1.7",
 		"title": "REST",
 		"license": {
 			"name": "MIT",

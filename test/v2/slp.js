@@ -15,6 +15,7 @@ const chai = require("chai")
 const assert = chai.assert
 const slpRoute = require("../../dist/routes/v2/slp")
 const nock = require("nock") // HTTP mocking
+const sinon = require("sinon")
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
@@ -28,6 +29,7 @@ util.inspect.defaultOptions = { depth: 1 }
 
 describe("#SLP", () => {
   let req, res, mockServerUrl
+  let sandbox
 
   before(() => {
     // Save existing environment variables.
@@ -56,12 +58,16 @@ describe("#SLP", () => {
 
     // Activate nock if it's inactive.
     if (!nock.isActive()) nock.activate()
+
+    sandbox = sinon.createSandbox()
   })
 
   afterEach(() => {
     // Clean up HTTP mocks.
     nock.cleanAll() // clear interceptor list.
     nock.restore()
+
+    sandbox.restore()
   })
 
   after(() => {
@@ -388,6 +394,41 @@ describe("#SLP", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "txids needs to be an array")
       assert.equal(res.statusCode, 400)
+    })
+
+    it("should throw 400 error if array is too large", async () => {
+      const testArray = []
+      for (var i = 0; i < 25; i++) testArray.push("")
+
+      req.body.txids = testArray
+
+      const result = await validateBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Array too large")
+    })
+
+    it("should validate array with single element", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        //nock(mockServerUrl)
+        //  .get(uri => uri.includes("/"))
+        //  .reply(200, mockData.mockSingleToken)
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
+      }
+
+      req.body.txids = [
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091"
+      ]
+
+      const result = await validateBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["txid", "valid"])
     })
   })
 })

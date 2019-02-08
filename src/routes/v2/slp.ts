@@ -9,6 +9,8 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
+const FREEMIUM_INPUT_SIZE = 20
+
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
@@ -590,10 +592,10 @@ async function validateBulk(
     }
 
     // Enforce no more than 20 txids.
-    if (txids.length > 20) {
+    if (txids.length > FREEMIUM_INPUT_SIZE) {
       res.status(400)
       return res.json({
-        error: "Array too large. Max 20 txids"
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
       })
     }
 
@@ -628,6 +630,7 @@ async function validateBulk(
   }
 }
 
+// Returns a Boolean if the input TXID is a valid SLP TXID.
 async function isValidSlpTxid(txid: string): Promise<boolean> {
   const isValid = await slpValidator.isValidSlpTxid(txid)
   return isValid
@@ -642,6 +645,7 @@ module.exports = {
     balancesForAddress,
     balancesForAddressByTokenID,
     // convertAddress,
-    validateBulk
+    validateBulk,
+    isValidSlpTxid
   }
 }

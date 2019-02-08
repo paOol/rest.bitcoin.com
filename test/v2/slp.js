@@ -378,20 +378,16 @@ describe("#SLP", () => {
   //   // })
   // })
 
-  /*
   describe("validateBulk()", () => {
     const validateBulk = slpRoute.testableComponents.validateBulk
 
-    it("should throw 400 if address is empty", async () => {
-      req.params.address = ""
-      req.params.tokenId =
-        "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
+    it("should throw 400 if txid array is empty", async () => {
       const result = await validateBulk(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "address can not be empty")
+      assert.include(result.error, "txids needs to be an array")
+      assert.equal(res.statusCode, 400)
     })
   })
-*/
 })

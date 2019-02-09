@@ -39,12 +39,6 @@ interface IRLConfig {
   rawTransactionsRateLimit4: any
   rawTransactionsRateLimit5: any
   rawTransactionsRateLimit6: any
-  rawTransactionsRateLimit7: any
-  rawTransactionsRateLimit8: any
-  rawTransactionsRateLimit9: any
-  rawTransactionsRateLimit10: any
-  rawTransactionsRateLimit11: any
-  rawTransactionsRateLimit12: any
 }
 
 const config: IRLConfig = {
@@ -53,18 +47,12 @@ const config: IRLConfig = {
   rawTransactionsRateLimit3: undefined,
   rawTransactionsRateLimit4: undefined,
   rawTransactionsRateLimit5: undefined,
-  rawTransactionsRateLimit6: undefined,
-  rawTransactionsRateLimit7: undefined,
-  rawTransactionsRateLimit8: undefined,
-  rawTransactionsRateLimit9: undefined,
-  rawTransactionsRateLimit10: undefined,
-  rawTransactionsRateLimit11: undefined,
-  rawTransactionsRateLimit12: undefined
+  rawTransactionsRateLimit6: undefined
 }
 
 let i = 1
 
-while (i < 13) {
+while (i < 7) {
   config[`rawTransactionsRateLimit${i}`] = new RateLimit({
     windowMs: 60000, // 1 hour window
     delayMs: 0, // disable delaying - full speed until the max limit is reached
@@ -109,16 +97,6 @@ router.post(
   config.rawTransactionsRateLimit6,
   sendRawTransaction
 )
-router.put("/change", config.rawTransactionsRateLimit7, whChangeOutput)
-router.put("/input", config.rawTransactionsRateLimit8, whInput)
-router.put("/opreturn", config.rawTransactionsRateLimit9, whOpReturn)
-router.put("/reference", config.rawTransactionsRateLimit10, whReference)
-router.get(
-  "/decodeTransaction/:rawtx",
-  config.rawTransactionsRateLimit11,
-  whDecodeTx
-)
-router.put("/create", config.rawTransactionsRateLimit12, whCreateTx)
 
 function root(
   req: express.Request,
@@ -556,314 +534,6 @@ async function sendRawTransaction(
   }
 }
 
-// WH add change output to the transaction.
-async function whChangeOutput(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    // TODO: What kind of validations should go here?
-
-    const rawTx = req.body.rawtx
-    if (!rawTx || rawTx === "") {
-      res.status(400)
-      return res.json({ error: "rawtx can not be empty" })
-    }
-
-    const prevTxs = req.body.prevtxs
-    if (!prevTxs || prevTxs === "") {
-      res.status(400)
-      return res.json({ error: "prevtxs can not be empty" })
-    }
-
-    const destination = req.body.destination
-    if (!destination || destination === "") {
-      res.status(400)
-      return res.json({ error: "destination can not be empty" })
-    }
-
-    let fee = req.body.fee
-    if (!fee || fee === "") {
-      res.status(400)
-      return res.json({ error: "fee can not be empty" })
-    }
-    fee = parseFloat(fee)
-
-    const params = [rawTx, prevTxs, destination, fee]
-    if (req.body.position) params.push(parseInt(req.body.position))
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    requestConfig.data.id = "whc_createrawtx_change"
-    requestConfig.data.method = "whc_createrawtx_change"
-    requestConfig.data.params = params
-
-    const response = await BitboxHTTP(requestConfig)
-    return res.json(response.data.result)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
-// Add a transaction input
-async function whInput(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    const rawtx = req.body.rawtx
-
-    const txid = req.body.txid
-    if (!txid || txid === "") {
-      res.status(400)
-      return res.json({ error: "txid can not be empty" })
-    }
-
-    let n = req.body.n
-    if (n === undefined || n === "") {
-      res.status(400)
-      return res.json({ error: "n can not be empty" })
-    }
-    n = parseInt(n)
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    requestConfig.data.id = "whc_createrawtx_input"
-    requestConfig.data.method = "whc_createrawtx_input"
-    requestConfig.data.params = [rawtx, txid, n]
-
-    const response = await BitboxHTTP(requestConfig)
-
-    return res.json(response.data.result)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
-// Add an op-return to the transaction.
-async function whOpReturn(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    const rawtx = req.body.rawtx
-    if (!rawtx || rawtx === "") {
-      res.status(400)
-      return res.json({ error: "rawtx can not be empty" })
-    }
-
-    const payload = req.body.payload
-    if (!payload || payload === "") {
-      res.status(400)
-      return res.json({ error: "payload can not be empty" })
-    }
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    requestConfig.data.id = "whc_createrawtx_opreturn"
-    requestConfig.data.method = "whc_createrawtx_opreturn"
-    requestConfig.data.params = [rawtx, payload]
-
-    const response = await BitboxHTTP(requestConfig)
-
-    return res.json(response.data.result)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
-async function whReference(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    const rawtx = req.body.rawtx
-    if (!rawtx || rawtx === "") {
-      res.status(400)
-      return res.json({ error: "rawtx can not be empty" })
-    }
-
-    const destination = req.body.destination
-    if (!destination || destination === "") {
-      res.status(400)
-      return res.json({ error: "destination can not be empty" })
-    }
-
-    const params = [rawtx, destination]
-    if (req.body.amount) params.push(req.body.amount)
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    requestConfig.data.id = "whc_createrawtx_reference"
-    requestConfig.data.method = "whc_createrawtx_reference"
-    requestConfig.data.params = params
-
-    const response = await BitboxHTTP(requestConfig)
-
-    return res.json(response.data.result)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
-// Decode the raw hex of a WH transaction.
-async function whDecodeTx(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    const rawtx = req.params.rawtx
-    if (!rawtx || rawtx === "") {
-      res.status(400)
-      return res.json({ error: "rawtx can not be empty" })
-    }
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    const params = [rawtx]
-
-    // 12/21/18 CT - Commenting out this code because the swagger UI is causing
-    // a bug. If height is specified but prevTxs is not, then the full node
-    // will throw an error. Commenting out these extra parameters for now since
-    // my understanding is that its use is a corner case.
-    //if (req.query.prevTxs) params.push(req.query.prevTxs)
-
-    //if (req.query.height) params.push(req.query.height)
-
-    requestConfig.data.id = "whc_decodetransaction"
-    requestConfig.data.method = "whc_decodetransaction"
-    requestConfig.data.params = params
-
-    //console.log(`requestConfig.data: ${util.inspect(requestConfig.data)}`)
-
-    const response = await BitboxHTTP(requestConfig)
-
-    return res.json(response.data.result)
-  } catch (err) {
-    // Return the error message from the node, if it exists.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
-// Create a transaction spending the given inputs and creating new outputs.
-async function whCreateTx(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) {
-  try {
-    // Validate input parameters
-    let inputs = req.body.inputs
-    if (!inputs || inputs === "") {
-      res.status(400)
-      return res.json({ error: "inputs can not be empty" })
-    }
-
-    let outputs = req.body.outputs
-    if (!outputs || outputs === "") {
-      res.status(400)
-      return res.json({ error: "outputs can not be empty" })
-    }
-
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
-    const params = [inputs, outputs]
-    if (req.body.locktime) params.push(req.body.locktime)
-
-    requestConfig.data.id = "createrawtransaction"
-    requestConfig.data.method = "createrawtransaction"
-    requestConfig.data.params = params
-
-    const response = await BitboxHTTP(requestConfig)
-
-    return res.json(response.data.result)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
-
 module.exports = {
   router,
   testableComponents: {
@@ -873,12 +543,6 @@ module.exports = {
     decodeScript,
     getRawTransactionBulk,
     getRawTransactionSingle,
-    sendRawTransaction,
-    whChangeOutput,
-    whInput,
-    whOpReturn,
-    whReference,
-    whDecodeTx,
-    whCreateTx
+    sendRawTransaction
   }
 }

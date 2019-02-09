@@ -9,6 +9,8 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
+const FREEMIUM_INPUT_SIZE = 20
+
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
@@ -348,9 +350,9 @@ async function listSingleToken(
     })
 
     // If token could not be found.
-    if(t === undefined) {
+    if (t === undefined) {
       t = {
-        id: 'not found'
+        id: "not found"
       }
     }
 
@@ -590,10 +592,10 @@ async function validateBulk(
     }
 
     // Enforce no more than 20 txids.
-    if (txids.length > 20) {
+    if (txids.length > FREEMIUM_INPUT_SIZE) {
       res.status(400)
       return res.json({
-        error: "Array too large. Max 20 txids"
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
       })
     }
 
@@ -601,12 +603,22 @@ async function validateBulk(
 
     // Validate each txid
     const validatePromises = txids.map(async txid => {
-      const isValid = await isValidSlpTxid(txid)
-      let tmp: any = {
-        txid: txid,
-        valid: isValid ? true : false
+      try {
+        // Dev note: must call module.exports to allow stubs in unit tests.
+        const isValid = await module.exports.testableComponents.isValidSlpTxid(
+          txid
+        )
+
+        let tmp: any = {
+          txid: txid,
+          valid: isValid ? true : false
+        }
+        return tmp
+      } catch (err) {
+        //console.log(`err obj: ${util.inspect(err)}`)
+        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
+        throw err
       }
-      return tmp
     })
 
     // Filter array to only valid txid results
@@ -628,6 +640,7 @@ async function validateBulk(
   }
 }
 
+// Returns a Boolean if the input TXID is a valid SLP TXID.
 async function isValidSlpTxid(txid: string): Promise<boolean> {
   const isValid = await slpValidator.isValidSlpTxid(txid)
   return isValid
@@ -642,6 +655,7 @@ module.exports = {
     balancesForAddress,
     balancesForAddressByTokenID,
     // convertAddress,
-    validateBulk
+    validateBulk,
+    isValidSlpTxid
   }
 }

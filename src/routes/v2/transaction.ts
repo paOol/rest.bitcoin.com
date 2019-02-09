@@ -32,11 +32,11 @@ const processInputs = (tx: any) => {
   if (tx.vin) {
     tx.vin.forEach((vin: any) => {
       if (!vin.coinbase) {
+        vin.value = vin.valueSat
         const address = vin.addr
         if (address) {
           vin.legacyAddress = BITBOX.Address.toLegacyAddress(address)
           vin.cashAddress = BITBOX.Address.toCashAddress(address)
-          vin.value = vin.valueSat
           delete vin.addr
         }
         delete vin.valueSat

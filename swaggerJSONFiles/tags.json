@@ -63,30 +63,6 @@
         "description": "Find out more",
         "url": "https://developer.bitcoin.com/rest/docs/util"
       }
-    },
-    {
-      "name": "dataRetrieval",
-      "description": "dataRetrieval",
-      "externalDocs": {
-        "description": "Find out more",
-        "url": "https://developer.bitcoin.com/rest/docs/dataRetrieval"
-      }
-    },
-    {
-      "name": "payloadCreation",
-      "description": "payloadCreation",
-      "externalDocs": {
-        "description": "Find out more",
-        "url": "https://developer.bitcoin.com/rest/docs/payloadCreation"
-      }
-    },
-    {
-      "name": "wormhole",
-      "description": "wormhole",
-      "externalDocs": {
-        "description": "Find out more",
-        "url": "https://developer.bitcoin.com/rest/docs/wormhole"
-      }
     }
   ]
 }

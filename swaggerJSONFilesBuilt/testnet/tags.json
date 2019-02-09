@@ -63,14 +63,6 @@
         "description": "Find out more",
         "url": "https://developer.bitcoin.com/rest/docs/util"
       }
-    },
-    {
-      "name": "dataRetrieval",
-      "description": "dataRetrieval",
-      "externalDocs": {
-        "description": "Find out more",
-        "url": "https://developer.bitcoin.com/rest/docs/dataRetrieval"
-      }
     }
   ]
 }

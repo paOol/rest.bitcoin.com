@@ -51,7 +51,6 @@ var rawtransactionsV2 = require("./routes/v2/rawtransactions");
 var transactionV2 = require("./routes/v2/transaction");
 var utilV2 = require("./routes/v2/util");
 var dataRetrievalV2 = require("./routes/v2/dataRetrieval");
-var payloadCreationV2 = require("./routes/v2/payloadCreation");
 var slpV2 = require("./routes/v2/slp");
 require("dotenv").config();
 var app = express();
@@ -104,7 +103,6 @@ app.use("/" + v2prefix + "/" + "rawtransactions", rawtransactionsV2.router);
 app.use("/" + v2prefix + "/" + "transaction", transactionV2.router);
 app.use("/" + v2prefix + "/" + "util", utilV2.router);
 app.use("/" + v2prefix + "/" + "dataRetrieval", dataRetrievalV2.router);
-app.use("/" + v2prefix + "/" + "payloadCreation", payloadCreationV2.router);
 app.use("/" + v2prefix + "/" + "slp", slpV2.router);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -105,5 +105,3 @@ Finally open `http://localhost:3000/` and confirm you see the GUI
 
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/Bitcoin.com/rest.bitcoin.com.svg)](https://greenkeeper.io/)
-
-deploy

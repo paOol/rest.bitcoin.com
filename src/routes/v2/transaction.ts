@@ -33,10 +33,12 @@ const processInputs = (tx: any) => {
     tx.vin.forEach((vin: any) => {
       if (!vin.coinbase) {
         const address = vin.addr
-        vin.legacyAddress = BITBOX.Address.toLegacyAddress(address)
-        vin.cashAddress = BITBOX.Address.toCashAddress(address)
-        vin.value = vin.valueSat
-        delete vin.addr
+        if (address) {
+          vin.legacyAddress = BITBOX.Address.toLegacyAddress(address)
+          vin.cashAddress = BITBOX.Address.toCashAddress(address)
+          vin.value = vin.valueSat
+          delete vin.addr
+        }
         delete vin.valueSat
         delete vin.doubleSpentTxID
       }
@@ -127,7 +129,6 @@ async function detailsBulk(
     // Return the array of retrieved transaction information.
     res.status(200)
     return res.json(result)
-    
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

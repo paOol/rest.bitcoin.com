@@ -368,7 +368,6 @@ async function listSingleToken(
   }
 }
 
-// TODO - Only works for mainnet. Get it to work for testnet too.
 async function balancesForAddress(
   req: express.Request,
   res: express.Response,
@@ -401,14 +400,43 @@ async function balancesForAddress(
       })
     }
 
-    const slpAddr = utils.toSlpAddress(req.params.address)
-    const balances = await bitboxproxy.getAllTokenBalances(slpAddr)
-    balances.slpAddress = slpAddr
-    balances.cashAddress = utils.toCashAddress(slpAddr)
-    balances.legacyAddress = BITBOX.Address.toLegacyAddress(
-      balances.cashAddress
+    let isMainnet = SLP.Address.isMainnetAddress(address)
+    let tmpBITBOX: any
+
+    if (isMainnet) {
+      tmpBITBOX = new BITBOXCli({ restURL: "https://rest.bitcoin.com/v2/" })
+    } else {
+      tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
+    }
+
+    const tmpSLPValidator = new slp.LocalValidator(
+      tmpBITBOX,
+      tmpBITBOX.RawTransactions.getRawTransaction
     )
-    return res.json(balances)
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, tmpSLPValidator)
+
+    const slpAddr = utils.toSlpAddress(req.params.address)
+    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+    let formattedTokens: any[] = []
+    if (balances.slpTokenBalances) {
+      let keys = Object.keys(balances.slpTokenBalances)
+      const axiosPromises = keys.map(async (key: any) => {
+        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
+        return {
+          tokenId: key,
+          balance: balances.slpTokenBalances[key]
+            .div(10 ** tokenMetadata.decimals)
+            .toString(),
+          decimalCount: tokenMetadata.decimals
+        }
+      })
+
+      // Wait for all parallel promises to return.
+      const axiosResult: Array<any> = await axios.all(axiosPromises)
+      return res.json(axiosResult)
+    } else {
+      return res.json("No balances for this address")
+    }
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)
 
@@ -426,7 +454,6 @@ async function balancesForAddress(
   }
 }
 
-// TODO - Only works for mainnet. Get it to work for testnet too.
 async function balancesForAddressByTokenID(
   req: express.Request,
   res: express.Response,
@@ -434,15 +461,9 @@ async function balancesForAddressByTokenID(
 ) {
   try {
     let address = req.params.address
-    let tokenId = req.params.tokenId
     if (!address || address === "") {
       res.status(400)
       return res.json({ error: "address can not be empty" })
-    }
-
-    if (!tokenId || tokenId === "") {
-      res.status(400)
-      return res.json({ error: "tokenId can not be empty" })
     }
 
     // Ensure the input is a valid BCH address.
@@ -465,73 +486,59 @@ async function balancesForAddressByTokenID(
       })
     }
 
-    const slpAddr = utils.toSlpAddress(address)
-    const balances = await bitboxproxy.getAllTokenBalances(slpAddr)
-    const query = {
-      v: 3,
-      q: {
-        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
-        limit: 1000
-      },
-      r: {
-        f:
-          '[ .[] | { id: .tx.h, timestamp: (.blk.t | strftime("%Y-%m-%d %H:%M")), symbol: .out[0].s4, name: .out[0].s5, document: .out[0].s6 } ]'
-      }
+    let isMainnet = SLP.Address.isMainnetAddress(address)
+    let tmpBITBOX: any
+
+    if (isMainnet) {
+      tmpBITBOX = new BITBOXCli({ restURL: "https://rest.bitcoin.com/v2/" })
+    } else {
+      tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
     }
 
-    const s = JSON.stringify(query)
-    const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.BITDB_URL}q/${b64}`
+    const tmpSLPValidator = new slp.LocalValidator(
+      tmpBITBOX,
+      tmpBITBOX.RawTransactions.getRawTransaction
+    )
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, tmpSLPValidator)
 
-    const tokenRes = await axios.get(url)
-    const tokens = tokenRes.data.c
-    if (tokenRes.data.u && tokenRes.data.u.length)
-      tokens.concat(tokenRes.data.u)
+    const slpAddr = utils.toSlpAddress(req.params.address)
+    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+    let formattedTokens: any[] = []
+    if (balances.slpTokenBalances) {
+      let keys = Object.keys(balances.slpTokenBalances)
+      const axiosPromises = keys.map(async (key: any) => {
+        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
+        return {
+          tokenId: key,
+          balance: balances.slpTokenBalances[key]
+            .div(10 ** tokenMetadata.decimals)
+            .toString(),
+          decimalCount: tokenMetadata.decimals
+        }
+      })
 
-    let t: any
-    tokens.forEach((token: any) => {
-      if (token.id === req.params.tokenId) t = token
-    })
-
-    interface ReturnObj {
-      [id: string]: any
-      timestamp: any
-      symbol: any
-      name: any
-      document: any
-      balance: any
-      slpAddress: any
-      cashAddress: any
-      legacyAddress: any
+      // Wait for all parallel promises to return.
+      const axiosResult: Array<any> = await axios.all(axiosPromises)
+      axiosResult.forEach((result: any) => {
+        console.log(result)
+        if (result.tokenId === req.params.tokenId) {
+          return res.json(result)
+        }
+      })
+      return res.json("No balance for this address and tokenId")
+    } else {
+      return res.json("No balance for this address and tokenId")
     }
-    const obj: ReturnObj = {
-      id: undefined,
-      timestamp: undefined,
-      symbol: undefined,
-      name: undefined,
-      document: undefined,
-      balance: undefined,
-      slpAddress: undefined,
-      cashAddress: undefined,
-      legacyAddress: undefined
-    }
-
-    obj.id = t.id
-    obj.timestamp = t.timestamp
-    obj.symbol = t.symbol
-    obj.name = t.name
-    obj.document = t.document
-    obj.balance = balances[req.params.tokenId]
-    obj.slpAddress = slpAddr
-    obj.cashAddress = utils.toCashAddress(slpAddr)
-    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
-    return res.json(obj)
   } catch (err) {
+    //console.log(`Error object: ${util.inspect(err)}`)
+
+    // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
       return res.json({ error: msg })
     }
+
     res.status(500)
     return res.json({
       error: `Error in /balance/:address/:tokenId: ${err.message}`

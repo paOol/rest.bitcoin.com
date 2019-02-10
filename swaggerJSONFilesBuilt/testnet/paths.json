@@ -1557,6 +1557,33 @@
 				}
 			}
 		},
+		"/slp/address/convert/{address}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "convert address to slpAddr, cashAddr and legacy",
+				"description": "convert address to slpAddr, cashAddr and legacy",
+				"operationId": "slpAddressConvert",
+				"parameters": [
+					{
+						"name": "address",
+						"in": "path",
+						"description": "The slp address",
+						"required": true,
+						"example": "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/validateTxid": {
 			"post": {
 				"tags": [

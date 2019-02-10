@@ -357,34 +357,34 @@ describe("#SLP", () => {
     // })
   })
 
-  // describe("convertAddress()", () => {
-  //   const convertAddress = slpRoute.testableComponents.convertAddress
-  //
-  //   it("should throw 400 if address is empty", async () => {
-  //     req.params.address = ""
-  //     const result = await convertAddress(req, res)
-  //     //console.log(`result: ${util.inspect(result)}`)
-  //
-  //     assert.hasAllKeys(result, ["error"])
-  //     assert.include(result.error, "address can not be empty")
-  //   })
-  //   //
-  //   // it("should convert address", async () => {
-  //   //   // Mock the RPC call for unit tests.
-  //   //   if (process.env.TEST === "unit") {
-  //   //     nock(`${process.env.BITDB_URL}`)
-  //   //       .post(``)
-  //   //       .reply(200, { result: mockData.mockConvert })
-  //   //   }
-  //   //
-  //   //   req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
-  //   //
-  //   //   const result = await convertAddress(req, res)
-  //   //   // console.log(`result: ${util.inspect(result)}`)
-  //   //
-  //   //   assert.hasAllKeys(result, ["cashAddress", "legacyAddress", "slpAddress"])
-  //   // })
-  // })
+  describe("convertAddress()", () => {
+    const convertAddress = slpRoute.testableComponents.convertAddress
+
+    it("should throw 400 if address is empty", async () => {
+      req.params.address = ""
+      const result = await convertAddress(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "address can not be empty")
+    })
+    //
+    it("should convert address", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.BITDB_URL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockConvert })
+      }
+
+      req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
+
+      const result = await convertAddress(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["cashAddress", "legacyAddress", "slpAddress"])
+    })
+  })
 
   describe("validateBulk()", () => {
     const validateBulk = slpRoute.testableComponents.validateBulk

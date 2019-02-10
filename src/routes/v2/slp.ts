@@ -460,10 +460,16 @@ async function balancesForAddressByTokenID(
   next: express.NextFunction
 ) {
   try {
-    let address = req.params.address
+    let address: string = req.params.address
     if (!address || address === "") {
       res.status(400)
       return res.json({ error: "address can not be empty" })
+    }
+
+    let tokenId: string = req.params.tokenId
+    if (!tokenId || tokenId === "") {
+      res.status(400)
+      return res.json({ error: "tokenId can not be empty" })
     }
 
     // Ensure the input is a valid BCH address.

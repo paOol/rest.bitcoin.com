@@ -19,6 +19,9 @@ util.inspect.defaultOptions = { depth: 5 }
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
 
+const SLPSDK = require("slp-sdk/lib/SLP").default
+const SLP = new SLPSDK()
+
 // Instantiate SLPJS.
 const slp = require("slpjs")
 const slpjs = new slp.Slp(BITBOX)
@@ -34,9 +37,6 @@ const BitboxHTTP = axios.create({
 })
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
-
-// const SLPsdk = require("slp-sdk/lib/SLP").default
-// const SLP = new SLPsdk()
 
 // Retrieve raw transactions details from the full node.
 async function getRawTransactionsFromNode(txids: string[]) {
@@ -176,7 +176,7 @@ router.get(
   config.slpRateLimit5,
   balancesForAddressByTokenID
 )
-// router.get("/address/convert/:address", config.slpRateLimit6, convertAddress)
+router.get("/address/convert/:address", config.slpRateLimit6, convertAddress)
 router.post("/validateTxid", config.slpRateLimit7, validateBulk)
 
 function root(
@@ -539,43 +539,43 @@ async function balancesForAddressByTokenID(
   }
 }
 
-// async function convertAddress(
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) {
-//   try {
-//     let address = req.params.address
-//     if (!address || address === "") {
-//       res.status(400)
-//       return res.json({ error: "address can not be empty" })
-//     }
-//     const slpAddr = SLP.Address.toSLPAddress(req.params.address)
-//     const obj: {
-//       [slpAddress: string]: any
-//       cashAddress: any
-//       legacyAddress: any
-//     } = {
-//       slpAddress: "",
-//       cashAddress: "",
-//       legacyAddress: ""
-//     }
-//     obj.slpAddress = slpAddr
-//     obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
-//     obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
-//     return res.json(obj)
-//   } catch (err) {
-//     const { msg, status } = routeUtils.decodeError(err)
-//     if (msg) {
-//       res.status(status)
-//       return res.json({ error: msg })
-//     }
-//     res.status(500)
-//     return res.json({
-//       error: `Error in /address/convert/:address: ${err.message}`
-//     })
-//   }
-// }
+async function convertAddress(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    let address = req.params.address
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+    const slpAddr = SLP.Address.toSLPAddress(req.params.address)
+    const obj: {
+      [slpAddress: string]: any
+      cashAddress: any
+      legacyAddress: any
+    } = {
+      slpAddress: "",
+      cashAddress: "",
+      legacyAddress: ""
+    }
+    obj.slpAddress = slpAddr
+    obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
+    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+    return res.json(obj)
+  } catch (err) {
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({
+      error: `Error in /address/convert/:address: ${err.message}`
+    })
+  }
+}
 
 async function validateBulk(
   req: express.Request,
@@ -654,7 +654,7 @@ module.exports = {
     listSingleToken,
     balancesForAddress,
     balancesForAddressByTokenID,
-    // convertAddress,
+    convertAddress,
     validateBulk,
     isValidSlpTxid
   }

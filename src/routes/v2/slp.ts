@@ -4,7 +4,6 @@ import * as express from "express"
 const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
-const RateLimit = require("express-rate-limit")
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
@@ -124,60 +123,19 @@ const requestConfig: IRequestConfig = {
   }
 }
 
-interface IRLConfig {
-  [slpRateLimit1: string]: any
-  slpRateLimit2: any
-  slpRateLimit3: any
-  slpRateLimit4: any
-  slpRateLimit5: any
-  slpRateLimit6: any
-  slpRateLimit7: any
-}
-
-const config: IRLConfig = {
-  slpRateLimit1: undefined,
-  slpRateLimit2: undefined,
-  slpRateLimit3: undefined,
-  slpRateLimit4: undefined,
-  slpRateLimit5: undefined,
-  slpRateLimit6: undefined,
-  slpRateLimit7: undefined
-}
-
-let i = 1
-while (i < 8) {
-  config[`slpRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.slpRateLimit1, root)
-router.get("/list", config.slpRateLimit2, list)
-router.get("/list/:tokenId", config.slpRateLimit3, listSingleToken)
+router.get("/", root)
+router.get("/list", list)
+router.get("/list/:tokenId", listSingleToken)
 router.get(
   "/balancesForAddress/:address",
-  config.slpRateLimit4,
   balancesForAddress
 )
 router.get(
   "/balance/:address/:tokenId",
-  config.slpRateLimit5,
   balancesForAddressByTokenID
 )
-router.get("/address/convert/:address", config.slpRateLimit6, convertAddress)
-router.post("/validateTxid", config.slpRateLimit7, validateBulk)
+router.get("/address/convert/:address", convertAddress)
+router.post("/validateTxid", validateBulk)
 
 function root(
   req: express.Request,

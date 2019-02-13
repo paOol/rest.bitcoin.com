@@ -1404,31 +1404,6 @@
         }
       }
     },
-    "/rawtransactions/decodeTransaction/{rawTx}": {
-      "get": {
-        "tags": ["rawtransactions"],
-        "summary": "decodeTransaction",
-        "description": "Decodes an Omni transaction. API Reference: https://developer.bitcoin.com/wormhole/docs/rawTransactions",
-        "operationId": "decodeTransaction",
-        "parameters": [
-          {
-            "name": "rawTx",
-            "in": "path",
-            "description": "The raw transaction to decode",
-            "required": true,
-            "example": "",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful response"
-          }
-        }
-      }
-    },
     "/slp/list": {
       "get": {
         "tags": ["slp"],

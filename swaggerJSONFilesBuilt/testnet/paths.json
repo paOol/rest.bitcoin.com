@@ -1537,7 +1537,7 @@
 				],
 				"summary": "convert address to slpAddr, cashAddr and legacy",
 				"description": "convert address to slpAddr, cashAddr and legacy",
-				"operationId": "slpAddressConvert",
+				"operationId": "addressConvert",
 				"parameters": [
 					{
 						"name": "address",
@@ -1564,7 +1564,7 @@
 				],
 				"summary": "list slp balances for address",
 				"description": "List SLP token balances for address",
-				"operationId": "slpBalancesForAddress",
+				"operationId": "balancesForAddress",
 				"parameters": [
 					{
 						"name": "address",
@@ -1591,7 +1591,7 @@
 				],
 				"summary": "list single slp token balance for address",
 				"description": "List single SLP token balance for address",
-				"operationId": "slpListSingleBalanceForAddress",
+				"operationId": "singleBalanceForAddress",
 				"parameters": [
 					{
 						"name": "address",

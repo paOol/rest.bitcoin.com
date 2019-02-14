@@ -1488,33 +1488,6 @@
 				}
 			}
 		},
-		"/rawtransactions/decodeTransaction/{rawTx}": {
-			"get": {
-				"tags": [
-					"rawtransactions"
-				],
-				"summary": "decodeTransaction",
-				"description": "Decodes an Omni transaction. API Reference: https://developer.bitcoin.com/wormhole/docs/rawTransactions",
-				"operationId": "decodeTransaction",
-				"parameters": [
-					{
-						"name": "rawTx",
-						"in": "path",
-						"description": "The raw transaction to decode",
-						"required": true,
-						"example": "0200000001ee6dbb4d43427f5e35ecc3b6eeecfffeee22650e1d0a9846be1a09cee1b7e490020000006a47304402204cbf80c5eb831b4276e3bbf5b85bb64a05251e120f6357ca145651bdf97de5e5022037e448281add7144b65f3943e8654a901daf6f285feb6b63cc928cbe64b8a50e412102df0a79c642da671cd17dcd80b1e506f3b42b7c92a40b3067b5754eb40fc85d02ffffffff0329328d00000000001976a914fd542b2f9e06d814dd6c503dc24707e5620d9a7488ac0000000000000000166a1408776863000000000000000100000000b2d05e0022020000000000001976a91472ef3365835cd4e791ea3511d96f1eba32472a9988ac00000000",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "successful response"
-					}
-				}
-			}
-		},
 		"/slp/list": {
 			"get": {
 				"tags": [
@@ -1564,7 +1537,7 @@
 				],
 				"summary": "convert address to slpAddr, cashAddr and legacy",
 				"description": "convert address to slpAddr, cashAddr and legacy",
-				"operationId": "slpAddressConvert",
+				"operationId": "addressConvert",
 				"parameters": [
 					{
 						"name": "address",
@@ -1591,7 +1564,7 @@
 				],
 				"summary": "list slp balances for address",
 				"description": "List SLP token balances for address",
-				"operationId": "slpBalancesForAddress",
+				"operationId": "balancesForAddress",
 				"parameters": [
 					{
 						"name": "address",
@@ -1618,7 +1591,7 @@
 				],
 				"summary": "list single slp token balance for address",
 				"description": "List single SLP token balance for address",
-				"operationId": "slpListSingleBalanceForAddress",
+				"operationId": "singleBalanceForAddress",
 				"parameters": [
 					{
 						"name": "address",

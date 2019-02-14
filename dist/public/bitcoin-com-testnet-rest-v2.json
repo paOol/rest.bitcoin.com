@@ -1091,7 +1091,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "trest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "2.2.3",
+		"version": "2.2.4",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2587,33 +2587,6 @@
 				}
 			}
 		},
-		"/rawtransactions/decodeTransaction/{rawTx}": {
-			"get": {
-				"tags": [
-					"rawtransactions"
-				],
-				"summary": "decodeTransaction",
-				"description": "Decodes an Omni transaction. API Reference: https://developer.bitcoin.com/wormhole/docs/rawTransactions",
-				"operationId": "decodeTransaction",
-				"parameters": [
-					{
-						"name": "rawTx",
-						"in": "path",
-						"description": "The raw transaction to decode",
-						"required": true,
-						"example": "02000000016ad673a59a43d70ec537ed1a7cc5b867e1bbbddde47a26164c2927530fae5951010000006a47304402206754d05ef05760ef9eb6d5b80deb174864768876067a261617a69cdbb9295179022022e223153eec7c1b511a4de3e618b952d7d2df925f5f1f9e006193c1cf6f507c4121024d4e7f522f67105b7bf5f9dbe557e7b2244613fdfcd6fe09304f93877328f6beffffffff039fecf70b000000001976a9143a9b2b0c12fe722fcf653b6ef5dcc38732d6ff5188ac0000000000000000166a1408776863000000000000022c0000000005f5e10022020000000000001976a9140ee020c07f39526ac5505c54fa1ab98490979b8388ac00000000",
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"responses": {
-					"200": {
-						"description": "successful response"
-					}
-				}
-			}
-		},
 		"/slp/list": {
 			"get": {
 				"tags": [
@@ -2663,7 +2636,7 @@
 				],
 				"summary": "convert address to slpAddr, cashAddr and legacy",
 				"description": "convert address to slpAddr, cashAddr and legacy",
-				"operationId": "slpAddressConvert",
+				"operationId": "addressConvert",
 				"parameters": [
 					{
 						"name": "address",
@@ -2690,7 +2663,7 @@
 				],
 				"summary": "list slp balances for address",
 				"description": "List SLP token balances for address",
-				"operationId": "slpBalancesForAddress",
+				"operationId": "balancesForAddress",
 				"parameters": [
 					{
 						"name": "address",
@@ -2717,7 +2690,7 @@
 				],
 				"summary": "list single slp token balance for address",
 				"description": "List single SLP token balance for address",
-				"operationId": "slpListSingleBalanceForAddress",
+				"operationId": "singleBalanceForAddress",
 				"parameters": [
 					{
 						"name": "address",

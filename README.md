@@ -12,13 +12,30 @@ Testnet available at [trest.bitcoin.com](https://trest.bitcoin.com)
 
 You can also run an instance of REST for your own full node
 
-### Prerequesites
+### Prerequisites
 
 #### NodeJS
 
 Install nodejs's LTS. 8.11.4 at the time of writing.
 
 https://nodejs.org/en/
+
+#### build-essential package
+
+If you encounter
+```
+gyp ERR! build error
+gyp ERR! stack Error: not found: make
+```
+
+For Ubuntu
+```
+sudo apt-get install build-essential
+```
+For CENTOS
+```
+RUN yum install -y make gcc*
+```
 
 ### Full node
 

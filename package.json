@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "bchsocketd": "^0.0.3",
     "bitbox-sdk": "^3.0.11",
     "bitcoincash-zmq-decoder": "0.1.5",
     "body-parser": "^1.18.3",

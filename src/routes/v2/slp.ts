@@ -515,12 +515,11 @@ async function balancesForAddressByTokenID(
 
       // Wait for all parallel promises to return.
       const axiosResult: Array<any> = await axios.all(axiosPromises)
-      axiosResult.forEach((result: any) => {
-        console.log(result)
+      for (let result of axiosResult) {
         if (result.tokenId === req.params.tokenId) {
           return res.json(result)
         }
-      })
+      }
       return res.json("No balance for this address and tokenId")
     } else {
       return res.json("No balance for this address and tokenId")

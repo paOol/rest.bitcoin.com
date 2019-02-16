@@ -409,15 +409,10 @@ async function balancesForAddress(
       tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
     }
 
-    const tmpSLPValidator = new slp.LocalValidator(
-      tmpBITBOX,
-      tmpBITBOX.RawTransactions.getRawTransaction
-    )
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, tmpSLPValidator)
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
 
     const slpAddr = utils.toSlpAddress(req.params.address)
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-    let formattedTokens: any[] = []
     if (balances.slpTokenBalances) {
       let keys = Object.keys(balances.slpTokenBalances)
       const axiosPromises = keys.map(async (key: any) => {
@@ -501,15 +496,10 @@ async function balancesForAddressByTokenID(
       tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
     }
 
-    const tmpSLPValidator = new slp.LocalValidator(
-      tmpBITBOX,
-      tmpBITBOX.RawTransactions.getRawTransaction
-    )
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, tmpSLPValidator)
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
 
     const slpAddr = utils.toSlpAddress(req.params.address)
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-    let formattedTokens: any[] = []
     if (balances.slpTokenBalances) {
       let keys = Object.keys(balances.slpTokenBalances)
       const axiosPromises = keys.map(async (key: any) => {
@@ -525,12 +515,11 @@ async function balancesForAddressByTokenID(
 
       // Wait for all parallel promises to return.
       const axiosResult: Array<any> = await axios.all(axiosPromises)
-      axiosResult.forEach((result: any) => {
-        console.log(result)
+      for (let result of axiosResult) {
         if (result.tokenId === req.params.tokenId) {
           return res.json(result)
         }
-      })
+      }
       return res.json("No balance for this address and tokenId")
     } else {
       return res.json("No balance for this address and tokenId")

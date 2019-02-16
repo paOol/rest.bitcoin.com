@@ -1404,31 +1404,6 @@
         }
       }
     },
-    "/rawtransactions/decodeTransaction/{rawTx}": {
-      "get": {
-        "tags": ["rawtransactions"],
-        "summary": "decodeTransaction",
-        "description": "Decodes an Omni transaction. API Reference: https://developer.bitcoin.com/wormhole/docs/rawTransactions",
-        "operationId": "decodeTransaction",
-        "parameters": [
-          {
-            "name": "rawTx",
-            "in": "path",
-            "description": "The raw transaction to decode",
-            "required": true,
-            "example": "",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful response"
-          }
-        }
-      }
-    },
     "/slp/list": {
       "get": {
         "tags": ["slp"],
@@ -1472,7 +1447,7 @@
         "tags": ["slp"],
         "summary": "convert address to slpAddr, cashAddr and legacy",
         "description": "convert address to slpAddr, cashAddr and legacy",
-        "operationId": "slpAddressConvert",
+        "operationId": "addressConvert",
         "parameters": [
           {
             "name": "address",
@@ -1497,7 +1472,7 @@
         "tags": ["slp"],
         "summary": "list slp balances for address",
         "description": "List SLP token balances for address",
-        "operationId": "slpBalancesForAddress",
+        "operationId": "balancesForAddress",
         "parameters": [
           {
             "name": "address",
@@ -1522,7 +1497,7 @@
         "tags": ["slp"],
         "summary": "list single slp token balance for address",
         "description": "List single SLP token balance for address",
-        "operationId": "slpListSingleBalanceForAddress",
+        "operationId": "singleBalanceForAddress",
         "parameters": [
           {
             "name": "address",

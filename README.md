@@ -12,13 +12,30 @@ Testnet available at [trest.bitcoin.com](https://trest.bitcoin.com)
 
 You can also run an instance of REST for your own full node
 
-### Prerequesites
+### Prerequisites
 
 #### NodeJS
 
 Install nodejs's LTS. 8.11.4 at the time of writing.
 
 https://nodejs.org/en/
+
+#### build-essential package
+
+If you encounter
+```
+gyp ERR! build error
+gyp ERR! stack Error: not found: make
+```
+
+For Ubuntu
+```
+sudo apt-get install build-essential
+```
+For CENTOS
+```
+RUN yum install -y make gcc*
+```
 
 ### Full node
 
@@ -86,11 +103,12 @@ Now you need to start REST and pass in the following environment variables
 - ZEROMQ_PORT - The port on which you enabled ZeroMQ
 - ZEROMQ_URL - The IP address of your full BCH node
 - NETWORK - mainnet or testnet depending on which network you're using
+- BITDB_URL - mainnet or testnet BITDB URL
 
 Here's how the final command would look
 
 ```
-BITCOINCOM_BASEURL=https://bch-insight.bitpay.com/api/ RPC_BASEURL=http://your.nodes.ip.address:8332/ RPC_PASSWORD=rpcPasssword RPC_USERNAME=rpcUsername ZEROMQ_PORT=28332 ZEROMQ_URL=your.nodes.ip.address NETWORK=mainnet npm run dev
+BITCOINCOM_BASEURL=https://bch-insight.bitpay.com/api/ RPC_BASEURL=http://your.nodes.ip.address:8332/ RPC_PASSWORD=rpcPasssword RPC_USERNAME=rpcUsername ZEROMQ_PORT=28332 ZEROMQ_URL=your.nodes.ip.address BITDB_URL=https://bitdb.bitcoin.com/ NETWORK=mainnet npm run dev
 ```
 
 Starting in the regtest mode (partly working since the bitcoincom_baseurl does not work with local nodes):

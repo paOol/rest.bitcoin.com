@@ -18,7 +18,8 @@ const routeRateLimit = function(
   // TODO: Auth: Set or disable rate limit if authenticated user
 
   // Current route
-  const route = req.baseUrl + req.path
+  const path = req.baseUrl + req.path
+  const route = path.split("/").slice(0,4).join("/")
 
   // Create new RateLimit if none exists for this route
   if (!uniqueRateLimits[route]) {

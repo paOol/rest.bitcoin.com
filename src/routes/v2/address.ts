@@ -55,7 +55,7 @@ async function detailsFromInsight(
   currentPage: number = 0
 ) {
   try {
-    const legacyAddr = BITBOX.Address.toLegacyAddress(thisAddress)
+    const legacyAddr = BITBOX.Address.toCashAddress(thisAddress)
 
     let path = `${process.env.BITCOINCOM_BASEURL}addr/${legacyAddr}`
 
@@ -197,7 +197,7 @@ async function detailsSingle(
 
     // Ensure the input is a valid BCH address.
     try {
-      var legacyAddr = BITBOX.Address.toLegacyAddress(address)
+      var legacyAddr = BITBOX.Address.toCashAddress(address)
     } catch (err) {
       res.status(400)
       return res.json({
@@ -239,7 +239,7 @@ async function detailsSingle(
 // Retrieve UTXO data from the Insight API
 async function utxoFromInsight(thisAddress: string) {
   try {
-    const legacyAddr = BITBOX.Address.toLegacyAddress(thisAddress)
+    const legacyAddr = BITBOX.Address.toCashAddress(thisAddress)
 
     const path = `${process.env.BITCOINCOM_BASEURL}addr/${legacyAddr}/utxo`
 

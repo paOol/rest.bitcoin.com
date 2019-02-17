@@ -1,6 +1,6 @@
 {
   "name": "rest.bitcoin.com",
-  "version": "2.2.5",
+  "version": "2.2.6",
   "description": "REST API for Bitcoin.com's Cloud",
   "author": "Gabriel Cardona <gabriel@bitcoin.com>",
   "contributors": [

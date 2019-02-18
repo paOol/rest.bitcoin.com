@@ -16,52 +16,14 @@ const router: express.Router = express.Router()
 
 const FREEMIUM_INPUT_SIZE = 20
 
-const RateLimit = require("express-rate-limit")
-
-interface IRLConfig {
-  [blockRateLimit1: string]: any
-  blockRateLimit2: any
-  blockRateLimit3: any
-  blockRateLimit4: any
-  blockRateLimit5: any
-}
-
-const config: IRLConfig = {
-  blockRateLimit1: undefined,
-  blockRateLimit2: undefined,
-  blockRateLimit3: undefined,
-  blockRateLimit4: undefined,
-  blockRateLimit5: undefined
-}
-
-let i = 1
-while (i < 6) {
-  config[`blockRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.blockRateLimit1, root)
-router.get("/detailsByHash/:hash", config.blockRateLimit2, detailsByHashSingle)
-router.post("/detailsByHash", config.blockRateLimit3, detailsByHashBulk)
+router.get("/", root)
+router.get("/detailsByHash/:hash", detailsByHashSingle)
+router.post("/detailsByHash", detailsByHashBulk)
 router.get(
   "/detailsByHeight/:height",
-  config.blockRateLimit4,
   detailsByHeightSingle
 )
-router.post("/detailsByHeight", config.blockRateLimit5, detailsByHeightBulk)
+router.post("/detailsByHeight", detailsByHeightBulk)
 
 function root(
   req: express.Request,

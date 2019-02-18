@@ -2,38 +2,9 @@
 
 import * as express from "express"
 const router = express.Router()
-const RateLimit = require("express-rate-limit")
-
-interface IRLConfig {
-  [networkRateLimit1: string]: any
-}
-
-const config: IRLConfig = {
-  networkRateLimit1: undefined
-}
-
-let i = 1
-while (i < 2) {
-  config[`networkRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
 
 router.get(
   "/",
-  config.networkRateLimit1,
   async (
     req: express.Request,
     res: express.Response,

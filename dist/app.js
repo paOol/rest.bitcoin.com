@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
+// Middleware
+var route_ratelimit_1 = require("./middleware/route-ratelimit");
 var path = require("path");
 var logger = require("morgan");
 var cookieParser = require("cookie-parser");
@@ -89,6 +91,8 @@ app.use("/" + v1prefix + "/" + "util", utilV1);
 app.use("/" + v1prefix + "/" + "dataRetrieval", dataRetrievalV1);
 app.use("/" + v1prefix + "/" + "payloadCreation", payloadCreationV1);
 app.use("/" + v1prefix + "/" + "slp", slpV1);
+// Rate limit on all v2 routes
+app.use("/" + v2prefix + "/", route_ratelimit_1.routeRateLimit);
 app.use("/", indexV2);
 app.use("/" + v2prefix + "/" + "health-check", healthCheckV2);
 app.use("/" + v2prefix + "/" + "address", addressV2.router);

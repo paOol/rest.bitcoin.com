@@ -3,6 +3,9 @@ import { Socket } from "net"
 
 import * as express from "express"
 
+// Middleware
+import { routeRateLimit } from "./middleware/route-ratelimit"
+
 const path = require("path")
 const logger = require("morgan")
 const cookieParser = require("cookie-parser")
@@ -130,6 +133,8 @@ app.use(`/${v1prefix}/` + `dataRetrieval`, dataRetrievalV1)
 app.use(`/${v1prefix}/` + `payloadCreation`, payloadCreationV1)
 app.use(`/${v1prefix}/` + `slp`, slpV1)
 
+// Rate limit on all v2 routes
+app.use(`/${v2prefix}/`, routeRateLimit)
 app.use("/", indexV2)
 app.use(`/${v2prefix}/` + `health-check`, healthCheckV2)
 app.use(`/${v2prefix}/` + `address`, addressV2.router)

@@ -9,7 +9,6 @@ const routeUtils = require("./route-utils")
 
 //const router = express.Router()
 const router: express.Router = express.Router()
-const RateLimit = require("express-rate-limit")
 
 // Used for processing error messages before sending them to the user.
 const util = require("util")
@@ -25,66 +24,20 @@ const FREEMIUM_INPUT_SIZE = 20
 // https://github.com/bitpay/insight-api#notes-on-upgrading-from-v03
 const PAGE_SIZE = 1000
 
-interface IRLConfig {
-  [addressRateLimit1: string]: any
-  addressRateLimit2: any
-  addressRateLimit3: any
-  addressRateLimit4: any
-  addressRateLimit5: any
-  addressRateLimit6: any
-  addressRateLimit7: any
-  addressRateLimit8: any
-  addressRateLimit9: any
-  addressRateLimit10: any
-}
-
-const config: IRLConfig = {
-  addressRateLimit1: undefined,
-  addressRateLimit2: undefined,
-  addressRateLimit3: undefined,
-  addressRateLimit4: undefined,
-  addressRateLimit5: undefined,
-  addressRateLimit6: undefined,
-  addressRateLimit7: undefined,
-  addressRateLimit8: undefined,
-  addressRateLimit9: undefined,
-  addressRateLimit10: undefined
-}
-
-let i = 1
-while (i < 11) {
-  config[`addressRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: function(req: express.Request, res: express.Response /*next*/) {
-      res.format({
-        json: function() {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
 // Connect the route endpoints to their handler functions.
-router.get("/", config.addressRateLimit1, root)
-router.get("/details/:address", config.addressRateLimit2, detailsSingle)
-router.post("/details", config.addressRateLimit3, detailsBulk)
-router.post("/utxo", config.addressRateLimit4, utxoBulk)
-router.get("/utxo/:address", config.addressRateLimit5, utxoSingle)
-router.post("/unconfirmed", config.addressRateLimit6, unconfirmedBulk)
-router.get("/unconfirmed/:address", config.addressRateLimit7, unconfirmedSingle)
+router.get("/", root)
+router.get("/details/:address", detailsSingle)
+router.post("/details", detailsBulk)
+router.post("/utxo", utxoBulk)
+router.get("/utxo/:address", utxoSingle)
+router.post("/unconfirmed", unconfirmedBulk)
+router.get("/unconfirmed/:address", unconfirmedSingle)
 router.get(
   "/transactions/:address",
-  config.addressRateLimit8,
   transactionsSingle
 )
-router.post("/transactions", config.addressRateLimit9, transactionsBulk)
-router.get("/fromXPub/:xpub", config.addressRateLimit10, fromXPubSingle)
+router.post("/transactions", transactionsBulk)
+router.get("/fromXPub/:xpub", fromXPubSingle)
 
 // Root API endpoint. Simply acknowledges that it exists.
 function root(

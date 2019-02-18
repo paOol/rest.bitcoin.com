@@ -126,15 +126,9 @@ const requestConfig: IRequestConfig = {
 router.get("/", root)
 router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
-router.get(
-  "/balancesForAddress/:address",
-  balancesForAddress
-)
-router.get(
-  "/balance/:address/:tokenId",
-  balancesForAddressByTokenID
-)
-router.get("/address/convert/:address", convertAddress)
+router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
+router.get("/convert/:address", convertAddress)
 router.post("/validateTxid", validateBulk)
 
 function root(

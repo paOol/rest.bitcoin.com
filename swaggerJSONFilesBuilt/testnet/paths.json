@@ -470,7 +470,7 @@
 				],
 				"summary": "Block details single",
 				"description": "Details about a single block by height",
-				"operationId": "etailsHeightSingle",
+				"operationId": "detailsHeightSingle",
 				"parameters": [
 					{
 						"name": "height",
@@ -1530,21 +1530,21 @@
 				}
 			}
 		},
-		"/slp/address/convert/{address}": {
+		"/slp/convert/{address}": {
 			"get": {
 				"tags": [
 					"slp"
 				],
 				"summary": "convert address to slpAddr, cashAddr and legacy",
 				"description": "convert address to slpAddr, cashAddr and legacy",
-				"operationId": "addressConvert",
+				"operationId": "convert",
 				"parameters": [
 					{
 						"name": "address",
 						"in": "path",
 						"description": "The slp address",
 						"required": true,
-						"example": "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5",
+						"example": "",
 						"schema": {
 							"type": "string"
 						}

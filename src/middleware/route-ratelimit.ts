@@ -19,7 +19,7 @@ const routeRateLimit = function(
 
   // Current route
   const path = req.baseUrl + req.path
-  const route = path.split("/").slice(0,4).join("/")
+  const route = req.method + path.split("/").slice(0,4).join("/")
 
   // Create new RateLimit if none exists for this route
   if (!uniqueRateLimits[route]) {

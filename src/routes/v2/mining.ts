@@ -4,7 +4,6 @@ import * as express from "express"
 const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
-const RateLimit = require("express-rate-limit")
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 
@@ -29,40 +28,9 @@ const requestConfig: IRequestConfig = {
   }
 }
 
-interface IRLConfig {
-  [miningRateLimit1: string]: any
-  miningRateLimit2: any
-  miningRateLimit3: any
-}
-
-const config: IRLConfig = {
-  miningRateLimit1: undefined,
-  miningRateLimit2: undefined,
-  miningRateLimit3: undefined
-}
-
-let i = 1
-while (i < 4) {
-  config[`miningRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.miningRateLimit1, root)
-router.get("/getMiningInfo", config.miningRateLimit2, getMiningInfo)
-router.get("/getNetworkHashps", config.miningRateLimit3, getNetworkHashPS)
+router.get("/", root)
+router.get("/getMiningInfo", getMiningInfo)
+router.get("/getNetworkHashps", getNetworkHashPS)
 
 function root(
   req: express.Request,

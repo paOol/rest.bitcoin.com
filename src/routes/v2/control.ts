@@ -4,7 +4,6 @@ import * as express from "express"
 const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
-const RateLimit = require("express-rate-limit")
 const logger = require("./logging.js")
 const routeUtils = require("./route-utils")
 
@@ -12,39 +11,8 @@ const routeUtils = require("./route-utils")
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
 
-// Typescript
-interface IRLConfig {
-  [controlRateLimit1: string]: any
-  controlRateLimit2: any
-}
-
-// Typescript
-const config: IRLConfig = {
-  controlRateLimit1: undefined,
-  controlRateLimit2: undefined
-}
-
-let i = 1
-while (i < 3) {
-  config[`controlRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.controlRateLimit1, root)
-router.get("/getInfo", config.controlRateLimit2, getInfo)
+router.get("/", root)
+router.get("/getInfo", getInfo)
 
 function root(
   req: express.Request,

@@ -4,7 +4,6 @@ import * as express from "express"
 const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
-const RateLimit = require("express-rate-limit")
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 
@@ -14,18 +13,6 @@ const BITBOX = new BITBOXCli()
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 3 }
-
-interface IRLConfig {
-  [transactionRateLimit1: string]: any
-  transactionRateLimit2: any
-  transactionRateLimit3: any
-}
-
-const config: IRLConfig = {
-  transactionRateLimit1: undefined,
-  transactionRateLimit2: undefined,
-  transactionRateLimit3: undefined
-}
 
 // Manipulates and formats the raw data comming from Insight API.
 const processInputs = (tx: any) => {
@@ -46,28 +33,9 @@ const processInputs = (tx: any) => {
   }
 }
 
-let i = 1
-while (i < 4) {
-  config[`transactionRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.transactionRateLimit1, root)
-router.post("/details", config.transactionRateLimit2, detailsBulk)
-router.get("/details/:txid", config.transactionRateLimit3, detailsSingle)
+router.get("/", root)
+router.post("/details", detailsBulk)
+router.get("/details/:txid", detailsSingle)
 
 function root(
   req: express.Request,

@@ -5,7 +5,6 @@ const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 import { IResponse } from "./interfaces/IResponse"
-const RateLimit = require("express-rate-limit")
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 
@@ -32,69 +31,26 @@ const requestConfig: IRequestConfig = {
   }
 }
 
-interface IRLConfig {
-  [rawTransactionsRateLimit1: string]: any
-  rawTransactionsRateLimit2: any
-  rawTransactionsRateLimit3: any
-  rawTransactionsRateLimit4: any
-  rawTransactionsRateLimit5: any
-  rawTransactionsRateLimit6: any
-}
-
-const config: IRLConfig = {
-  rawTransactionsRateLimit1: undefined,
-  rawTransactionsRateLimit2: undefined,
-  rawTransactionsRateLimit3: undefined,
-  rawTransactionsRateLimit4: undefined,
-  rawTransactionsRateLimit5: undefined,
-  rawTransactionsRateLimit6: undefined
-}
-
-let i = 1
-
-while (i < 7) {
-  config[`rawTransactionsRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
-router.get("/", config.rawTransactionsRateLimit1, root)
+router.get("/", root)
 router.get(
   "/decodeRawTransaction/:hex",
-  config.rawTransactionsRateLimit2,
   decodeRawTransactionSingle
 )
 router.post(
   "/decodeRawTransaction",
-  config.rawTransactionsRateLimit2,
   decodeRawTransactionBulk
 )
-router.get("/decodeScript/:hex", config.rawTransactionsRateLimit3, decodeScript)
+router.get("/decodeScript/:hex", decodeScript)
 router.post(
   "/getRawTransaction",
-  config.rawTransactionsRateLimit4,
   getRawTransactionBulk
 )
 router.get(
   "/getRawTransaction/:txid",
-  config.rawTransactionsRateLimit5,
   getRawTransactionSingle
 )
 router.post(
   "/sendRawTransaction",
-  config.rawTransactionsRateLimit6,
   sendRawTransaction
 )
 

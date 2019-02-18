@@ -9,7 +9,6 @@ import * as express from "express"
 const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
-const RateLimit = require("express-rate-limit")
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 
@@ -19,108 +18,43 @@ util.inspect.defaultOptions = { depth: 1 }
 
 const FREEMIUM_INPUT_SIZE = 20
 
-interface IRLConfig {
-  [blockchainRateLimit1: string]: any
-  blockchainRateLimit2: any
-  blockchainRateLimit3: any
-  blockchainRateLimit4: any
-  blockchainRateLimit5: any
-  blockchainRateLimit6: any
-  blockchainRateLimit7: any
-  blockchainRateLimit8: any
-  blockchainRateLimit9: any
-  blockchainRateLimit10: any
-  blockchainRateLimit11: any
-  blockchainRateLimit12: any
-  blockchainRateLimit13: any
-  blockchainRateLimit14: any
-  blockchainRateLimit15: any
-  blockchainRateLimit16: any
-  blockchainRateLimit17: any
-}
-
-const config: IRLConfig = {
-  blockchainRateLimit1: undefined,
-  blockchainRateLimit2: undefined,
-  blockchainRateLimit3: undefined,
-  blockchainRateLimit4: undefined,
-  blockchainRateLimit5: undefined,
-  blockchainRateLimit6: undefined,
-  blockchainRateLimit7: undefined,
-  blockchainRateLimit8: undefined,
-  blockchainRateLimit9: undefined,
-  blockchainRateLimit10: undefined,
-  blockchainRateLimit11: undefined,
-  blockchainRateLimit12: undefined,
-  blockchainRateLimit13: undefined,
-  blockchainRateLimit14: undefined,
-  blockchainRateLimit15: undefined,
-  blockchainRateLimit16: undefined,
-  blockchainRateLimit17: undefined
-}
-
-let i = 1
-while (i < 18) {
-  config[`blockchainRateLimit${i}`] = new RateLimit({
-    windowMs: 60000, // 1 hour window
-    delayMs: 0, // disable delaying - full speed until the max limit is reached
-    max: 60, // start blocking after 60 requests
-    handler: (req: express.Request, res: express.Response /*next*/) => {
-      res.format({
-        json: () => {
-          res.status(500).json({
-            error: "Too many requests. Limits are 60 requests per minute."
-          })
-        }
-      })
-    }
-  })
-  i++
-}
-
 // Define routes.
-router.get("/", config.blockchainRateLimit1, root)
-router.get("/getBestBlockHash", config.blockchainRateLimit2, getBestBlockHash)
+router.get("/", root)
+router.get("/getBestBlockHash", getBestBlockHash)
 // Dev Note: getBlock/:hash ommited because its the same as block/detailsByHash
-//router.get("/getBlock/:hash", config.blockchainRateLimit3, getBlock)
-router.get("/getBlockchainInfo", config.blockchainRateLimit3, getBlockchainInfo)
-router.get("/getBlockCount", config.blockchainRateLimit4, getBlockCount)
+//router.get("/getBlock/:hash", getBlock)
+router.get("/getBlockchainInfo", getBlockchainInfo)
+router.get("/getBlockCount", getBlockCount)
 router.get(
   "/getBlockHeader/:hash",
-  config.blockchainRateLimit5,
   getBlockHeaderSingle
 )
-router.post("/getBlockHeader", config.blockchainRateLimit6, getBlockHeaderBulk)
+router.post("/getBlockHeader", getBlockHeaderBulk)
 
-router.get("/getChainTips", config.blockchainRateLimit7, getChainTips)
-router.get("/getDifficulty", config.blockchainRateLimit8, getDifficulty)
+router.get("/getChainTips", getChainTips)
+router.get("/getDifficulty", getDifficulty)
 router.get(
   "/getMempoolEntry/:txid",
-  config.blockchainRateLimit9,
   getMempoolEntrySingle
 )
 router.post(
   "/getMempoolEntry",
-  config.blockchainRateLimit10,
   getMempoolEntryBulk
 )
-router.get("/getMempoolInfo", config.blockchainRateLimit11, getMempoolInfo)
-router.get("/getRawMempool", config.blockchainRateLimit12, getRawMempool)
-router.get("/getTxOut/:txid/:n", config.blockchainRateLimit13, getTxOut)
+router.get("/getMempoolInfo", getMempoolInfo)
+router.get("/getRawMempool", getRawMempool)
+router.get("/getTxOut/:txid/:n", getTxOut)
 router.get(
   "/getTxOutProof/:txid",
-  config.blockchainRateLimit14,
   getTxOutProofSingle
 )
-router.post("/getTxOutProof", config.blockchainRateLimit15, getTxOutProofBulk)
+router.post("/getTxOutProof", getTxOutProofBulk)
 router.get(
   "/verifyTxOutProof/:proof",
-  config.blockchainRateLimit16,
   verifyTxOutProofSingle
 )
 router.post(
   "/verifyTxOutProof",
-  config.blockchainRateLimit17,
   verifyTxOutProofBulk
 )
 

@@ -1091,7 +1091,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "trest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "2.2.5",
+		"version": "2.2.6",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -1569,7 +1569,7 @@
 				],
 				"summary": "Block details single",
 				"description": "Details about a single block by height",
-				"operationId": "etailsHeightSingle",
+				"operationId": "detailsHeightSingle",
 				"parameters": [
 					{
 						"name": "height",
@@ -2629,21 +2629,21 @@
 				}
 			}
 		},
-		"/slp/address/convert/{address}": {
+		"/slp/convert/{address}": {
 			"get": {
 				"tags": [
 					"slp"
 				],
 				"summary": "convert address to slpAddr, cashAddr and legacy",
 				"description": "convert address to slpAddr, cashAddr and legacy",
-				"operationId": "addressConvert",
+				"operationId": "convert",
 				"parameters": [
 					{
 						"name": "address",
 						"in": "path",
 						"description": "The slp address",
 						"required": true,
-						"example": "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5",
+						"example": "",
 						"schema": {
 							"type": "string"
 						}

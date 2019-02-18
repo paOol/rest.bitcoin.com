@@ -446,7 +446,7 @@
         "tags": ["block"],
         "summary": "Block details single",
         "description": "Details about a single block by height",
-        "operationId": "etailsHeightSingle",
+        "operationId": "detailsHeightSingle",
         "parameters": [
           {
             "name": "height",
@@ -1442,12 +1442,12 @@
         }
       }
     },
-    "/slp/address/convert/{address}": {
+    "/slp/convert/{address}": {
       "get": {
         "tags": ["slp"],
         "summary": "convert address to slpAddr, cashAddr and legacy",
         "description": "convert address to slpAddr, cashAddr and legacy",
-        "operationId": "addressConvert",
+        "operationId": "convert",
         "parameters": [
           {
             "name": "address",

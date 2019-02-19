@@ -20,6 +20,9 @@ const BitboxHTTP = axios.create({
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
+console.log('BitboxHTTP', BitboxHTTP);
+console.log('process env', process.env);
+
 const requestConfig: IRequestConfig = {
   method: "post",
   auth: {
@@ -276,6 +279,7 @@ async function getRawTransactionsFromNode(txid: string, verbose: number) {
     requestConfig.data.params = [txid, verbose]
 
     const response = await BitboxHTTP(requestConfig)
+    console.log('response', response.data);
 
     return response.data.result
   } catch (err) {

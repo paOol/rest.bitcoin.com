@@ -32,27 +32,12 @@ const requestConfig: IRequestConfig = {
 }
 
 router.get("/", root)
-router.get(
-  "/decodeRawTransaction/:hex",
-  decodeRawTransactionSingle
-)
-router.post(
-  "/decodeRawTransaction",
-  decodeRawTransactionBulk
-)
+router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
+router.post("/decodeRawTransaction", decodeRawTransactionBulk)
 router.get("/decodeScript/:hex", decodeScript)
-router.post(
-  "/getRawTransaction",
-  getRawTransactionBulk
-)
-router.get(
-  "/getRawTransaction/:txid",
-  getRawTransactionSingle
-)
-router.post(
-  "/sendRawTransaction",
-  sendRawTransaction
-)
+router.post("/getRawTransaction", getRawTransactionBulk)
+router.get("/getRawTransaction/:txid", getRawTransactionSingle)
+router.post("/sendRawTransaction", sendRawTransaction)
 
 function root(
   req: express.Request,
@@ -401,34 +386,16 @@ async function sendRawTransaction(
 ) {
   try {
     // Validation
-    const hexes = req.body.hexes
+    const hexes = req.body.hexes // Body
+    const hex = req.params.hex // URL parameter
 
-    // Reject if input is not an array.
-    if (!Array.isArray(hexes)) {
+    // Reject if input is not an array or a string
+    if (!Array.isArray(hexes) || typeof hex === "string") {
       res.status(400)
-      return res.json({ error: "hex must be an array" })
+      return res.json({ error: "hex must be an array or string" })
     }
 
-    // Reject if there are too many elements in the array.
-    if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
-      return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
-      })
-    }
-
-    // Validate each element
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
-
-      if (hex === "") {
-        res.status(400)
-        return res.json({
-          error: `Encountered empty hex`
-        })
-      }
-    }
-
+    let result
     const {
       BitboxHTTP,
       username,
@@ -436,35 +403,75 @@ async function sendRawTransaction(
       requestConfig
     } = routeUtils.setEnvVars()
 
-    // Dev Note CT 1/31/2019:
-    // Sending the 'sendrawtrnasaction' RPC call to a full node in parallel will
-    // not work. Testing showed that the full node will return the same TXID for
-    // different TX hexes. I believe this is by design, to prevent double spends.
-    // In parallel, we are essentially asking the node to broadcast a new TX before
-    // it's finished broadcast the previous one. Serial execution is required.
+    // Handle an array input.
+    if (Array.isArray(hexes)) {
+      // Reject if there are too many elements in the array.
+      if (hexes.length > FREEMIUM_INPUT_SIZE) {
+        res.status(400)
+        return res.json({
+          error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+        })
+      }
 
-    // How to send TX hexes in parallel the WRONG WAY:
-    /*
-    // Collect an array of promises.
-    const promises = hexes.map(async (hex: any) => {
-      requestConfig.data.id = "sendrawtransaction"
-      requestConfig.data.method = "sendrawtransaction"
-      requestConfig.data.params = [hex]
+      // Validate each element
+      for (let i = 0; i < hexes.length; i++) {
+        const hex = hexes[i]
 
-      return await BitboxHTTP(requestConfig)
-    })
+        if (hex === "") {
+          res.status(400)
+          return res.json({
+            error: `Encountered empty hex`
+          })
+        }
+      }
 
-    // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
 
-    // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
-    */
 
-    // Sending them serially.
-    const result = []
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+      // Dev Note CT 1/31/2019:
+      // Sending the 'sendrawtrnasaction' RPC call to a full node in parallel will
+      // not work. Testing showed that the full node will return the same TXID for
+      // different TX hexes. I believe this is by design, to prevent double spends.
+      // In parallel, we are essentially asking the node to broadcast a new TX before
+      // it's finished broadcast the previous one. Serial execution is required.
+
+      // How to send TX hexes in parallel the WRONG WAY:
+      /*
+          // Collect an array of promises.
+          const promises = hexes.map(async (hex: any) => {
+            requestConfig.data.id = "sendrawtransaction"
+            requestConfig.data.method = "sendrawtransaction"
+            requestConfig.data.params = [hex]
+
+            return await BitboxHTTP(requestConfig)
+          })
+
+          // Wait for all parallel Insight requests to return.
+          const axiosResult: Array<any> = await axios.all(promises)
+
+          // Retrieve the data part of the result.
+          const result = axiosResult.map(x => x.data.result)
+          */
+
+      // Sending them serially.
+      result = []
+      for (let i = 0; i < hexes.length; i++) {
+        const hex = hexes[i]
+
+        requestConfig.data.id = "sendrawtransaction"
+        requestConfig.data.method = "sendrawtransaction"
+        requestConfig.data.params = [hex]
+
+        const rpcResult = await BitboxHTTP(requestConfig)
+
+        result.push(rpcResult.data.result)
+      }
+    } else {
+      if (hex === "") {
+        res.status(400)
+        return res.json({
+          error: `Encountered empty hex`
+        })
+      }
 
       requestConfig.data.id = "sendrawtransaction"
       requestConfig.data.method = "sendrawtransaction"
@@ -472,7 +479,7 @@ async function sendRawTransaction(
 
       const rpcResult = await BitboxHTTP(requestConfig)
 
-      result.push(rpcResult.data.result)
+      result = rpcResult.data.result  
     }
 
     res.status(200)

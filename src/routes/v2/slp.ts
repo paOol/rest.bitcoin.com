@@ -7,6 +7,7 @@ import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
+import * as Bitcore from 'bitcore-lib-cash';
 
 const FREEMIUM_INPUT_SIZE = 20
 
@@ -22,7 +23,8 @@ const SLPSDK = require("slp-sdk/lib/SLP").default
 const SLP = new SLPSDK()
 
 // Instantiate SLPJS.
-const slp = require("slpjs")
+//const slp = require("slpjs")
+const slp = require("/home/trout/work/bch/slpjs")
 const slpjs = new slp.Slp(BITBOX)
 const utils = slp.Utils
 
@@ -130,7 +132,7 @@ router.get("/balancesForAddress/:address", balancesForAddress)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddress)
 router.post("/validateTxid", validateBulk)
-router.get("/tokentransfer/:txid", tokenTransfer)
+router.get("/tokentransfer/:txhex", tokenTransfer)
 
 function root(
   req: express.Request,
@@ -607,10 +609,26 @@ async function tokenTransfer(
   next: express.NextFunction
 ) {
   try {
-    const txid = req.params.txid
+    const txhex = req.params.txhex
 
-    console.log(`txid: ${util.inspect(txid)}`)
-    return await slpValidator.isValidSlpTxid(txid)
+    // Get the TX Hex from the TXID
+    console.log(`txhex: ${util.inspect(txhex)}`)
+
+    // Create a Bitcore transaction object from the raw hex
+    const txn = new Bitcore.Transaction(txhex)
+    console.log(`txn: ${util.inspect(txn)}`)
+
+    // parse the SLP output
+    const slpOut = slpjs.parseSlpOutputScript(txn.outputs[0]._scriptBuffer)
+    console.log(`slpOut: ${util.inspect(slpOut)}`)
+    console.log(`slpOut.sendOutputs: ${util.inspect(slpOut.sendOutputs)}`)
+    console.log(`slpOut.sendOutputs[0].c: ${util.inspect(slpOut.sendOutputs[0].c)}`)
+    console.log(`slpOut.sendOutputs[1].c: ${util.inspect(slpOut.sendOutputs[1].c)}`)
+    console.log(`slpOut.sendOutputs[2].c: ${util.inspect(slpOut.sendOutputs[2].c)}`)
+    //console.log(`slpOut.genesisOrMintQuantity.c: ${util.inspect(slpOut.genesisOrMintQuantity.c)}`)
+
+    //return await slpValidator.isValidSlpTxid(txid)
+    return true
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

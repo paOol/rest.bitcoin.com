@@ -373,6 +373,7 @@ async function getRawTransactionSingle(
       res.status(400)
       return res.json({ error: "txid can not be empty" })
     }
+    console.log('txid', txid);
 
     const data = await getRawTransactionsFromNode(txid, verbose)
 

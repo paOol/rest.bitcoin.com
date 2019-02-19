@@ -130,6 +130,7 @@ router.get("/balancesForAddress/:address", balancesForAddress)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddress)
 router.post("/validateTxid", validateBulk)
+router.get("/tokentransfer/:txid", tokenTransfer)
 
 function root(
   req: express.Request,
@@ -600,6 +601,29 @@ async function isValidSlpTxid(txid: string): Promise<boolean> {
   return isValid
 }
 
+async function tokenTransfer(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const txid = req.params.txid
+
+    console.log(`txid: ${util.inspect(txid)}`)
+    return await slpValidator.isValidSlpTxid(txid)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -610,6 +634,7 @@ module.exports = {
     balancesForAddressByTokenID,
     convertAddress,
     validateBulk,
-    isValidSlpTxid
+    isValidSlpTxid,
+    tokenTransfer
   }
 }

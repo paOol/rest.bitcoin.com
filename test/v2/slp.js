@@ -54,7 +54,7 @@ describe("#SLP", () => {
     res = mockRes
 
     // Explicitly reset the parmas and body.
-    req.body = {}
+    //req.params = {}
     req.body = {}
     req.query = {}
 
@@ -501,6 +501,18 @@ describe("#SLP", () => {
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
       assert.equal(result.length, 2)
+    })
+  })
+
+  describe("tokenTransfer()", () => {
+    const tokenTransfer = slpRoute.testableComponents.tokenTransfer
+
+    it("should run my test", async () => {
+      req.params.txid =
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091"
+
+      const result = await tokenTransfer(req, res)
+      console.log(`result: ${util.inspect(result)}`)
     })
   })
 })

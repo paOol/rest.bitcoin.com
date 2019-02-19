@@ -302,7 +302,7 @@ async function utxoBulk(
 
       // Ensure the input is a valid BCH address.
       try {
-        BITBOX.Address.toLegacyAddress(thisAddress)
+        BITBOX.Address.toCashAddress(thisAddress);
       } catch (er) {
         //if (er.message.includes("Unsupported address format"))
         res.status(400)

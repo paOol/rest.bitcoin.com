@@ -39,7 +39,7 @@ const password = process.env.RPC_PASSWORD
 
 // Retrieve raw transactions details from the full node.
 // TODO: move this function to a separate support library.
-// TODO: 
+// TODO: Add unit tests for this function.
 async function getRawTransactionsFromNode(txids: string[]) {
   try {
     const {

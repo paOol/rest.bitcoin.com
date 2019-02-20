@@ -5,6 +5,9 @@
   and integration tests. By default, TEST is set to 'unit'. Set this variable
   to 'integration' to run the tests against BCH mainnet.
 
+  TODO:
+  -Create e2e test for sendRawTransaction.
+
 */
 
 "use strict"

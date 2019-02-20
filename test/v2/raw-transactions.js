@@ -512,10 +512,9 @@ describe("#Raw-Transactions", () => {
     })
   })
 
-  describe("sendRawTransaction()", () => {
-    // block route handler.
+  describe("sendRawTransactionBulk()", () => {
     const sendRawTransaction =
-      rawtransactions.testableComponents.sendRawTransaction
+      rawtransactions.testableComponents.sendRawTransactionBulk
 
     it("should throw 400 error if hexs array is missing", async () => {
       const result = await sendRawTransaction(req, res)
@@ -593,6 +592,114 @@ describe("#Raw-Transactions", () => {
       if (process.env.TEST === "unit") {
         assert.isArray(result)
         assert.isString(result[0])
+
+        // Integration test
+      } else {
+        assert.hasAllKeys(result, ["error"])
+        assert.include(result.error, "transaction already in block chain")
+      }
+    })
+  })
+
+  describe("sendRawTransactionSingle()", () => {
+    // block route handler.
+    const sendRawTransaction =
+      rawtransactions.testableComponents.sendRawTransactionSingle
+
+    it("should throw an error for an empty hex", async () => {
+      req.params.hex = ""
+
+      const result = await sendRawTransaction(req, res)
+
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
+      assert.include(
+        result.error,
+        "Encountered empty hex",
+        "Proper error message"
+      )
+    })
+
+    it("should throw an error for a non-string", async () => {
+      req.params.hex = 456
+
+      const result = await sendRawTransaction(req, res)
+
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
+      assert.include(
+        result.error,
+        "hex must be a string",
+        "Proper error message"
+      )
+    })
+
+    it("should throw 500 when network issues", async () => {
+      // Save the existing RPC URL.
+      const savedUrl = process.env.BITCOINCOM_BASEURL
+      const savedUrl2 = process.env.RPC_BASEURL
+
+      // Manipulate the URL to cause a 500 network error.
+      process.env.BITCOINCOM_BASEURL = "http://fakeurl/api/"
+      process.env.RPC_BASEURL = "http://fakeurl/api/"
+
+      req.params.hex =
+        "0200000001189f7cf4303e2e0bcc5af4be323b9b397dd4104ca2de09528eb90a1450b8a999010000006a4730440220212ec2ffce136a30cec1bc86a40b08a2afdeb6f8dbd652d7bcb07b1aad6dfa8c022041f59585273b89d88879a9a531ba3272dc953f48ff57dad955b2dee70e76c0624121030143ffd18f1c4add75c86b2f930d9551d51f7a6bd786314247022b7afc45d231ffffffff0230d39700000000001976a914af64a026e06910c59463b000d18c3d125d7e951a88ac58c20000000000001976a914af64a026e06910c59463b000d18c3d125d7e951a88ac00000000"
+      const result = await sendRawTransaction(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      // Restore the saved URL.
+      process.env.BITCOINCOM_BASEURL = savedUrl
+      process.env.RPC_BASEURL = savedUrl2
+
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or great expected."
+      )
+    })
+
+    it("should throw an error for invalid hex", async () => {
+      req.params.hex = "abc123"
+
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.RPC_BASEURL}`)
+          .post(``)
+          .reply(500, {
+            error: { message: "TX decode failed" }
+          })
+      }
+
+      const result = await sendRawTransaction(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
+      assert.include(result.error, "TX decode failed")
+    })
+
+    it("should GET /sendRawTransaction/:hex", async () => {
+      // This is a difficult test to run as transaction hex is invalid after a
+      // block confirmation. So the unit tests simulates what the output 'should'
+      // be, but the integration asserts an expected failure.
+
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.RPC_BASEURL}`)
+          .post(``)
+          .reply(200, {
+            result:
+              "aef8848396e67532b42008b9d75b5a5a3459a6717740f31f0553b74102b4b118"
+          })
+      }
+
+      req.params.hex =
+        "0200000001189f7cf4303e2e0bcc5af4be323b9b397dd4104ca2de09528eb90a1450b8a999010000006a4730440220212ec2ffce136a30cec1bc86a40b08a2afdeb6f8dbd652d7bcb07b1aad6dfa8c022041f59585273b89d88879a9a531ba3272dc953f48ff57dad955b2dee70e76c0624121030143ffd18f1c4add75c86b2f930d9551d51f7a6bd786314247022b7afc45d231ffffffff0230d39700000000001976a914af64a026e06910c59463b000d18c3d125d7e951a88ac58c20000000000001976a914af64a026e06910c59463b000d18c3d125d7e951a88ac00000000"
+
+      const result = await sendRawTransaction(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      if (process.env.TEST === "unit") {
+        assert.isString(result)
 
         // Integration test
       } else {

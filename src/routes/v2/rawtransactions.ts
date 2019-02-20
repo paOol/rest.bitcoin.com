@@ -295,13 +295,17 @@ async function decodeScriptBulk(
       requestConfig.data.params = [hex]
 
       const response = await BitboxHTTP(requestConfig)
+      return response
     })
 
     // Wait for all parallel promises to return.
     const resolved: Array<any> = await Promise.all(promises)
 
+    // Retrieve the data from each resolved promise.
+    const result = resolved.map(x => x.data.result)
+
     res.status(200)
-    return res.json(resolved)
+    return res.json(result)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

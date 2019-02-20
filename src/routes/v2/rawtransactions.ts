@@ -34,7 +34,8 @@ const requestConfig: IRequestConfig = {
 router.get("/", root)
 router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
 router.post("/decodeRawTransaction", decodeRawTransactionBulk)
-router.get("/decodeScript/:hex", decodeScript)
+router.get("/decodeScript/:hex", decodeScriptSingle)
+router.post("/decodeScript", decodeScriptBulk)
 router.post("/getRawTransaction", getRawTransactionBulk)
 router.get("/getRawTransaction/:txid", getRawTransactionSingle)
 router.post("/sendRawTransaction", sendRawTransactionBulk)
@@ -203,8 +204,8 @@ async function decodeRawTransactionBulk(
 }
 
 // Decode a raw transaction from hex to assembly.
-// GET
-async function decodeScript(
+// GET single
+async function decodeScriptSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -231,6 +232,80 @@ async function decodeScript(
 
     const response = await BitboxHTTP(requestConfig)
     return res.json(response.data.result)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    // Write out error to error log.
+    //logger.error(`Error in rawtransactions/decodeScript: `, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+// Decode a raw transaction from hex to assembly.
+// POST bulk
+async function decodeScriptBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const hexes = req.body.hexes
+
+    // Validation
+    if (!Array.isArray(hexes)) {
+      res.status(400)
+      return res.json({ error: "hexes must be an array" })
+    }
+    if (hexes.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
+      return res.json({
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+      })
+    }
+
+    // Validate each hex in the array
+    for(let i = 0; i < hexes.length; i++) {
+      const hex = hexes[i]
+
+      // Throw an error if hex is empty.
+      if (!hex || hex === "") {
+        res.status(400)
+        return res.json({ error: "Encountered empty hex" })
+      }
+    }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
+
+    // Loop through each hex and create an array of promises
+    const promises = hexes.map(async (hex: any) => {
+      requestConfig.data.id = "decodescript"
+      requestConfig.data.method = "decodescript"
+      requestConfig.data.params = [hex]
+
+      const response = await BitboxHTTP(requestConfig)
+      return response
+    })
+
+    // Wait for all parallel promises to return.
+    const resolved: Array<any> = await Promise.all(promises)
+
+    // Retrieve the data from each resolved promise.
+    const result = resolved.map(x => x.data.result)
+
+    res.status(200)
+    return res.json(result)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -536,7 +611,8 @@ module.exports = {
     root,
     decodeRawTransactionSingle,
     decodeRawTransactionBulk,
-    decodeScript,
+    decodeScriptSingle,
+    decodeScriptBulk,
     getRawTransactionBulk,
     getRawTransactionSingle,
     sendRawTransactionBulk,

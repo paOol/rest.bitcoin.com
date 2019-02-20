@@ -32,27 +32,13 @@ const requestConfig: IRequestConfig = {
 }
 
 router.get("/", root)
-router.get(
-  "/decodeRawTransaction/:hex",
-  decodeRawTransactionSingle
-)
-router.post(
-  "/decodeRawTransaction",
-  decodeRawTransactionBulk
-)
+router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
+router.post("/decodeRawTransaction", decodeRawTransactionBulk)
 router.get("/decodeScript/:hex", decodeScript)
-router.post(
-  "/getRawTransaction",
-  getRawTransactionBulk
-)
-router.get(
-  "/getRawTransaction/:txid",
-  getRawTransactionSingle
-)
-router.post(
-  "/sendRawTransaction",
-  sendRawTransaction
-)
+router.post("/getRawTransaction", getRawTransactionBulk)
+router.get("/getRawTransaction/:txid", getRawTransactionSingle)
+router.post("/sendRawTransaction", sendRawTransactionBulk)
+router.get("/sendRawTransaction/:hex", sendRawTransactionSingle)
 
 function root(
   req: express.Request,
@@ -394,7 +380,7 @@ async function getRawTransactionSingle(
 }
 
 // Transmit a raw transaction to the BCH network.
-async function sendRawTransaction(
+async function sendRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -403,11 +389,18 @@ async function sendRawTransaction(
     // Validation
     const hexes = req.body.hexes
 
-    // Reject if input is not an array.
+    // Reject if input is not an array
     if (!Array.isArray(hexes)) {
       res.status(400)
       return res.json({ error: "hex must be an array" })
     }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
 
     // Reject if there are too many elements in the array.
     if (hexes.length > FREEMIUM_INPUT_SIZE) {
@@ -429,13 +422,6 @@ async function sendRawTransaction(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Dev Note CT 1/31/2019:
     // Sending the 'sendrawtrnasaction' RPC call to a full node in parallel will
     // not work. Testing showed that the full node will return the same TXID for
@@ -445,21 +431,21 @@ async function sendRawTransaction(
 
     // How to send TX hexes in parallel the WRONG WAY:
     /*
-    // Collect an array of promises.
-    const promises = hexes.map(async (hex: any) => {
-      requestConfig.data.id = "sendrawtransaction"
-      requestConfig.data.method = "sendrawtransaction"
-      requestConfig.data.params = [hex]
+          // Collect an array of promises.
+          const promises = hexes.map(async (hex: any) => {
+            requestConfig.data.id = "sendrawtransaction"
+            requestConfig.data.method = "sendrawtransaction"
+            requestConfig.data.params = [hex]
 
-      return await BitboxHTTP(requestConfig)
-    })
+            return await BitboxHTTP(requestConfig)
+          })
 
-    // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+          // Wait for all parallel Insight requests to return.
+          const axiosResult: Array<any> = await axios.all(promises)
 
-    // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
-    */
+          // Retrieve the data part of the result.
+          const result = axiosResult.map(x => x.data.result)
+          */
 
     // Sending them serially.
     const result = []
@@ -490,6 +476,60 @@ async function sendRawTransaction(
   }
 }
 
+// Transmit a raw transaction to the BCH network.
+async function sendRawTransactionSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const hex = req.params.hex // URL parameter
+
+    // Reject if input is not an array or a string
+    if (typeof hex !== "string") {
+      res.status(400)
+      return res.json({ error: "hex must be a string" })
+    }
+
+    // Validation
+    if (hex === "") {
+      res.status(400)
+      return res.json({
+        error: `Encountered empty hex`
+      })
+    }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
+
+    // RPC call
+    requestConfig.data.id = "sendrawtransaction"
+    requestConfig.data.method = "sendrawtransaction"
+    requestConfig.data.params = [hex]
+
+    const rpcResult = await BitboxHTTP(requestConfig)
+
+    const result = rpcResult.data.result
+
+    res.status(200)
+    return res.json(result)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -499,6 +539,7 @@ module.exports = {
     decodeScript,
     getRawTransactionBulk,
     getRawTransactionSingle,
-    sendRawTransaction
+    sendRawTransactionBulk,
+    sendRawTransactionSingle
   }
 }

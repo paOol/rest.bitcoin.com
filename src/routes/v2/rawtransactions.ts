@@ -608,6 +608,7 @@ module.exports = {
     decodeRawTransactionSingle,
     decodeRawTransactionBulk,
     decodeScriptSingle,
+    decodeScriptBulk,
     getRawTransactionBulk,
     getRawTransactionSingle,
     sendRawTransactionBulk,

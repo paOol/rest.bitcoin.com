@@ -38,6 +38,8 @@ const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
 // Retrieve raw transactions details from the full node.
+// TODO: move this function to a separate support library.
+// TODO: 
 async function getRawTransactionsFromNode(txids: string[]) {
   try {
     const {

@@ -387,9 +387,9 @@ async function sendRawTransactionBulk(
 ) {
   try {
     // Validation
-    const hexes = req.body.hexes // Body
+    const hexes = req.body.hexes
 
-    // Reject if input is not an array or a string
+    // Reject if input is not an array
     if (!Array.isArray(hexes)) {
       res.status(400)
       return res.json({ error: "hex must be an array" })

@@ -388,12 +388,11 @@ async function sendRawTransactionBulk(
   try {
     // Validation
     const hexes = req.body.hexes // Body
-    const hex = req.params.hex // URL parameter
 
     // Reject if input is not an array or a string
-    if (!Array.isArray(hexes) || typeof hex === "string") {
+    if (!Array.isArray(hexes)) {
       res.status(400)
-      return res.json({ error: "hex must be an array or string" })
+      return res.json({ error: "hex must be an array" })
     }
 
     const {
@@ -486,6 +485,12 @@ async function sendRawTransactionSingle(
   try {
     const hex = req.params.hex // URL parameter
 
+    // Reject if input is not an array or a string
+    if (typeof hex !== "string") {
+      res.status(400)
+      return res.json({ error: "hex must be a string" })
+    }
+
     // Validation
     if (hex === "") {
       res.status(400)
@@ -493,6 +498,13 @@ async function sendRawTransactionSingle(
         error: `Encountered empty hex`
       })
     }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
 
     // RPC call
     requestConfig.data.id = "sendrawtransaction"

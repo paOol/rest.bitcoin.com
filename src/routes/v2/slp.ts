@@ -238,82 +238,7 @@ async function listSingleToken(
     }
 
     const t = await lookupToken(tokenId)
-/*
-    const query = {
-      v: 3,
-      q: {
-        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
-        limit: 1000
-      }
-    }
 
-    const s = JSON.stringify(query)
-    const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.BITDB_URL}q/${b64}`
-
-    const tokenRes = await axios.get(url)
-
-    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data)}`)
-    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
-
-    let formattedTokens: Array<any> = []
-
-    if (tokenRes.data.u.length) {
-      tokenRes.data.u.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: token.blk
-            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-            : "unconfirmed",
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
-      })
-    }
-
-    if (tokenRes.data.c.length) {
-      tokenRes.data.c.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000)),
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
-      })
-    }
-
-    //console.log(`formattedTokens: ${JSON.stringify(formattedTokens,null,2)}`)
-
-    let t
-    formattedTokens.forEach((token: any) => {
-      if (token.id === req.params.tokenId) t = token
-    })
-
-    // If token could not be found.
-    if (t === undefined) {
-      t = {
-        id: "not found"
-      }
-    }
-*/
     res.status(200)
     return res.json(t)
   } catch (err) {
@@ -359,7 +284,7 @@ async function listBulkToken(
       // Validate each element.
       if (!tokenId || tokenId === "") {
         res.status(400)
-        return res.json({ error: "Empty tokenId encountered" })
+        return res.json({ error: `Empty tokenId encountered in entry ${i}` })
       }
 
       const thisToken = await lookupToken(tokenId)
@@ -460,7 +385,7 @@ async function lookupToken(tokenId) {
 
     return t
   } catch(err) {
-    console.log(`Error in slp.ts/lookupToken()`)
+    //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
 }

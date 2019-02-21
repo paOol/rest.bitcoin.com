@@ -357,12 +357,13 @@ describe("#SLP", () => {
     // })
   })
 
-  describe("convertAddress()", () => {
-    const convertAddress = slpRoute.testableComponents.convertAddress
+  describe("convertAddressSingle()", () => {
+    const convertAddressSingle =
+      slpRoute.testableComponents.convertAddressSingle
 
     it("should throw 400 if address is empty", async () => {
       req.params.address = ""
-      const result = await convertAddress(req, res)
+      const result = await convertAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -379,10 +380,83 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
-      const result = await convertAddress(req, res)
+      const result = await convertAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["cashAddress", "legacyAddress", "slpAddress"])
+    })
+  })
+
+  describe("convertAddressSingle()", () => {
+    const convertAddressBulk = slpRoute.testableComponents.convertAddressBulk
+
+    it("should throw 400 if addresses array is empty", async () => {
+      const result = await convertAddressBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "addresses needs to be an array")
+      assert.equal(res.statusCode, 400)
+    })
+
+    it("should throw 400 error if array is too large", async () => {
+      const testArray = []
+      for (var i = 0; i < 25; i++) testArray.push("")
+
+      req.body.addresses = testArray
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Array too large")
+    })
+
+    it("should error on malformed address", async () => {
+      try {
+        req.body.addresses = ["bitcoincash:qzs02v05l7qs5s5dwuj0cx5ehjm2c"]
+
+        await convertAddressBulk(req, res)
+
+        assert.equal(true, false, "Unexpected result!")
+      } catch (err) {
+        // console.log(`err.message: ${util.inspect(err.message)}`)
+
+        assert.include(err.message, `Unsupported address format`)
+      }
+    })
+
+    it("should validate array with single element", async () => {
+      req.body.addresses = [
+        "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c"
+      ]
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], [
+        "slpAddress",
+        "cashAddress",
+        "legacyAddress"
+      ])
+    })
+
+    it("should validate array with multiple elements", async () => {
+      req.body.addresses = [
+        "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c",
+        "bitcoincash:qrehqueqhw629p6e57994436w730t4rzasnly00ht0"
+      ]
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], [
+        "slpAddress",
+        "cashAddress",
+        "legacyAddress"
+      ])
     })
   })
 

@@ -32,6 +32,13 @@
     ]
   },
   {
+    "key": "SLPConvert",
+    "value": [
+      "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c",
+      "bitcoincash:qrehqueqhw629p6e57994436w730t4rzasnly00ht0"
+    ]
+  },
+  {
     "key": "SLPTxids",
     "value": [
       "88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa",

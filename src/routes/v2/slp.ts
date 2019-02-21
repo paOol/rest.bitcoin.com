@@ -551,7 +551,15 @@ async function convertAddressBulk(
   if (!Array.isArray(addresses)) {
     res.status(400)
     return res.json({
-      error: "hashes needs to be an array. Use GET for single address."
+      error: "addresses needs to be an array. Use GET for single address."
+    })
+  }
+
+  // Enforce no more than 20 txids.
+  if (addresses.length > FREEMIUM_INPUT_SIZE) {
+    res.status(400)
+    return res.json({
+      error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
     })
   }
 
@@ -666,6 +674,7 @@ module.exports = {
     balancesForAddress,
     balancesForAddressByTokenID,
     convertAddressSingle,
+    convertAddressBulk,
     validateBulk,
     isValidSlpTxid
   }

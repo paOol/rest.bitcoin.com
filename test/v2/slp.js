@@ -387,6 +387,65 @@ describe("#SLP", () => {
     })
   })
 
+  describe("convertAddressSingle()", () => {
+    const convertAddressBulk = slpRoute.testableComponents.convertAddressBulk
+
+    it("should throw 400 if addresses array is empty", async () => {
+      const result = await convertAddressBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "addresses needs to be an array")
+      assert.equal(res.statusCode, 400)
+    })
+
+    it("should throw 400 error if array is too large", async () => {
+      const testArray = []
+      for (var i = 0; i < 25; i++) testArray.push("")
+
+      req.body.addresses = testArray
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Array too large")
+    })
+
+    it("should validate array with single element", async () => {
+      req.body.addresses = [
+        "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c"
+      ]
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], [
+        "slpAddress",
+        "cashAddress",
+        "legacyAddress"
+      ])
+    })
+
+    it("should validate array with multiple elements", async () => {
+      req.body.addresses = [
+        "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c",
+        "bitcoincash:qrehqueqhw629p6e57994436w730t4rzasnly00ht0"
+      ]
+
+      const result = await convertAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], [
+        "slpAddress",
+        "cashAddress",
+        "legacyAddress"
+      ])
+    })
+  })
+
   describe("validateBulk()", () => {
     const validateBulk = slpRoute.testableComponents.validateBulk
 

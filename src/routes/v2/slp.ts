@@ -37,6 +37,15 @@ const BitboxHTTP = axios.create({
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
+router.get("/", root)
+router.get("/list", list)
+router.get("/list/:tokenId", listSingleToken)
+router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
+router.get("/convert/:address", convertAddressSingle)
+router.post("/convert", convertAddressBulk)
+router.post("/validateTxid", validateBulk)
+
 // Retrieve raw transactions details from the full node.
 // TODO: move this function to a separate support library.
 // TODO: Add unit tests for this function.
@@ -124,14 +133,6 @@ const requestConfig: IRequestConfig = {
     jsonrpc: "1.0"
   }
 }
-
-router.get("/", root)
-router.get("/list", list)
-router.get("/list/:tokenId", listSingleToken)
-router.get("/balancesForAddress/:address", balancesForAddress)
-router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
-router.get("/convert/:address", convertAddress)
-router.post("/validateTxid", validateBulk)
 
 function root(
   req: express.Request,
@@ -495,18 +496,22 @@ async function balancesForAddressByTokenID(
   }
 }
 
-async function convertAddress(
+async function convertAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
   try {
     let address = req.params.address
+
+    // Validate input
     if (!address || address === "") {
       res.status(400)
       return res.json({ error: "address can not be empty" })
     }
-    const slpAddr = SLP.Address.toSLPAddress(req.params.address)
+
+    const slpAddr = SLP.Address.toSLPAddress(address)
+
     const obj: {
       [slpAddress: string]: any
       cashAddress: any
@@ -519,6 +524,8 @@ async function convertAddress(
     obj.slpAddress = slpAddr
     obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
     obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+
+    res.status(200)
     return res.json(obj)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
@@ -531,6 +538,54 @@ async function convertAddress(
       error: `Error in /address/convert/:address: ${err.message}`
     })
   }
+}
+
+async function convertAddressBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let addresses = req.body.addresses
+
+  // Reject if hashes is not an array.
+  if (!Array.isArray(addresses)) {
+    res.status(400)
+    return res.json({
+      error: "hashes needs to be an array. Use GET for single address."
+    })
+  }
+
+  // Convert each address in the array.
+  const convertedAddresses = []
+  for(let i=0; i < addresses.length; i++) {
+    const address = addresses[i]
+
+    // Validate input
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+
+    const slpAddr = SLP.Address.toSLPAddress(address)
+
+    const obj: {
+      [slpAddress: string]: any
+      cashAddress: any
+      legacyAddress: any
+    } = {
+      slpAddress: "",
+      cashAddress: "",
+      legacyAddress: ""
+    }
+    obj.slpAddress = slpAddr
+    obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
+    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+
+    convertedAddresses.push(obj)
+  }
+
+  res.status(200)
+  return res.json(convertedAddresses)
 }
 
 async function validateBulk(
@@ -610,7 +665,7 @@ module.exports = {
     listSingleToken,
     balancesForAddress,
     balancesForAddressByTokenID,
-    convertAddress,
+    convertAddressSingle,
     validateBulk,
     isValidSlpTxid
   }

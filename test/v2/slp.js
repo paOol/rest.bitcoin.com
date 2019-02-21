@@ -357,12 +357,13 @@ describe("#SLP", () => {
     // })
   })
 
-  describe("convertAddress()", () => {
-    const convertAddress = slpRoute.testableComponents.convertAddress
+  describe("convertAddressSingle()", () => {
+    const convertAddressSingle =
+      slpRoute.testableComponents.convertAddressSingle
 
     it("should throw 400 if address is empty", async () => {
       req.params.address = ""
-      const result = await convertAddress(req, res)
+      const result = await convertAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -379,7 +380,7 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
-      const result = await convertAddress(req, res)
+      const result = await convertAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["cashAddress", "legacyAddress", "slpAddress"])

@@ -5,6 +5,9 @@
   and integration tests. By default, TEST is set to 'unit'. Set this variable
   to 'integration' to run the tests against BCH mainnet.
 
+  TODO:
+  -Create e2e test for sendRawTransaction.
+
 */
 
 "use strict"
@@ -188,7 +191,7 @@ describe("#Raw-Transactions", () => {
       assert.include(result.error, "Encountered empty hex")
     })
 
-    it("should error on non-array single address", async () => {
+    it("should error on non-array single hex", async () => {
       req.body.hexes =
         "0200000001b9b598d7d6d72fc486b2b3a3c03c79b5bade6ec9a77ced850515ab5e64edcc21010000006b483045022100a7b1b08956abb8d6f322aa709d8583c8ea492ba0585f1a6f4f9983520af74a5a0220411aee4a9a54effab617b0508c504c31681b15f9b187179b4874257badd4139041210360cfc66fdacb650bc4c83b4e351805181ee696b7d5ab4667c57b2786f51c413dffffffff0210270000000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac786e9800000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac00000000"
 
@@ -263,12 +266,13 @@ describe("#Raw-Transactions", () => {
     })
   })
 
-  describe("decodeScript()", () => {
+  describe("decodeScriptSingle()", () => {
     // block route handler.
-    const decodeScript = rawtransactions.testableComponents.decodeScript
+    const decodeScriptSingle =
+      rawtransactions.testableComponents.decodeScriptSingle
 
     it("should throw error if hex is missing", async () => {
-      const result = await decodeScript(req, res)
+      const result = await decodeScriptSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -285,7 +289,7 @@ describe("#Raw-Transactions", () => {
       req.params.hex =
         "0200000001b9b598d7d6d72fc486b2b3a3c03c79b5bade6ec9a77ced850515ab5e64edcc21010000006b483045022100a7b1b08956abb8d6f322aa709d8583c8ea492ba0585f1a6f4f9983520af74a5a0220411aee4a9a54effab617b0508c504c31681b15f9b187179b4874257badd4139041210360cfc66fdacb650bc4c83b4e351805181ee696b7d5ab4667c57b2786f51c413dffffffff0210270000000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac786e9800000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac00000000"
 
-      const result = await decodeScript(req, res)
+      const result = await decodeScriptSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -299,7 +303,7 @@ describe("#Raw-Transactions", () => {
       //assert.include(result.error,"Network error: Could not communicate with full node","Error message expected")
     })
 
-    it("should GET /decodeScript", async () => {
+    it("should GET /decodeScriptSingle", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         nock(`${process.env.RPC_BASEURL}`)
@@ -310,10 +314,100 @@ describe("#Raw-Transactions", () => {
       req.params.hex =
         "0200000001b9b598d7d6d72fc486b2b3a3c03c79b5bade6ec9a77ced850515ab5e64edcc21010000006b483045022100a7b1b08956abb8d6f322aa709d8583c8ea492ba0585f1a6f4f9983520af74a5a0220411aee4a9a54effab617b0508c504c31681b15f9b187179b4874257badd4139041210360cfc66fdacb650bc4c83b4e351805181ee696b7d5ab4667c57b2786f51c413dffffffff0210270000000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac786e9800000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac00000000"
 
-      const result = await decodeScript(req, res)
+      const result = await decodeScriptSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["asm", "type", "p2sh"])
+    })
+  })
+
+  describe("decodeScriptBulk()", () => {
+    const decodeScriptBulk = rawtransactions.testableComponents.decodeScriptBulk
+
+    it("should throw 400 error if hexes array is missing", async () => {
+      const result = await decodeScriptBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "hexes must be an array")
+    })
+
+    it("should throw 400 error if hexes array is too large", async () => {
+      const testArray = []
+      for (var i = 0; i < 25; i++) testArray.push("")
+
+      req.body.hexes = testArray
+
+      const result = await decodeScriptBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Array too large. Max 20 hexes")
+    })
+
+    it("should throw 400 error if hexes is empty", async () => {
+      req.body.hexes = [""]
+
+      const result = await decodeScriptBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Encountered empty hex")
+    })
+
+    it("should error on non-array single hex", async () => {
+      req.body.hexes =
+        "0200000001b9b598d7d6d72fc486b2b3a3c03c79b5bade6ec9a77ced850515ab5e64edcc21010000006b483045022100a7b1b08956abb8d6f322aa709d8583c8ea492ba0585f1a6f4f9983520af74a5a0220411aee4a9a54effab617b0508c504c31681b15f9b187179b4874257badd4139041210360cfc66fdacb650bc4c83b4e351805181ee696b7d5ab4667c57b2786f51c413dffffffff0210270000000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac786e9800000000001976a914eb4b180def88e3f5625b2d8ae2c098ff7d85f66488ac00000000"
+
+      const result = await decodeScriptBulk(req, res)
+
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
+      assert.include(
+        result.error,
+        "hexes must be an array",
+        "Proper error message"
+      )
+    })
+
+    it("should decode an array with a single hex", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.RPC_BASEURL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockDecodeScript })
+      }
+
+      req.body.hexes = [
+        "4830450221009a51e00ec3524a7389592bc27bea4af5104a59510f5f0cfafa64bbd5c164ca2e02206c2a8bbb47eabdeed52f17d7df668d521600286406930426e3a9415fe10ed592012102e6e1423f7abde8b70bca3e78a7d030e5efabd3eb35c19302542b5fe7879c1a16"
+      ]
+
+      const result = await decodeScriptBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["asm", "type", "p2sh"])
+    })
+
+    it("should decode an array with a multiple hexes", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.RPC_BASEURL}`)
+          .post(``)
+          .times(2)
+          .reply(200, { result: mockData.mockDecodeScript })
+      }
+
+      req.body.hexes = [
+        "4830450221009a51e00ec3524a7389592bc27bea4af5104a59510f5f0cfafa64bbd5c164ca2e02206c2a8bbb47eabdeed52f17d7df668d521600286406930426e3a9415fe10ed592012102e6e1423f7abde8b70bca3e78a7d030e5efabd3eb35c19302542b5fe7879c1a16",
+        "4830450221009a51e00ec3524a7389592bc27bea4af5104a59510f5f0cfafa64bbd5c164ca2e02206c2a8bbb47eabdeed52f17d7df668d521600286406930426e3a9415fe10ed592012102e6e1423f7abde8b70bca3e78a7d030e5efabd3eb35c19302542b5fe7879c1a16"
+      ]
+
+      const result = await decodeScriptBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.equal(result.length, 2)
+      assert.hasAllKeys(result[0], ["asm", "type", "p2sh"])
     })
   })
 

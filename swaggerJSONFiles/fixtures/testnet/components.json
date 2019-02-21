@@ -32,6 +32,13 @@
     ]
   },
   {
+    "key": "SLPConvert",
+    "value": [
+      "bchtest:qzjtnzcvzxx7s0na88yrg3zl28wwvfp97538sgrrmr",
+      "bchtest:qp6hgvevf4gzz6l7pgcte3gaaud9km0l459fa23dul"
+    ]
+  },
+  {
     "key": "SLPTxids",
     "value": [
       "3ea2767c91d087d14dda8faef736cd39d6c6ebbd5f7d2c7e8de0df3360436bfb",

@@ -10,6 +10,9 @@
       "Txid": {
         "type": "string"
       },
+      "SLPConvert": {
+        "type": "string"
+      },
       "SLPTxid": {
         "type": "string"
       },
@@ -108,6 +111,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Txid"
+            },
+            "example": []
+          }
+        }
+      },
+      "SLPConvert": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SLPConvert"
             },
             "example": []
           }

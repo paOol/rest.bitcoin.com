@@ -1522,6 +1522,30 @@
         }
       }
     },
+    "/slp/convert": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "convert address to slpAddr, cashAddr and legacy",
+        "description": "convert address to slpAddr, cashAddr and legacy",
+        "operationId": "convertBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPConvert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/balancesForAddress/{address}": {
       "get": {
         "tags": ["slp"],

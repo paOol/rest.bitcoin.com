@@ -412,6 +412,20 @@ describe("#SLP", () => {
       assert.include(result.error, "Array too large")
     })
 
+    it("should error on malformed address", async () => {
+      try {
+        req.body.addresses = ["bitcoincash:qzs02v05l7qs5s5dwuj0cx5ehjm2c"]
+
+        await convertAddressBulk(req, res)
+
+        assert.equal(true, false, "Unexpected result!")
+      } catch (err) {
+        // console.log(`err.message: ${util.inspect(err.message)}`)
+
+        assert.include(err.message, `Unsupported address format`)
+      }
+    })
+
     it("should validate array with single element", async () => {
       req.body.addresses = [
         "bitcoincash:qzs02v05l7qs5s24srqju498qu55dwuj0cx5ehjm2c"

@@ -40,6 +40,7 @@ const password = process.env.RPC_PASSWORD
 router.get("/", root)
 router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
+router.post("/list", listBulkToken)
 router.get("/balancesForAddress/:address", balancesForAddress)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
@@ -236,6 +237,8 @@ async function listSingleToken(
       return res.json({ error: "tokenId can not be empty" })
     }
 
+    const t = await lookupToken(tokenId)
+/*
     const query = {
       v: 3,
       q: {
@@ -310,7 +313,8 @@ async function listSingleToken(
         id: "not found"
       }
     }
-
+*/
+    res.status(200)
     return res.json(t)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
@@ -320,6 +324,144 @@ async function listSingleToken(
     }
     res.status(500)
     return res.json({ error: `Error in /list/:tokenId: ${err.message}` })
+  }
+}
+
+async function listBulkToken(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    let tokenIds = req.body.tokenIds
+
+    // Reject if tokenIds is not an array.
+    if (!Array.isArray(tokenIds)) {
+      res.status(400)
+      return res.json({
+        error: "tokenIds needs to be an array. Use GET for single tokenId."
+      })
+    }
+
+    // Enforce no more than 20 txids.
+    if (tokenIds.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
+      return res.json({
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} tokenIds`
+      })
+    }
+
+    // Lookup each token in the array
+    const tokens = []
+    for(let i=0; i < tokenIds.length; i++) {
+      const tokenId = tokenIds[i]
+
+      // Validate each element.
+      if (!tokenId || tokenId === "") {
+        res.status(400)
+        return res.json({ error: "Empty tokenId encountered" })
+      }
+
+      const thisToken = await lookupToken(tokenId)
+      tokens.push(thisToken)
+    }
+
+    res.status(200)
+    return res.json(tokens)
+  } catch (err) {
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /list/:tokenId: ${err.message}` })
+  }
+}
+
+// This is a utility function in order to keep code DRY. It is used by the
+// single and bulk list*Token functions.
+async function lookupToken(tokenId) {
+  try {
+    const query = {
+      v: 3,
+      q: {
+        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
+        limit: 1000
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.BITDB_URL}q/${b64}`
+
+    const tokenRes = await axios.get(url)
+
+    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data)}`)
+    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
+
+    let formattedTokens: Array<any> = []
+
+    if (tokenRes.data.u.length) {
+      tokenRes.data.u.forEach((token: any) => {
+        let div = "1"
+        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
+          div += "0"
+        }
+
+        formattedTokens.push({
+          id: token.tx.h,
+          timestamp: token.blk
+            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
+            : "unconfirmed",
+          symbol: token.out[0].s4,
+          name: token.out[0].s5,
+          documentUri: token.out[0].s6,
+          documentHash: token.out[0].h7,
+          decimals: parseInt(token.out[0].h8),
+          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
+        })
+      })
+    }
+
+    if (tokenRes.data.c.length) {
+      tokenRes.data.c.forEach((token: any) => {
+        let div = "1"
+        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
+          div += "0"
+        }
+
+        formattedTokens.push({
+          id: token.tx.h,
+          timestamp: strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000)),
+          symbol: token.out[0].s4,
+          name: token.out[0].s5,
+          documentUri: token.out[0].s6,
+          documentHash: token.out[0].h7,
+          decimals: parseInt(token.out[0].h8),
+          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
+        })
+      })
+    }
+
+    //console.log(`formattedTokens: ${JSON.stringify(formattedTokens,null,2)}`)
+
+    let t
+    formattedTokens.forEach((token: any) => {
+      if (token.id === tokenId) t = token
+    })
+
+    // If token could not be found.
+    if (t === undefined) {
+      t = {
+        id: "not found"
+      }
+    }
+
+    return t
+  } catch(err) {
+    console.log(`Error in slp.ts/lookupToken()`)
+    throw err
   }
 }
 
@@ -671,6 +813,7 @@ module.exports = {
     root,
     list,
     listSingleToken,
+    listBulkToken,
     balancesForAddress,
     balancesForAddressByTokenID,
     convertAddressSingle,

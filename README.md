@@ -10,7 +10,7 @@ Testnet available at [trest.bitcoin.com](https://trest.bitcoin.com)
 
 ## Usage
 
-You can also run an instance of REST for your own full node
+You can also run an instance of REST for your own full node.
 
 ### Prerequisites
 
@@ -23,16 +23,20 @@ https://nodejs.org/en/
 #### build-essential package
 
 If you encounter
+
 ```
 gyp ERR! build error
 gyp ERR! stack Error: not found: make
 ```
 
 For Ubuntu
+
 ```
 sudo apt-get install build-essential
 ```
+
 For CENTOS
+
 ```
 RUN yum install -y make gcc*
 ```
@@ -121,6 +125,5 @@ PORT=3000 BITCOINCOM_BASEURL=http://localhost:3000/api/ RPC_BASEURL=http://local
 #### View in browser
 
 Finally open `http://localhost:3000/` and confirm you see the GUI
-
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/Bitcoin.com/rest.bitcoin.com.svg)](https://greenkeeper.io/)

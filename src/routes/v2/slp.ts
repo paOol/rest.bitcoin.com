@@ -39,7 +39,19 @@ const BitboxHTTP = axios.create({
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
+router.get("/", root)
+router.get("/list", list)
+router.get("/list/:tokenId", listSingleToken)
+router.post("/list", listBulkToken)
+router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
+router.get("/convert/:address", convertAddressSingle)
+router.post("/convert", convertAddressBulk)
+router.post("/validateTxid", validateBulk)
+
 // Retrieve raw transactions details from the full node.
+// TODO: move this function to a separate support library.
+// TODO: Add unit tests for this function.
 async function getRawTransactionsFromNode(txids: string[]) {
   try {
     const {
@@ -124,15 +136,6 @@ const requestConfig: IRequestConfig = {
     jsonrpc: "1.0"
   }
 }
-
-router.get("/", root)
-router.get("/list", list)
-router.get("/list/:tokenId", listSingleToken)
-router.get("/balancesForAddress/:address", balancesForAddress)
-router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
-router.get("/convert/:address", convertAddress)
-router.post("/validateTxid", validateBulk)
-router.get("/tokentransfer/:txhex", tokenTransfer)
 
 function root(
   req: express.Request,
@@ -236,6 +239,77 @@ async function listSingleToken(
       return res.json({ error: "tokenId can not be empty" })
     }
 
+    const t = await lookupToken(tokenId)
+
+    res.status(200)
+    return res.json(t)
+  } catch (err) {
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /list/:tokenId: ${err.message}` })
+  }
+}
+
+async function listBulkToken(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    let tokenIds = req.body.tokenIds
+
+    // Reject if tokenIds is not an array.
+    if (!Array.isArray(tokenIds)) {
+      res.status(400)
+      return res.json({
+        error: "tokenIds needs to be an array. Use GET for single tokenId."
+      })
+    }
+
+    // Enforce no more than 20 txids.
+    if (tokenIds.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
+      return res.json({
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} tokenIds`
+      })
+    }
+
+    // Lookup each token in the array
+    const tokens = []
+    for(let i=0; i < tokenIds.length; i++) {
+      const tokenId = tokenIds[i]
+
+      // Validate each element.
+      if (!tokenId || tokenId === "") {
+        res.status(400)
+        return res.json({ error: `Empty tokenId encountered in entry ${i}` })
+      }
+
+      const thisToken = await lookupToken(tokenId)
+      tokens.push(thisToken)
+    }
+
+    res.status(200)
+    return res.json(tokens)
+  } catch (err) {
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /list/:tokenId: ${err.message}` })
+  }
+}
+
+// This is a utility function in order to keep code DRY. It is used by the
+// single and bulk list*Token functions.
+async function lookupToken(tokenId) {
+  try {
     const query = {
       v: 3,
       q: {
@@ -301,7 +375,7 @@ async function listSingleToken(
 
     let t
     formattedTokens.forEach((token: any) => {
-      if (token.id === req.params.tokenId) t = token
+      if (token.id === tokenId) t = token
     })
 
     // If token could not be found.
@@ -311,15 +385,10 @@ async function listSingleToken(
       }
     }
 
-    return res.json(t)
-  } catch (err) {
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
-    res.status(500)
-    return res.json({ error: `Error in /list/:tokenId: ${err.message}` })
+    return t
+  } catch(err) {
+    //console.log(`Error in slp.ts/lookupToken()`)
+    throw err
   }
 }
 
@@ -496,18 +565,22 @@ async function balancesForAddressByTokenID(
   }
 }
 
-async function convertAddress(
+async function convertAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
   try {
     let address = req.params.address
+
+    // Validate input
     if (!address || address === "") {
       res.status(400)
       return res.json({ error: "address can not be empty" })
     }
-    const slpAddr = SLP.Address.toSLPAddress(req.params.address)
+
+    const slpAddr = SLP.Address.toSLPAddress(address)
+
     const obj: {
       [slpAddress: string]: any
       cashAddress: any
@@ -520,6 +593,8 @@ async function convertAddress(
     obj.slpAddress = slpAddr
     obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
     obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+
+    res.status(200)
     return res.json(obj)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
@@ -532,6 +607,62 @@ async function convertAddress(
       error: `Error in /address/convert/:address: ${err.message}`
     })
   }
+}
+
+async function convertAddressBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let addresses = req.body.addresses
+
+  // Reject if hashes is not an array.
+  if (!Array.isArray(addresses)) {
+    res.status(400)
+    return res.json({
+      error: "addresses needs to be an array. Use GET for single address."
+    })
+  }
+
+  // Enforce no more than 20 txids.
+  if (addresses.length > FREEMIUM_INPUT_SIZE) {
+    res.status(400)
+    return res.json({
+      error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
+    })
+  }
+
+  // Convert each address in the array.
+  const convertedAddresses = []
+  for(let i=0; i < addresses.length; i++) {
+    const address = addresses[i]
+
+    // Validate input
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+
+    const slpAddr = SLP.Address.toSLPAddress(address)
+
+    const obj: {
+      [slpAddress: string]: any
+      cashAddress: any
+      legacyAddress: any
+    } = {
+      slpAddress: "",
+      cashAddress: "",
+      legacyAddress: ""
+    }
+    obj.slpAddress = slpAddr
+    obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
+    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+
+    convertedAddresses.push(obj)
+  }
+
+  res.status(200)
+  return res.json(convertedAddresses)
 }
 
 async function validateBulk(
@@ -648,9 +779,11 @@ module.exports = {
     root,
     list,
     listSingleToken,
+    listBulkToken,
     balancesForAddress,
     balancesForAddressByTokenID,
-    convertAddress,
+    convertAddressSingle,
+    convertAddressBulk,
     validateBulk,
     isValidSlpTxid,
     tokenTransfer

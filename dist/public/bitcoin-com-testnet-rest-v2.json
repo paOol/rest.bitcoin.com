@@ -10,6 +10,18 @@
 			"Txid": {
 				"type": "string"
 			},
+			"SLPConvert": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPConvert"
+						},
+						"example": []
+					}
+				}
+			},
 			"SLPTxid": {
 				"type": "string"
 			},
@@ -122,6 +134,18 @@
 							"3ea2767c91d087d14dda8faef736cd39d6c6ebbd5f7d2c7e8de0df3360436bfb",
 							"cce4e8eb4b3160b93ceecb0956cde405d85b42cbcb3fa1b4e9a9bedaf3476f05"
 						]
+					}
+				}
+			},
+			"SLPListBulk": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPListBulk"
+						},
+						"example": []
 					}
 				}
 			},
@@ -1091,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "trest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "2.2.6",
+		"version": "2.3.1",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2306,7 +2330,7 @@
 				],
 				"summary": "Decode a hex-encoded script.",
 				"description": "Decode a hex-encoded script.",
-				"operationId": "decodeScript",
+				"operationId": "decodeScriptSingle",
 				"parameters": [
 					{
 						"in": "path",
@@ -2332,6 +2356,35 @@
 					},
 					"400": {
 						"description": "Argument must be hexadecimal string"
+					}
+				}
+			}
+		},
+		"/rawtransactions/decodeScript": {
+			"post": {
+				"tags": [
+					"rawtransactions"
+				],
+				"summary": "Decode multiple hex-encoded scripts.",
+				"description": "Decode multiple hex-encoded scripts.",
+				"operationId": "decodeScriptBulk",
+				"requestBody": {
+					"description": "Array of hexes",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Hexes"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful operation"
+					},
+					"400": {
+						"description": "TX decode failed"
 					}
 				}
 			}
@@ -2412,6 +2465,36 @@
 				}
 			}
 		},
+		"/rawtransactions/sendRawTransaction/{hex}": {
+			"get": {
+				"tags": [
+					"rawtransactions"
+				],
+				"summary": "Submits single raw transactions to local node and network.",
+				"description": "Submits single raw transaction (serialized, hex-encoded) to local node and network.",
+				"operationId": "sendRawTransactionSingle",
+				"parameters": [
+					{
+						"name": "hex",
+						"in": "path",
+						"description": "the raw transaction hex",
+						"required": true,
+						"example": "",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					},
+					"400": {
+						"description": "Transaction not found"
+					}
+				}
+			}
+		},
 		"/rawtransactions/sendRawTransaction": {
 			"post": {
 				"tags": [
@@ -2419,7 +2502,7 @@
 				],
 				"summary": "Submits multiple raw transactions to local node and network.",
 				"description": "Submits multiple raw transaction (serialized, hex-encoded) to local node and network.",
-				"operationId": "sendRawTransaction",
+				"operationId": "sendRawTransactionBulk",
 				"requestBody": {
 					"description": "Array of raw tx hexes",
 					"required": true,
@@ -2588,13 +2671,24 @@
 			}
 		},
 		"/slp/list": {
-			"get": {
+			"post": {
 				"tags": [
 					"slp"
 				],
-				"summary": "list",
-				"description": "List all SLP tokens",
-				"operationId": "listAll",
+				"summary": "list token information",
+				"description": "List multiple SLP tokens by id",
+				"operationId": "listBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPListBulk"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"
@@ -2649,6 +2743,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/convert": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "convert address to slpAddr, cashAddr and legacy",
+				"description": "convert address to slpAddr, cashAddr and legacy",
+				"operationId": "convertBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPConvert"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"

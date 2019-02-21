@@ -10,6 +10,18 @@
 			"Txid": {
 				"type": "string"
 			},
+			"SLPConvert": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPConvert"
+						},
+						"example": []
+					}
+				}
+			},
 			"SLPTxid": {
 				"type": "string"
 			},
@@ -122,6 +134,18 @@
 							"3ea2767c91d087d14dda8faef736cd39d6c6ebbd5f7d2c7e8de0df3360436bfb",
 							"cce4e8eb4b3160b93ceecb0956cde405d85b42cbcb3fa1b4e9a9bedaf3476f05"
 						]
+					}
+				}
+			},
+			"SLPListBulk": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPListBulk"
+						},
+						"example": []
 					}
 				}
 			},

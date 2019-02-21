@@ -32,27 +32,14 @@ const requestConfig: IRequestConfig = {
 }
 
 router.get("/", root)
-router.get(
-  "/decodeRawTransaction/:hex",
-  decodeRawTransactionSingle
-)
-router.post(
-  "/decodeRawTransaction",
-  decodeRawTransactionBulk
-)
-router.get("/decodeScript/:hex", decodeScript)
-router.post(
-  "/getRawTransaction",
-  getRawTransactionBulk
-)
-router.get(
-  "/getRawTransaction/:txid",
-  getRawTransactionSingle
-)
-router.post(
-  "/sendRawTransaction",
-  sendRawTransaction
-)
+router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
+router.post("/decodeRawTransaction", decodeRawTransactionBulk)
+router.get("/decodeScript/:hex", decodeScriptSingle)
+router.post("/decodeScript", decodeScriptBulk)
+router.post("/getRawTransaction", getRawTransactionBulk)
+router.get("/getRawTransaction/:txid", getRawTransactionSingle)
+router.post("/sendRawTransaction", sendRawTransactionBulk)
+router.get("/sendRawTransaction/:hex", sendRawTransactionSingle)
 
 function root(
   req: express.Request,
@@ -217,8 +204,8 @@ async function decodeRawTransactionBulk(
 }
 
 // Decode a raw transaction from hex to assembly.
-// GET
-async function decodeScript(
+// GET single
+async function decodeScriptSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -245,6 +232,80 @@ async function decodeScript(
 
     const response = await BitboxHTTP(requestConfig)
     return res.json(response.data.result)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    // Write out error to error log.
+    //logger.error(`Error in rawtransactions/decodeScript: `, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+// Decode a raw transaction from hex to assembly.
+// POST bulk
+async function decodeScriptBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const hexes = req.body.hexes
+
+    // Validation
+    if (!Array.isArray(hexes)) {
+      res.status(400)
+      return res.json({ error: "hexes must be an array" })
+    }
+    if (hexes.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
+      return res.json({
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+      })
+    }
+
+    // Validate each hex in the array
+    for(let i = 0; i < hexes.length; i++) {
+      const hex = hexes[i]
+
+      // Throw an error if hex is empty.
+      if (!hex || hex === "") {
+        res.status(400)
+        return res.json({ error: "Encountered empty hex" })
+      }
+    }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
+
+    // Loop through each hex and create an array of promises
+    const promises = hexes.map(async (hex: any) => {
+      requestConfig.data.id = "decodescript"
+      requestConfig.data.method = "decodescript"
+      requestConfig.data.params = [hex]
+
+      const response = await BitboxHTTP(requestConfig)
+      return response
+    })
+
+    // Wait for all parallel promises to return.
+    const resolved: Array<any> = await Promise.all(promises)
+
+    // Retrieve the data from each resolved promise.
+    const result = resolved.map(x => x.data.result)
+
+    res.status(200)
+    return res.json(result)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -394,7 +455,7 @@ async function getRawTransactionSingle(
 }
 
 // Transmit a raw transaction to the BCH network.
-async function sendRawTransaction(
+async function sendRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -403,11 +464,18 @@ async function sendRawTransaction(
     // Validation
     const hexes = req.body.hexes
 
-    // Reject if input is not an array.
+    // Reject if input is not an array
     if (!Array.isArray(hexes)) {
       res.status(400)
       return res.json({ error: "hex must be an array" })
     }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
 
     // Reject if there are too many elements in the array.
     if (hexes.length > FREEMIUM_INPUT_SIZE) {
@@ -429,13 +497,6 @@ async function sendRawTransaction(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Dev Note CT 1/31/2019:
     // Sending the 'sendrawtrnasaction' RPC call to a full node in parallel will
     // not work. Testing showed that the full node will return the same TXID for
@@ -445,21 +506,21 @@ async function sendRawTransaction(
 
     // How to send TX hexes in parallel the WRONG WAY:
     /*
-    // Collect an array of promises.
-    const promises = hexes.map(async (hex: any) => {
-      requestConfig.data.id = "sendrawtransaction"
-      requestConfig.data.method = "sendrawtransaction"
-      requestConfig.data.params = [hex]
+          // Collect an array of promises.
+          const promises = hexes.map(async (hex: any) => {
+            requestConfig.data.id = "sendrawtransaction"
+            requestConfig.data.method = "sendrawtransaction"
+            requestConfig.data.params = [hex]
 
-      return await BitboxHTTP(requestConfig)
-    })
+            return await BitboxHTTP(requestConfig)
+          })
 
-    // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+          // Wait for all parallel Insight requests to return.
+          const axiosResult: Array<any> = await axios.all(promises)
 
-    // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
-    */
+          // Retrieve the data part of the result.
+          const result = axiosResult.map(x => x.data.result)
+          */
 
     // Sending them serially.
     const result = []
@@ -490,15 +551,71 @@ async function sendRawTransaction(
   }
 }
 
+// Transmit a raw transaction to the BCH network.
+async function sendRawTransactionSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const hex = req.params.hex // URL parameter
+
+    // Reject if input is not an array or a string
+    if (typeof hex !== "string") {
+      res.status(400)
+      return res.json({ error: "hex must be a string" })
+    }
+
+    // Validation
+    if (hex === "") {
+      res.status(400)
+      return res.json({
+        error: `Encountered empty hex`
+      })
+    }
+
+    const {
+      BitboxHTTP,
+      username,
+      password,
+      requestConfig
+    } = routeUtils.setEnvVars()
+
+    // RPC call
+    requestConfig.data.id = "sendrawtransaction"
+    requestConfig.data.method = "sendrawtransaction"
+    requestConfig.data.params = [hex]
+
+    const rpcResult = await BitboxHTTP(requestConfig)
+
+    const result = rpcResult.data.result
+
+    res.status(200)
+    return res.json(result)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
     root,
     decodeRawTransactionSingle,
     decodeRawTransactionBulk,
-    decodeScript,
+    decodeScriptSingle,
+    decodeScriptBulk,
     getRawTransactionBulk,
     getRawTransactionSingle,
-    sendRawTransaction
+    sendRawTransactionBulk,
+    sendRawTransactionSingle
   }
 }

@@ -2671,6 +2671,19 @@
 			}
 		},
 		"/slp/list": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list",
+				"description": "List all SLP tokens",
+				"operationId": "listAll",
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			},
 			"post": {
 				"tags": [
 					"slp"

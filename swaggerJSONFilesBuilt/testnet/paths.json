@@ -1207,7 +1207,7 @@
 				],
 				"summary": "Decode a hex-encoded script.",
 				"description": "Decode a hex-encoded script.",
-				"operationId": "decodeScript",
+				"operationId": "decodeScriptSingle",
 				"parameters": [
 					{
 						"in": "path",
@@ -1233,6 +1233,35 @@
 					},
 					"400": {
 						"description": "Argument must be hexadecimal string"
+					}
+				}
+			}
+		},
+		"/rawtransactions/decodeScript": {
+			"post": {
+				"tags": [
+					"rawtransactions"
+				],
+				"summary": "Decode multiple hex-encoded scripts.",
+				"description": "Decode multiple hex-encoded scripts.",
+				"operationId": "decodeScriptBulk",
+				"requestBody": {
+					"description": "Array of hexes",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Hexes"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful operation"
+					},
+					"400": {
+						"description": "TX decode failed"
 					}
 				}
 			}

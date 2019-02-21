@@ -137,6 +137,18 @@
 					}
 				}
 			},
+			"SLPListBulk": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPListBulk"
+						},
+						"example": []
+					}
+				}
+			},
 			"SLPTxids": {
 				"type": "object",
 				"properties": {
@@ -2659,13 +2671,24 @@
 			}
 		},
 		"/slp/list": {
-			"get": {
+			"post": {
 				"tags": [
 					"slp"
 				],
-				"summary": "list",
-				"description": "List all SLP tokens",
-				"operationId": "listAll",
+				"summary": "list token information",
+				"description": "List multiple SLP tokens by id",
+				"operationId": "listBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPListBulk"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"

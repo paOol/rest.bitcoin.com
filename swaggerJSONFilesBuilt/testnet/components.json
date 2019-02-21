@@ -137,6 +137,18 @@
 					}
 				}
 			},
+			"SLPListBulk": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPListBulk"
+						},
+						"example": []
+					}
+				}
+			},
 			"SLPTxids": {
 				"type": "object",
 				"properties": {

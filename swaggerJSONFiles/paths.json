@@ -1497,6 +1497,30 @@
         }
       }
     },
+    "/slp/list": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "list token information",
+        "description": "List multiple SLP tokens by id",
+        "operationId": "listBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPListBulk" 
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/convert/{address}": {
       "get": {
         "tags": ["slp"],

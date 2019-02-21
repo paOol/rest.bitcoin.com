@@ -39,6 +39,13 @@
     ]
   },
   {
+    "key": "SLPListBulk",
+    "value": [
+      "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a",
+      "c35a87afad11c8d086c1449ffd8b0a84324e72b15b1bcfdf166a493551b4eea6"
+    ]
+  },
+  {
     "key": "SLPTxids",
     "value": [
       "88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa",

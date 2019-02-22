@@ -788,8 +788,53 @@ async function txDetails(
       txObj.vout[i].tokens = thisTokenTransfer
     }
 
+    // Create array of input metadata.
+    const vin = []
+    for(let i=0; i < txObj.vin.length; i++) {
+      let addr = 'unknown' // default value
+      let tokenQty = 'unknown' // default value
+
+      // Need to add logic here to detect address and token inputs.
+
+      vin.push({
+        address: addr,
+        tokensIn: tokenQty
+      })
+    }
+
+    // Create an array of output metadata.
+    const vout = []
+    for(let i=0; i < txObj.vout.length; i++) {
+      let addr = 'unknown' // default value
+      let tokenQty = 'unknown' // default value
+
+      const thisVout = txObj.vout[i]
+
+      // Capture data if it exists.
+      try {
+        if(thisVout.scriptPubKey.addresses) addr = thisVout.scriptPubKey.addresses
+        if(thisVout.tokens) tokenQty = thisVout.tokens
+      } catch(e) {}
+
+      vout.push({
+        address: addr,
+        tokensOut: tokenQty
+      })
+    }
+
+    // Consolidate the metadata.
+    const result = {
+      inputs: vin,
+      outputs: vout,
+      symbol: txObj.tokenInfo.symbol,
+      tokenId: txObj.tokenInfo.id,
+      decimals: txObj.tokenInfo.decimals
+    }
+
+
+
     //return await slpValidator.isValidSlpTxid(txid)
-    return txObj
+    return result
   } catch (err) {
     console.log(`Error in tokenTransfer(): `, err)
 

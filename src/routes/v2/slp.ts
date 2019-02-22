@@ -8,7 +8,7 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 import * as Bitcore from 'bitcore-lib-cash';
-const transaction = require("./transaction")
+const rawtransactions = require("./rawtransactions")
 
 const FREEMIUM_INPUT_SIZE = 20
 
@@ -24,8 +24,8 @@ const SLPSDK = require("slp-sdk/lib/SLP").default
 const SLP = new SLPSDK()
 
 // Instantiate SLPJS.
-//const slp = require("slpjs")
-const slp = require("/home/trout/work/bch/slpjs")
+const slp = require("slpjs")
+//const slp = require("/home/trout/work/bch/slpjs")
 const slpjs = new slp.Slp(BITBOX)
 const utils = slp.Utils
 
@@ -49,7 +49,7 @@ router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
-router.get("/tokentransfer/:txhex", tokenTransfer)
+router.get("/txDetails/:txid", txDetails)
 
 // Retrieve raw transactions details from the full node.
 // TODO: move this function to a separate support library.
@@ -736,43 +736,45 @@ async function isValidSlpTxid(txid: string): Promise<boolean> {
   return isValid
 }
 
-async function tokenTransfer(
+async function txDetails(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
   try {
     const txid = req.params.txid
-    const txhex = req.params.txhex
+    //const txhex = req.params.txhex
 
-    const txObj = await transaction.transactionsFromInsight(txid)
-    console.log(`txObj: ${util.inspect(txObj)}`)
-    console.log(`txObj.vout: ${util.inspect(txObj.vout)}`)
-    console.log(`txObj.vout[2].scriptPubKey: ${util.inspect(txObj.vout[2].scriptPubKey)}`)
+    // Get normal BCH details on the transaction.
+    //const txObj = await transaction.transactionsFromInsight(txid)
+    const txObj = await rawtransactions.getRawTransactionsFromNode(txid, 1)
+    //console.log(`txObj: ${util.inspect(txObj)}`)
+    //console.log(`txObj.vout: ${util.inspect(txObj.vout)}`)
+    //console.log(`txObj.vout[2].scriptPubKey: ${util.inspect(txObj.vout[2].scriptPubKey)}`)
 
     // Get the TX Hex from the TXID
-    console.log(`txhex: ${util.inspect(txhex)}`)
+    //console.log(`txhex: ${util.inspect(txhex)}`)
 
     // Create a Bitcore transaction object from the raw hex
-    const txn = new Bitcore.Transaction(txhex)
+    const txn = new Bitcore.Transaction(txObj.hex)
 
     // parse the SLP output
     const slpOut = slpjs.parseSlpOutputScript(txn.outputs[0]._scriptBuffer)
-    console.log(`slpOut: ${util.inspect(slpOut)}`)
+    //console.log(`slpOut: ${util.inspect(slpOut)}`)
 
     // Get token info from the tokenId
     const tokenId = slpOut.tokenIdHex
-    console.log(`tokenId: ${tokenId}`)
+    //console.log(`tokenId: ${tokenId}`)
     const thisToken = await lookupToken(tokenId)
-    console.log(`thisToken: ${util.inspect(thisToken)}`)
+    //console.log(`thisToken: ${util.inspect(thisToken)}`)
 
     // Add the token info to the tx object.
     txObj.tokenInfo = thisToken
 
-    console.log(`slpOut.sendOutputs: ${util.inspect(slpOut.sendOutputs)}`)
-    console.log(`slpOut.sendOutputs[0].c: ${util.inspect(slpOut.sendOutputs[0].toFixed()/Math.pow(10,thisToken.decimals))}`)
-    console.log(`slpOut.sendOutputs[1].c: ${util.inspect(slpOut.sendOutputs[1].toFixed()/Math.pow(10,thisToken.decimals))}`)
-    console.log(`slpOut.sendOutputs[2].c: ${util.inspect(slpOut.sendOutputs[2].toFixed()/Math.pow(10,thisToken.decimals))}`)
+    //console.log(`slpOut.sendOutputs: ${util.inspect(slpOut.sendOutputs)}`)
+    //console.log(`slpOut.sendOutputs[0].c: ${util.inspect(slpOut.sendOutputs[0].toFixed()/Math.pow(10,thisToken.decimals))}`)
+    //console.log(`slpOut.sendOutputs[1].c: ${util.inspect(slpOut.sendOutputs[1].toFixed()/Math.pow(10,thisToken.decimals))}`)
+    //console.log(`slpOut.sendOutputs[2].c: ${util.inspect(slpOut.sendOutputs[2].toFixed()/Math.pow(10,thisToken.decimals))}`)
     //console.log(`slpOut.genesisOrMintQuantity.c: ${util.inspect(slpOut.genesisOrMintQuantity.c)}`)
 
     // Dev Note: Assuming output values from slpjs.parseSlpOutputScript() always
@@ -818,6 +820,6 @@ module.exports = {
     convertAddressBulk,
     validateBulk,
     isValidSlpTxid,
-    tokenTransfer
+    txDetails
   }
 }

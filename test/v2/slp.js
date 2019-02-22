@@ -737,6 +737,7 @@ describe("#SLP", () => {
         const result = await txDetails(req, res)
         //console.log(`result: ${util.inspect(result)}`)
         //console.log(`result.vout: ${util.inspect(result.vout)}`)
+        console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
         assert.hasAnyKeys(result, ["tokenInfo"])
         assert.hasAnyKeys(result.vout[0], ["tokens"])

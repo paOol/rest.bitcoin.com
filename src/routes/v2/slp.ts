@@ -747,26 +747,15 @@ async function tokenTransfer(
 
     const txObj = await transaction.transactionsFromInsight(txid)
     console.log(`txObj: ${util.inspect(txObj)}`)
+    console.log(`txObj.vout: ${util.inspect(txObj.vout)}`)
+    console.log(`txObj.vout[2].scriptPubKey: ${util.inspect(txObj.vout[2].scriptPubKey)}`)
 
     // Get the TX Hex from the TXID
     console.log(`txhex: ${util.inspect(txhex)}`)
 
     // Create a Bitcore transaction object from the raw hex
     const txn = new Bitcore.Transaction(txhex)
-/*
-    const txObj = txn.toObject()
-    console.log(`txObj: ${util.inspect(txObj)}`)
-    console.log(`txObj.inputs[0]: ${util.inspect(txObj.inputs[0])}`)
-    console.log(`txObj.inputs[1]: ${util.inspect(txObj.inputs[1])}`)
-    console.log(`txObj.outputs[0]: ${util.inspect(txObj.outputs[0])}`)
-    console.log(`txObj.outputs[1]: ${util.inspect(txObj.outputs[1])}`)
-    console.log(`txObj.outputs[2]: ${util.inspect(txObj.outputs[2])}`)
-    console.log(`txObj.outputs[3]: ${util.inspect(txObj.outputs[3])}`)
 
-    const script = new Bitcore.Script(txObj.outputs[3].script)
-    const addr = script.getAddressInfo()
-    console.log(`addr: ${JSON.stringify(addr.hashBuffer)}`)
-*/
     // parse the SLP output
     const slpOut = slpjs.parseSlpOutputScript(txn.outputs[0]._scriptBuffer)
     console.log(`slpOut: ${util.inspect(slpOut)}`)
@@ -777,6 +766,8 @@ async function tokenTransfer(
     const thisToken = await lookupToken(tokenId)
     console.log(`thisToken: ${util.inspect(thisToken)}`)
 
+    // Add the token info to the tx object.
+    txObj.tokenInfo = thisToken
 
     console.log(`slpOut.sendOutputs: ${util.inspect(slpOut.sendOutputs)}`)
     console.log(`slpOut.sendOutputs[0].c: ${util.inspect(slpOut.sendOutputs[0].toFixed()/Math.pow(10,thisToken.decimals))}`)
@@ -784,8 +775,19 @@ async function tokenTransfer(
     console.log(`slpOut.sendOutputs[2].c: ${util.inspect(slpOut.sendOutputs[2].toFixed()/Math.pow(10,thisToken.decimals))}`)
     //console.log(`slpOut.genesisOrMintQuantity.c: ${util.inspect(slpOut.genesisOrMintQuantity.c)}`)
 
+    // Dev Note: Assuming output values from slpjs.parseSlpOutputScript() always
+    // line up with the output values from transaction.transactionsFromInsight().
+    // They should, since they are based on the same TXID and TX hex.
+    for(let i=0; i < slpOut.sendOutputs.length; i++) {
+      // Convert the SLP information to a floating point number.
+      const thisTokenTransfer = slpOut.sendOutputs[i].toFixed()/Math.pow(10,thisToken.decimals)
+
+      // Add the token quantity to the tx data.
+      txObj.vout[i].tokens = thisTokenTransfer
+    }
+
     //return await slpValidator.isValidSlpTxid(txid)
-    return true
+    return txObj
   } catch (err) {
     console.log(`Error in tokenTransfer(): `, err)
 

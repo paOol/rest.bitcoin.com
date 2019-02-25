@@ -8,6 +8,15 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
+let BigNumber = require("bignumber.js")
+
+let createBigNumber = (e, c) => {
+  let a = new BigNumber(0)
+  a.e = e
+  a.c = c
+  return a
+}
+
 const FREEMIUM_INPUT_SIZE = 20
 
 // Used to convert error messages to strings, to safely pass to users.
@@ -46,6 +55,7 @@ router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
+router.get("/tokenStats/:tokenId", tokenStats)
 
 // Retrieve raw transactions details from the full node.
 // TODO: move this function to a separate support library.
@@ -278,7 +288,7 @@ async function listBulkToken(
 
     // Lookup each token in the array
     const tokens = []
-    for(let i=0; i < tokenIds.length; i++) {
+    for (let i = 0; i < tokenIds.length; i++) {
       const tokenId = tokenIds[i]
 
       // Validate each element.
@@ -384,7 +394,7 @@ async function lookupToken(tokenId) {
     }
 
     return t
-  } catch(err) {
+  } catch (err) {
     //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
@@ -632,7 +642,7 @@ async function convertAddressBulk(
 
   // Convert each address in the array.
   const convertedAddresses = []
-  for(let i=0; i < addresses.length; i++) {
+  for (let i = 0; i < addresses.length; i++) {
     const address = addresses[i]
 
     // Validate input
@@ -732,6 +742,88 @@ async function isValidSlpTxid(txid: string): Promise<boolean> {
   return isValid
 }
 
+async function tokenStats(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let tokenId: string = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
+  try {
+    const query = {
+      v: 3,
+      c: ["t"],
+      q: {
+        find: {
+          "tokenDetails.tokenIdHex": tokenId
+        },
+        limit: 10
+      },
+      r: {
+        f: "[.[] | { tokenDetails: .tokenDetails, tokenStats: .tokenStats } ]"
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const response = await axios.get(url)
+
+    let tokenDetailsData = response.data.t[0].tokenDetails
+    let tokenStatsData = response.data.t[0].tokenStats
+    let decimals = tokenDetailsData.decimals
+    let tokenStats = {
+      tokenId: tokenDetailsData.tokenIdHex,
+      documentUri: tokenDetailsData.documentUri,
+      documentHash: tokenDetailsData.documentSha256,
+      symbol: tokenDetailsData.symbol,
+      name: tokenDetailsData.name,
+      decimals: tokenDetailsData.decimals,
+      txnsSinceGenesis: tokenStatsData.qty_valid_txns_since_genesis,
+      validUtxos: tokenStatsData.qty_valid_token_utxos,
+      validAddresses: tokenStatsData.qty_valid_token_addresses,
+      circulatingSupply: createBigNumber(
+        tokenStatsData.qty_token_circulating_supply.e,
+        tokenStatsData.qty_token_circulating_supply.c
+      )
+        .dividedBy(10 ** decimals)
+        .toString(),
+      totalBurned: createBigNumber(
+        tokenStatsData.qty_token_burned.e,
+        tokenStatsData.qty_token_burned.c
+      )
+        .dividedBy(10 ** decimals)
+        .toString(),
+      totalMinted: createBigNumber(
+        tokenStatsData.qty_token_minted.e,
+        tokenStatsData.qty_token_minted.c
+      )
+        .dividedBy(10 ** decimals)
+        .toString(),
+      satoshisLockedUp: tokenStatsData.qty_satoshis_locked_up
+    }
+
+    res.json(tokenStats)
+
+    return tokenStats
+  } catch (err) {
+    console.log(err)
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /tokenStats: ${err.message}` })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -744,6 +836,7 @@ module.exports = {
     convertAddressSingle,
     convertAddressBulk,
     validateBulk,
-    isValidSlpTxid
+    isValidSlpTxid,
+    tokenStats
   }
 }

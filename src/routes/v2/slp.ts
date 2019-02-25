@@ -813,7 +813,6 @@ async function tokenStats(
 
     return tokenStats
   } catch (err) {
-    console.log(err)
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)

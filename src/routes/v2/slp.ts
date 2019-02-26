@@ -47,7 +47,7 @@ router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
 
-if (process.env.NON_JS_FRAMEWORK) {
+if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
     "/createTokenType1/:fundingAddress/:fundingWif/:tokenReceiverAddress/:batonReceiverAddress/:bchChangeReceiverAddress/:decimals/:name/:symbol/:documentUri/:documentHash/:initialTokenQty",
     createTokenType1
@@ -763,18 +763,84 @@ async function createTokenType1(
   res: express.Response,
   next: express.NextFunction
 ) {
+  let fundingAddress = req.params.fundingAddress
+  if (!fundingAddress || fundingAddress === "") {
+    res.status(400)
+    return res.json({ error: "fundingAddress can not be empty" })
+  }
+
+  let fundingWif = req.params.fundingWif
+  if (!fundingWif || fundingWif === "") {
+    res.status(400)
+    return res.json({ error: "fundingWif can not be empty" })
+  }
+
+  let tokenReceiverAddress = req.params.tokenReceiverAddress
+  if (!tokenReceiverAddress || tokenReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "tokenReceiverAddress can not be empty" })
+  }
+
+  let batonReceiverAddress = req.params.batonReceiverAddress
+  if (!batonReceiverAddress || batonReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "batonReceiverAddress can not be empty" })
+  }
+
+  let bchChangeReceiverAddress = req.params.bchChangeReceiverAddress
+  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
+  }
+
+  let decimals = req.params.decimals
+  if (!decimals || decimals === "") {
+    res.status(400)
+    return res.json({ error: "decimals can not be empty" })
+  }
+
+  let name = req.params.name
+  if (!name || name === "") {
+    res.status(400)
+    return res.json({ error: "name can not be empty" })
+  }
+
+  let symbol = req.params.symbol
+  if (!symbol || symbol === "") {
+    res.status(400)
+    return res.json({ error: "symbol can not be empty" })
+  }
+
+  let documentUri = req.params.documentUri
+  if (!documentUri || documentUri === "") {
+    res.status(400)
+    return res.json({ error: "documentUri can not be empty" })
+  }
+
+  let documentHash = req.params.documentHash
+  if (!documentHash || documentHash === "") {
+    res.status(400)
+    return res.json({ error: "documentHash can not be empty" })
+  }
+
+  let initialTokenQty = req.params.initialTokenQty
+  if (!initialTokenQty || initialTokenQty === "") {
+    res.status(400)
+    return res.json({ error: "initialTokenQty can not be empty" })
+  }
+
   let token = await SLP.TokenType1.create({
-    fundingAddress: req.params.fundingAddress,
-    fundingWif: req.params.fundingWif,
-    tokenReceiverAddress: req.params.tokenReceiverAddress,
-    batonReceiverAddress: req.params.batonReceiverAddress,
-    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
-    decimals: req.params.decimals,
-    name: req.params.name,
-    symbol: req.params.symbol,
-    documentUri: req.params.documentUri,
-    documentHash: req.params.documentHash,
-    initialTokenQty: req.params.initialTokenQty
+    fundingAddress: fundingAddress,
+    fundingWif: fundingWif,
+    tokenReceiverAddress: tokenReceiverAddress,
+    batonReceiverAddress: batonReceiverAddress,
+    bchChangeReceiverAddress: bchChangeReceiverAddress,
+    decimals: decimals,
+    name: name,
+    symbol: symbol,
+    documentUri: documentUri,
+    documentHash: documentHash,
+    initialTokenQty: initialTokenQty
   })
 
   res.status(200)
@@ -786,14 +852,56 @@ async function mintTokenType1(
   res: express.Response,
   next: express.NextFunction
 ) {
+  let fundingAddress = req.params.fundingAddress
+  if (!fundingAddress || fundingAddress === "") {
+    res.status(400)
+    return res.json({ error: "fundingAddress can not be empty" })
+  }
+
+  let fundingWif = req.params.fundingWif
+  if (!fundingWif || fundingWif === "") {
+    res.status(400)
+    return res.json({ error: "fundingWif can not be empty" })
+  }
+
+  let tokenReceiverAddress = req.params.tokenReceiverAddress
+  if (!tokenReceiverAddress || tokenReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "tokenReceiverAddress can not be empty" })
+  }
+
+  let batonReceiverAddress = req.params.batonReceiverAddress
+  if (!batonReceiverAddress || batonReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "batonReceiverAddress can not be empty" })
+  }
+
+  let bchChangeReceiverAddress = req.params.bchChangeReceiverAddress
+  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
+  }
+
+  let tokenId = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
+  let additionalTokenQty = req.params.additionalTokenQty
+  if (!additionalTokenQty || additionalTokenQty === "") {
+    res.status(400)
+    return res.json({ error: "additionalTokenQty can not be empty" })
+  }
+
   let mint = await SLP.TokenType1.mint({
-    fundingAddress: req.params.fundingAddress,
-    fundingWif: req.params.fundingWif,
-    tokenReceiverAddress: req.params.tokenReceiverAddress,
-    batonReceiverAddress: req.params.batonReceiverAddress,
-    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
-    tokenId: req.params.tokenId,
-    additionalTokenQty: req.params.additionalTokenQty
+    fundingAddress: fundingAddress,
+    fundingWif: fundingWif,
+    tokenReceiverAddress: tokenReceiverAddress,
+    batonReceiverAddress: batonReceiverAddress,
+    bchChangeReceiverAddress: bchChangeReceiverAddress,
+    tokenId: tokenId,
+    additionalTokenQty: additionalTokenQty
   })
 
   res.status(200)
@@ -805,13 +913,48 @@ async function sendTokenType1(
   res: express.Response,
   next: express.NextFunction
 ) {
+  let fundingAddress = req.params.fundingAddress
+  if (!fundingAddress || fundingAddress === "") {
+    res.status(400)
+    return res.json({ error: "fundingAddress can not be empty" })
+  }
+
+  let fundingWif = req.params.fundingWif
+  if (!fundingWif || fundingWif === "") {
+    res.status(400)
+    return res.json({ error: "fundingWif can not be empty" })
+  }
+
+  let tokenReceiverAddress = req.params.tokenReceiverAddress
+  if (!tokenReceiverAddress || tokenReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "tokenReceiverAddress can not be empty" })
+  }
+
+  let bchChangeReceiverAddress = req.params.bchChangeReceiverAddress
+  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
+  }
+
+  let tokenId = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
+  let amount = req.params.amount
+  if (!amount || amount === "") {
+    res.status(400)
+    return res.json({ error: "amount can not be empty" })
+  }
   let send = await SLP.TokenType1.send({
-    fundingAddress: req.params.fundingAddress,
-    fundingWif: req.params.fundingWif,
-    tokenReceiverAddress: req.params.tokenReceiverAddress,
-    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
-    tokenId: req.params.tokenId,
-    amount: req.params.amount
+    fundingAddress: fundingAddress,
+    fundingWif: fundingWif,
+    tokenReceiverAddress: tokenReceiverAddress,
+    bchChangeReceiverAddress: bchChangeReceiverAddress,
+    tokenId: tokenId,
+    amount: amount
   })
 
   res.status(200)
@@ -823,12 +966,42 @@ async function burnTokenType1(
   res: express.Response,
   next: express.NextFunction
 ) {
+  let fundingAddress = req.params.fundingAddress
+  if (!fundingAddress || fundingAddress === "") {
+    res.status(400)
+    return res.json({ error: "fundingAddress can not be empty" })
+  }
+
+  let fundingWif = req.params.fundingWif
+  if (!fundingWif || fundingWif === "") {
+    res.status(400)
+    return res.json({ error: "fundingWif can not be empty" })
+  }
+
+  let bchChangeReceiverAddress = req.params.bchChangeReceiverAddress
+  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
+  }
+
+  let tokenId = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
+  let amount = req.params.amount
+  if (!amount || amount === "") {
+    res.status(400)
+    return res.json({ error: "amount can not be empty" })
+  }
+
   let burn = await SLP.TokenType1.burn({
-    fundingAddress: req.params.fundingAddress,
-    fundingWif: req.params.fundingWif,
-    tokenId: req.params.tokenId,
-    amount: req.params.amount,
-    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress
+    fundingAddress: fundingAddress,
+    fundingWif: fundingWif,
+    tokenId: tokenId,
+    amount: amount,
+    bchChangeReceiverAddress: bchChangeReceiverAddress
   })
 
   res.status(200)
@@ -840,11 +1013,35 @@ async function burnAllTokenType1(
   res: express.Response,
   next: express.NextFunction
 ) {
+  let fundingAddress = req.params.fundingAddress
+  if (!fundingAddress || fundingAddress === "") {
+    res.status(400)
+    return res.json({ error: "fundingAddress can not be empty" })
+  }
+
+  let fundingWif = req.params.fundingWif
+  if (!fundingWif || fundingWif === "") {
+    res.status(400)
+    return res.json({ error: "fundingWif can not be empty" })
+  }
+
+  let bchChangeReceiverAddress = req.params.bchChangeReceiverAddress
+  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
+    res.status(400)
+    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
+  }
+
+  let tokenId = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
   let burnAll = await SLP.TokenType1.burnAll({
-    fundingAddress: req.params.fundingAddress,
-    fundingWif: req.params.fundingWif,
-    tokenId: req.params.tokenId,
-    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress
+    fundingAddress: fundingAddress,
+    fundingWif: fundingWif,
+    tokenId: tokenId,
+    bchChangeReceiverAddress: bchChangeReceiverAddress
   })
 
   res.status(200)

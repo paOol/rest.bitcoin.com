@@ -47,6 +47,29 @@ router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
 
+if (process.env.NON_JS_FRAMEWORK) {
+  router.get(
+    "/createTokenType1/:fundingAddress/:fundingWif/:tokenReceiverAddress/:batonReceiverAddress/:bchChangeReceiverAddress/:decimals/:name/:symbol/:documentUri/:documentHash/:initialTokenQty",
+    createTokenType1
+  )
+  router.get(
+    "/mintTokenType1/:fundingAddress/:fundingWif/:tokenReceiverAddress/:batonReceiverAddress/:bchChangeReceiverAddress/:tokenId/:additionalTokenQty",
+    mintTokenType1
+  )
+  router.get(
+    "/sendTokenType1/:fundingAddress/:fundingWif/:tokenReceiverAddress/:bchChangeReceiverAddress/:tokenId/:amount",
+    sendTokenType1
+  )
+  router.get(
+    "/burnTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId/:amount",
+    burnTokenType1
+  )
+  router.get(
+    "/burnAllTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId",
+    burnAllTokenType1
+  )
+}
+
 // Retrieve raw transactions details from the full node.
 // TODO: move this function to a separate support library.
 // TODO: Add unit tests for this function.
@@ -278,7 +301,7 @@ async function listBulkToken(
 
     // Lookup each token in the array
     const tokens = []
-    for(let i=0; i < tokenIds.length; i++) {
+    for (let i = 0; i < tokenIds.length; i++) {
       const tokenId = tokenIds[i]
 
       // Validate each element.
@@ -384,7 +407,7 @@ async function lookupToken(tokenId) {
     }
 
     return t
-  } catch(err) {
+  } catch (err) {
     //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
@@ -632,7 +655,7 @@ async function convertAddressBulk(
 
   // Convert each address in the array.
   const convertedAddresses = []
-  for(let i=0; i < addresses.length; i++) {
+  for (let i = 0; i < addresses.length; i++) {
     const address = addresses[i]
 
     // Validate input
@@ -732,6 +755,102 @@ async function isValidSlpTxid(txid: string): Promise<boolean> {
   return isValid
 }
 
+// Below are functions which are enabled for teams not using our javascript SDKs which still need to create txs
+// These should never be enabled on our public REST API
+
+async function createTokenType1(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let token = await SLP.TokenType1.create({
+    fundingAddress: req.params.fundingAddress,
+    fundingWif: req.params.fundingWif,
+    tokenReceiverAddress: req.params.tokenReceiverAddress,
+    batonReceiverAddress: req.params.batonReceiverAddress,
+    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
+    decimals: req.params.decimals,
+    name: req.params.name,
+    symbol: req.params.symbol,
+    documentUri: req.params.documentUri,
+    documentHash: req.params.documentHash,
+    initialTokenQty: req.params.initialTokenQty
+  })
+
+  res.status(200)
+  return res.json(token)
+}
+
+async function mintTokenType1(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let mint = await SLP.TokenType1.mint({
+    fundingAddress: req.params.fundingAddress,
+    fundingWif: req.params.fundingWif,
+    tokenReceiverAddress: req.params.tokenReceiverAddress,
+    batonReceiverAddress: req.params.batonReceiverAddress,
+    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
+    tokenId: req.params.tokenId,
+    additionalTokenQty: req.params.additionalTokenQty
+  })
+
+  res.status(200)
+  return res.json(mint)
+}
+
+async function sendTokenType1(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let send = await SLP.TokenType1.send({
+    fundingAddress: req.params.fundingAddress,
+    fundingWif: req.params.fundingWif,
+    tokenReceiverAddress: req.params.tokenReceiverAddress,
+    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress,
+    tokenId: req.params.tokenId,
+    amount: req.params.amount
+  })
+
+  res.status(200)
+  return res.json(send)
+}
+
+async function burnTokenType1(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let burn = await SLP.TokenType1.burn({
+    fundingAddress: req.params.fundingAddress,
+    fundingWif: req.params.fundingWif,
+    tokenId: req.params.tokenId,
+    amount: req.params.amount,
+    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress
+  })
+
+  res.status(200)
+  return res.json(burn)
+}
+
+async function burnAllTokenType1(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let burnAll = await SLP.TokenType1.burnAll({
+    fundingAddress: req.params.fundingAddress,
+    fundingWif: req.params.fundingWif,
+    tokenId: req.params.tokenId,
+    bchChangeReceiverAddress: req.params.bchChangeReceiverAddress
+  })
+
+  res.status(200)
+  return res.json(burnAll)
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -744,6 +863,11 @@ module.exports = {
     convertAddressSingle,
     convertAddressBulk,
     validateBulk,
-    isValidSlpTxid
+    isValidSlpTxid,
+    createTokenType1,
+    mintTokenType1,
+    sendTokenType1,
+    burnTokenType1,
+    burnAllTokenType1
   }
 }

@@ -37,6 +37,11 @@ const BitboxHTTP = axios.create({
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
+// Setup REST and TREST URLs used by slpjs
+// Dev note: this allows for unit tests to mock the URL.
+if(!process.env.REST_URL) process.env.REST_URL = `https://rest.bitcoin.com/v2/`
+if(!process.env.TREST_URL) process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
+
 router.get("/", root)
 router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
@@ -122,9 +127,9 @@ function createValidator(network: string, getRawTransactions: any = null): any {
   let tmpBITBOX: any
 
   if (network === "mainnet") {
-    tmpBITBOX = new BITBOXCli({ restURL: "https://rest.bitcoin.com/v2/" })
+    tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
   } else {
-    tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
+    tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
   }
 
   const slpValidator: any = new slp.LocalValidator(
@@ -419,6 +424,7 @@ async function balancesForAddress(
   next: express.NextFunction
 ) {
   try {
+    // Validate the input data.
     let address = req.params.address
     if (!address || address === "") {
       res.status(400)
@@ -449,17 +455,28 @@ async function balancesForAddress(
     let tmpBITBOX: any
 
     if (isMainnet) {
-      tmpBITBOX = new BITBOXCli({ restURL: "https://rest.bitcoin.com/v2/" })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
     } else {
-      tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
     }
 
+    // Initialize slpjs with BITBOX and our local validator.
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
+    //console.log(`tmpbitboxNetwork: ${util.inspect(tmpbitboxNetwork, null, 2)}`)
 
+    // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
+
+    // Get balances and utxos for the address of interest.
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+
+    // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
+
+      // An array of txids, each representing a token class possed by this address.
       let keys = Object.keys(balances.slpTokenBalances)
+
+      // Query the token information for each token class found.
       const axiosPromises = keys.map(async (key: any) => {
         let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
         return {
@@ -474,6 +491,8 @@ async function balancesForAddress(
       // Wait for all parallel promises to return.
       const axiosResult: Array<any> = await axios.all(axiosPromises)
       return res.json(axiosResult)
+
+    // If no balances for this address exist, exit.
     } else {
       return res.json("No balances for this address")
     }
@@ -536,9 +555,9 @@ async function balancesForAddressByTokenID(
     let tmpBITBOX: any
 
     if (isMainnet) {
-      tmpBITBOX = new BITBOXCli({ restURL: "https://rest.bitcoin.com/v2/" })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
     } else {
-      tmpBITBOX = new BITBOXCli({ restURL: "https://trest.bitcoin.com/v2/" })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
     }
 
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)

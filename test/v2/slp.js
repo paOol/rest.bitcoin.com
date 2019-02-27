@@ -36,13 +36,21 @@ describe("#SLP", () => {
   before(() => {
     // Save existing environment variables.
     originalEnvVars = {
-      BITDB_URL: process.env.BITDB_URL
+      BITDB_URL: process.env.BITDB_URL,
+      BITCOINCOM_BASEURL: process.env.BITCOINCOM_BASEURL,
+      SLP_VALIDATE_URL: process.env.SLP_VALIDATE_URL,
+      SLP_VALIDATE_FAILOVER_URL: process.env.SLP_VALIDATE_FAILOVER_URL
     }
 
     // Set default environment variables for unit tests.
     if (!process.env.TEST) process.env.TEST = "unit"
+
+    // Block network connections for unit tests.
     if (process.env.TEST === "unit") {
       process.env.BITDB_URL = "http://fakeurl/"
+      process.env.BITCOINCOM_BASEURL = "http://fakeurl/"
+      process.env.SLP_VALIDATE_URL = "http://fakeurl/"
+      process.env.SLP_VALIDATE_FAILOVER_URL = "http://fakeurl/"
       mockServerUrl = `http://fakeurl`
     }
   })
@@ -75,6 +83,10 @@ describe("#SLP", () => {
   after(() => {
     // Restore any pre-existing environment variables.
     process.env.BITDB_URL = originalEnvVars.BITDB_URL
+    process.env.BITCOINCOM_BASEURL = originalEnvVars.BITCOINCOM_BASEURL
+    process.env.SLP_VALIDATE_URL = originalEnvVars.SLP_VALIDATE_URL
+    process.env.SLP_VALIDATE_FAILOVER_URL =
+      originalEnvVars.SLP_VALIDATE_FAILOVER_URL
   })
 
   describe("#root", async () => {
@@ -400,29 +412,44 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid")
     })
 
-    // I don't think balancesForAddress() works yet, as it comes from slp-sdk?
-    /*
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      // Save the existing rest URL settings.
+      const saveUrl1 = process.env.REST_URL
+      const saveUrl2 = process.env.TREST_URL
 
-      // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      // manipulate the rest url used by slpjs
+      process.env.REST_URL = "https://fakeurl/"
+      process.env.TREST_URL = "https://fakeurl/"
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
       const result = await balancesForAddress(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      //console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      // Restore the functionality of slpjs
+      process.env.REST_URL = saveUrl1
+      process.env.TREST_URL = saveUrl2
 
-      assert.isAbove(res.statusCode, 499, "HTTP status code 500 or greater expected.")
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
+      )
       assert.include(
         result.error,
         "Network error: Could not communicate",
         "Error message expected"
       )
+    })
+    /*
+    it("should get token balance for an address", async () => {
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+
+      const result = await balancesForAddress(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
     })
 */
   })

@@ -469,6 +469,7 @@ async function balancesForAddress(
 
     // Get balances and utxos for the address of interest.
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+    console.log(`balances: ${util.inspect(balances)}`)
 
     // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {

@@ -15,15 +15,19 @@ const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
+const proxyquire = require("proxyquire")
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
-const slpRoute = require("../../dist/routes/v2/slp")
+//const slpRoute = require("../../dist/routes/v2/slp")
+const pathStub = {}
+const slpRoute = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
 // Mocking data.
 const { mockReq, mockRes } = require("./mocks/express-mocks")
 const mockData = require("./mocks/slp-mocks")
+const slpjsMock = require("./mocks/slpjs-mocks")
 
 // Used for debugging.
 const util = require("util")
@@ -441,17 +445,19 @@ describe("#SLP", () => {
         "Error message expected"
       )
     })
-    /*
+
     it("should get token balance for an address", async () => {
+      if (process.env.TEST === "unit")
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
 
       const result = await balancesForAddress(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.isArray(result)
-      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
+      //assert.isArray(result)
+      //assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
     })
-*/
   })
 
   describe("balancesForAddressByTokenID()", () => {

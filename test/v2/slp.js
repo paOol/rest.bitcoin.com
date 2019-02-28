@@ -18,8 +18,7 @@ const sinon = require("sinon")
 const proxyquire = require("proxyquire")
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
-//const slpRoute = require("../../dist/routes/v2/slp")
-const pathStub = {}
+let pathStub = {} // Used to stub methods within slpjs.
 const slpRoute = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
 
 let originalEnvVars // Used during transition from integration to unit tests.
@@ -80,6 +79,9 @@ describe("#SLP", () => {
     // Clean up HTTP mocks.
     nock.cleanAll() // clear interceptor list.
     nock.restore()
+
+    // Reset the mocks for slpjs.
+    pathStub = {}
 
     sandbox.restore()
   })
@@ -448,6 +450,7 @@ describe("#SLP", () => {
 
     it("should get token balance for an address", async () => {
       if (process.env.TEST === "unit")
+        // Mock the slpjs library for unit tests.
         pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
 
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
@@ -508,29 +511,53 @@ describe("#SLP", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "Invalid")
     })
-    //
-    // it("should throw 503 when network issues", async () => {
-    //   // Save the existing BITDB_URL.
-    //   const savedUrl2 = process.env.BITDB_URL
-    //
-    //   // Manipulate the URL to cause a 500 network error.
-    //   process.env.BITDB_URL = "http://fakeurl/api/"
-    //
-    //   req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
-    //
-    //   const result = await balancesForAddress(req, res)
-    //   console.log(`result: ${util.inspect(result)}`)
-    //
-    //   // Restore the saved URL.
-    //   process.env.BITDB_URL = savedUrl2
-    //
-    //   assert.equal(res.statusCode, 503, "HTTP status code 503 expected.")
-    //   assert.include(
-    //     result.error,
-    //     "Network error: Could not communicate with full node",
-    //     "Error message expected"
-    //   )
-    // })
+
+    it("should throw 5XX error when network issues", async () => {
+      // Save the existing rest URL settings.
+      const saveUrl1 = process.env.REST_URL
+      const saveUrl2 = process.env.TREST_URL
+
+      // manipulate the rest url used by slpjs
+      process.env.REST_URL = "https://fakeurl/"
+      process.env.TREST_URL = "https://fakeurl/"
+
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.tokenId =
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+
+      const result = await balancesForAddressByTokenID(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      // Restore the functionality of slpjs
+      process.env.REST_URL = saveUrl1
+      process.env.TREST_URL = saveUrl2
+
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
+      )
+      assert.include(
+        result.error,
+        "Network error: Could not communicate",
+        "Error message expected"
+      )
+    })
+
+    it("should get token information", async () => {
+      if (process.env.TEST === "unit")
+        // Mock the slpjs library for unit tests.
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.tokenId =
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+
+      const result = await balancesForAddressByTokenID(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+    })
   })
 
   describe("convertAddressSingle()", () => {

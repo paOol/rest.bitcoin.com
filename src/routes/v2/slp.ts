@@ -418,6 +418,7 @@ async function lookupToken(tokenId) {
   }
 }
 
+// Retrieve token balances for all tokens for a single address.
 async function balancesForAddress(
   req: express.Request,
   res: express.Response,
@@ -462,7 +463,6 @@ async function balancesForAddress(
 
     // Initialize slpjs with BITBOX and our local validator.
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
-    //console.log(`tmpbitboxNetwork: ${util.inspect(tmpbitboxNetwork, null, 2)}`)
 
     // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
@@ -514,12 +514,15 @@ async function balancesForAddress(
   }
 }
 
+// Retrieve token balances for a single token class, for a single address.
 async function balancesForAddressByTokenID(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
   try {
+
+    // Validate input data.
     let address: string = req.params.address
     if (!address || address === "") {
       res.status(400)
@@ -561,14 +564,26 @@ async function balancesForAddressByTokenID(
       tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
     }
 
+    // Initialize slpjs with BITBOX and our local validator.
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
 
+    // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
+
+    // Get balances and utxos for the address of interest.
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+
+    // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
+
+      // An array of txids, each representing a token class possed by this address.
       let keys = Object.keys(balances.slpTokenBalances)
+
+      // Query the token information for each token class found.
       const axiosPromises = keys.map(async (key: any) => {
+
         let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
+
         return {
           tokenId: key,
           balance: balances.slpTokenBalances[key]
@@ -580,12 +595,18 @@ async function balancesForAddressByTokenID(
 
       // Wait for all parallel promises to return.
       const axiosResult: Array<any> = await axios.all(axiosPromises)
+
+      // Loop through the returned token classes for this address
       for (let result of axiosResult) {
+        // Return the token class of interest.
         if (result.tokenId === req.params.tokenId) {
           return res.json(result)
         }
       }
+
       return res.json("No balance for this address and tokenId")
+
+    // If no balances for this address exist, exit.
     } else {
       return res.json("No balance for this address and tokenId")
     }

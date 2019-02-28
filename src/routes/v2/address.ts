@@ -32,10 +32,7 @@ router.post("/utxo", utxoBulk)
 router.get("/utxo/:address", utxoSingle)
 router.post("/unconfirmed", unconfirmedBulk)
 router.get("/unconfirmed/:address", unconfirmedSingle)
-router.get(
-  "/transactions/:address",
-  transactionsSingle
-)
+router.get("/transactions/:address", transactionsSingle)
 router.post("/transactions", transactionsBulk)
 router.get("/fromXPub/:xpub", fromXPubSingle)
 
@@ -55,9 +52,16 @@ async function detailsFromInsight(
   currentPage: number = 0
 ) {
   try {
-    const legacyAddr = BITBOX.Address.toLegacyAddress(thisAddress)
+    let addr: string
+    if (
+      process.env.BITCOINCOM_BASEURL === "https://bch-insight.bitpay.com/api/"
+    ) {
+      addr = BITBOX.Address.toCashAddress(thisAddress)
+    } else {
+      addr = BITBOX.Address.toLegacyAddress(thisAddress)
+    }
 
-    let path = `${process.env.BITCOINCOM_BASEURL}addr/${legacyAddr}`
+    let path = `${process.env.BITCOINCOM_BASEURL}addr/${addr}`
 
     // Set from and to params based on currentPage and pageSize
     // https://github.com/bitpay/insight-api/blob/master/README.md#notes-on-upgrading-from-v02
@@ -239,9 +243,16 @@ async function detailsSingle(
 // Retrieve UTXO data from the Insight API
 async function utxoFromInsight(thisAddress: string) {
   try {
-    const legacyAddr = BITBOX.Address.toLegacyAddress(thisAddress)
+    let addr: string
+    if (
+      process.env.BITCOINCOM_BASEURL === "https://bch-insight.bitpay.com/api/"
+    ) {
+      addr = BITBOX.Address.toCashAddress(thisAddress)
+    } else {
+      addr = BITBOX.Address.toLegacyAddress(thisAddress)
+    }
 
-    const path = `${process.env.BITCOINCOM_BASEURL}addr/${legacyAddr}/utxo`
+    const path = `${process.env.BITCOINCOM_BASEURL}addr/${addr}/utxo`
 
     // Query the Insight server.
     const response = await axios.get(path)

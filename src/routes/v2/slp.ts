@@ -150,7 +150,6 @@ const slpValidator = createValidator(
 
 // Instantiate the bitboxproxy class in SLPJS.
 const bitboxproxy = new slp.BitboxNetwork(BITBOX, slpValidator)
-//console.log(`bitboxproxy: ${util.inspect(bitboxproxy)}`)
 
 const requestConfig: IRequestConfig = {
   method: "post",

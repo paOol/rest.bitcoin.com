@@ -15,11 +15,12 @@ const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
-const proxyquire = require("proxyquire")
+const proxyquire = require("proxyquire").noPreserveCache()
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
-let pathStub = {} // Used to stub methods within slpjs.
-const slpRoute = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
+const slpRoute = require("../../dist/routes/v2/slp")
+const pathStub = {} // Used to stub methods within slpjs.
+const slpRouteStub = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
@@ -79,9 +80,6 @@ describe("#SLP", () => {
     // Clean up HTTP mocks.
     nock.cleanAll() // clear interceptor list.
     nock.restore()
-
-    // Reset the mocks for slpjs.
-    pathStub = {}
 
     sandbox.restore()
   })
@@ -387,7 +385,7 @@ describe("#SLP", () => {
   })
 
   describe("balancesForAddress()", () => {
-    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
+    let balancesForAddress = slpRoute.testableComponents.balancesForAddress
 
     it("should throw 400 if address is empty", async () => {
       const result = await balancesForAddress(req, res)
@@ -449,9 +447,12 @@ describe("#SLP", () => {
     })
 
     it("should get token balance for an address", async () => {
-      if (process.env.TEST === "unit")
+      let bitboxNetwork
+      if (process.env.TEST === "unit") {
         // Mock the slpjs library for unit tests.
         pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        balancesForAddress = slpRouteStub.testableComponents.balancesForAddress
+      }
 
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
 
@@ -464,7 +465,7 @@ describe("#SLP", () => {
   })
 
   describe("balancesForAddressByTokenID()", () => {
-    const balancesForAddressByTokenID =
+    let balancesForAddressByTokenID =
       slpRoute.testableComponents.balancesForAddressByTokenID
 
     it("should throw 400 if address is empty", async () => {
@@ -545,9 +546,12 @@ describe("#SLP", () => {
     })
 
     it("should get token information", async () => {
-      if (process.env.TEST === "unit")
+      if (process.env.TEST === "unit") {
         // Mock the slpjs library for unit tests.
-        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        //pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        balancesForAddressByTokenID =
+          slpRouteStub.testableComponents.balancesForAddressByTokenID
+      }
 
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
       req.params.tokenId =

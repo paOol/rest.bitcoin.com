@@ -455,8 +455,8 @@ describe("#SLP", () => {
       const result = await balancesForAddress(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      //assert.isArray(result)
-      //assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
     })
   })
 

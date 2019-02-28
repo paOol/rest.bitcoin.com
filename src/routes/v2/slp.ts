@@ -469,7 +469,6 @@ async function balancesForAddress(
 
     // Get balances and utxos for the address of interest.
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-    //console.log(`balances: ${util.inspect(balances)}`)
 
     // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
@@ -480,7 +479,7 @@ async function balancesForAddress(
       // Query the token information for each token class found.
       const axiosPromises = keys.map(async (key: any) => {
         let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
-        console.log(`tokenMetadata: ${util.inspect(tokenMetadata,null,2)}`)
+
         return {
           tokenId: key,
           balance: balances.slpTokenBalances[key]

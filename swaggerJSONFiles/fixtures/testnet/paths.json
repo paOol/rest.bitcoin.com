@@ -143,5 +143,10 @@
     "key": "/slp/address/convert/{address}",
     "name": "address",
     "value": "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
+  },
+  {
+    "key": "/slp/txDetails/{txid}",
+    "name": "txid",
+    "value": "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
   }
 ]

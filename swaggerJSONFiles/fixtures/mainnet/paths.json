@@ -143,5 +143,10 @@
     "key": "/slp/address/convert/{address}",
     "name": "address",
     "value": "simpleledger:qz9tzs6d5097ejpg279rg0rnlhz546q4fsnck9wh5m"
+  },
+  {
+    "key": "/slp/txDetails/{txid}",
+    "name": "txid",
+    "value": "8ab4ac5dea3f9024e3954ee5b61452955d659a34561f79ef62ac44e133d0980e"
   }
 ]

@@ -66,7 +66,7 @@ describe("#SLP", () => {
     res = mockRes
 
     // Explicitly reset the parmas and body.
-    req.body = {}
+    //req.params = {}
     req.body = {}
     req.query = {}
 
@@ -782,6 +782,59 @@ describe("#SLP", () => {
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
       assert.equal(result.length, 2)
+    })
+  })
+
+  describe("txDetails()", () => {
+    let txDetails = slpRoute.testableComponents.txDetails
+
+    it("should throw 400 if txid is empty", async () => {
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "txid can not be empty")
+    })
+
+    it("should throw 400 for malformed txid", async () => {
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "This is not a txid")
+    })
+
+    it("should throw 400 for non-existant txid", async () => {
+      // Integration test
+      if (process.env.TEST !== "unit") {
+        req.params.txid =
+          "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b94578223333"
+
+        const result = await txDetails(req, res)
+        //console.log(`result: ${util.inspect(result)}`)
+
+        assert.hasAllKeys(result, ["error"])
+        assert.include(result.error, "TXID not found")
+      }
+    })
+
+    it("should get tx details with token info", async () => {
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        txDetails = slpRouteStub.testableComponents.txDetails
+      }
+
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
     })
   })
 })

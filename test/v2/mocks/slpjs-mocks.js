@@ -7,6 +7,7 @@
 const sinon = require("sinon")
 const proxyquire = require("proxyquire")
 const BigNumber = require("bignumber.js")
+const slpMocks = require("./slp-mocks")
 
 // Mock the BitboxNetwork class.
 class BitboxNetwork {
@@ -53,6 +54,10 @@ class BitboxNetwork {
     }
 
     return obj
+  }
+
+  async getTransactionDetails(txid) {
+    return slpMocks.mockTx
   }
 }
 

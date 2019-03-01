@@ -786,20 +786,55 @@ describe("#SLP", () => {
   })
 
   describe("tokenTransfer()", () => {
-    const txDetails = slpRoute.testableComponents.txDetails
+    let txDetails = slpRoute.testableComponents.txDetails
 
-    it("should run my test", async () => {
-      try {
+    it("should throw 400 if txid is empty", async () => {
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "txid can not be empty")
+    })
+
+    it("should throw 400 for malformed txid", async () => {
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "This is not a txid")
+    })
+
+    it("should throw 400 for non-existant txid", async () => {
+      // Integration test
+      if (process.env.TEST !== "unit") {
         req.params.txid =
-          "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+          "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b94578223333"
 
         const result = await txDetails(req, res)
-        //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+        console.log(`result: ${util.inspect(result)}`)
 
-        assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
-      } catch (err) {
-        console.log(`Error in test: `, err)
+        assert.hasAllKeys(result, ["error"])
+        assert.include(result.error, "TXID not found")
       }
+    })
+
+    it("should get tx details with token info", async () => {
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        txDetails = slpRouteStub.testableComponents.txDetails
+      }
+
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
     })
   })
 })

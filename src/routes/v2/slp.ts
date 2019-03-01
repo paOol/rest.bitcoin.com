@@ -1108,10 +1108,11 @@ async function txDetails(
     }
 
     // Create a local instantiation of BITBOX
+    let tmpBITBOX
     if(process.env.NETWORK === "testnet")
-      const tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
     else
-      const tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
+      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
 
     // Initialize slpjs with BITBOX and our local validator.
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
@@ -1122,16 +1123,20 @@ async function txDetails(
     //return await slpValidator.isValidSlpTxid(txid)
     return result
   } catch (err) {
-    console.log(`Error in tokenTransfer(): `, err)
+    //console.log(`Error in tokenTransfer(): `, err)
 
-    /*
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
       return res.json({ error: msg })
     }
-    */
+
+    // Handle corner case of mis-typted txid
+    if(err.error.indexOf('Not found') > -1) {
+      res.status(400)
+      return res.json({ error: 'TXID not found'})
+    }
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

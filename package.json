@@ -50,7 +50,7 @@
     "pg-hstore": "^2.3.2",
     "sequelize": "^3.30.4",
     "slp-sdk": "2.1.1",
-    "slpjs": "^0.13.0",
+    "slpjs": "^0.15.0",
     "socket.io": "^2.1.1",
     "strftime": "^0.10.0",
     "swagger-stats": "^0.95.6",

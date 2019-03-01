@@ -1095,96 +1095,29 @@ async function txDetails(
   next: express.NextFunction
 ) {
   try {
+    // Validate input parameter
     const txid = req.params.txid
-    //const txhex = req.params.txhex
-/*
-    // Get normal BCH details on the transaction.
-    //const txObj = await transaction.transactionsFromInsight(txid)
-    const txObj = await rawtransactions.getRawTransactionsFromNode(txid, 1)
-    //console.log(`txObj: ${util.inspect(txObj)}`)
-    //console.log(`txObj.vout: ${util.inspect(txObj.vout)}`)
-    //console.log(`txObj.vout[2].scriptPubKey: ${util.inspect(txObj.vout[2].scriptPubKey)}`)
-
-    // Get the TX Hex from the TXID
-    //console.log(`txhex: ${util.inspect(txhex)}`)
-
-    // Create a Bitcore transaction object from the raw hex
-    const txn = new Bitcore.Transaction(txObj.hex)
-
-    // parse the SLP output
-    const slpOut = slpjs.parseSlpOutputScript(txn.outputs[0]._scriptBuffer)
-    //console.log(`slpOut: ${util.inspect(slpOut)}`)
-
-    // Get token info from the tokenId
-    const tokenId = slpOut.tokenIdHex
-    //console.log(`tokenId: ${tokenId}`)
-    const thisToken = await lookupToken(tokenId)
-    //console.log(`thisToken: ${util.inspect(thisToken)}`)
-
-    // Add the token info to the tx object.
-    txObj.tokenInfo = thisToken
-
-    //console.log(`slpOut.sendOutputs: ${util.inspect(slpOut.sendOutputs)}`)
-    //console.log(`slpOut.sendOutputs[0].c: ${util.inspect(slpOut.sendOutputs[0].toFixed()/Math.pow(10,thisToken.decimals))}`)
-    //console.log(`slpOut.sendOutputs[1].c: ${util.inspect(slpOut.sendOutputs[1].toFixed()/Math.pow(10,thisToken.decimals))}`)
-    //console.log(`slpOut.sendOutputs[2].c: ${util.inspect(slpOut.sendOutputs[2].toFixed()/Math.pow(10,thisToken.decimals))}`)
-    //console.log(`slpOut.genesisOrMintQuantity.c: ${util.inspect(slpOut.genesisOrMintQuantity.c)}`)
-
-    // Dev Note: Assuming output values from slpjs.parseSlpOutputScript() always
-    // line up with the output values from transaction.transactionsFromInsight().
-    // They should, since they are based on the same TXID and TX hex.
-    for(let i=0; i < slpOut.sendOutputs.length; i++) {
-      // Convert the SLP information to a floating point number.
-      const thisTokenTransfer = slpOut.sendOutputs[i].toFixed()/Math.pow(10,thisToken.decimals)
-
-      // Add the token quantity to the tx data.
-      txObj.vout[i].tokens = thisTokenTransfer
+    if (!txid || txid === "") {
+      res.status(400)
+      return res.json({ error: "txid can not be empty" })
     }
 
-    // Create array of input metadata.
-    const vin = []
-    for(let i=0; i < txObj.vin.length; i++) {
-      let addr = 'unknown' // default value
-      let tokenQty = 'unknown' // default value
-
-      // Need to add logic here to detect address and token inputs.
-
-      vin.push({
-        address: addr,
-        tokensIn: tokenQty
-      })
+    if (txid.length !== 64) {
+      res.status(400)
+      return res.json({error: "This is not a txid"})
     }
 
-    // Create an array of output metadata.
-    const vout = []
-    for(let i=0; i < txObj.vout.length; i++) {
-      let addr = 'unknown' // default value
-      let tokenQty = 'unknown' // default value
+    // Create a local instantiation of BITBOX
+    if(process.env.NETWORK === "testnet")
+      const tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
+    else
+      const tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
 
-      const thisVout = txObj.vout[i]
+    // Initialize slpjs with BITBOX and our local validator.
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
 
-      // Capture data if it exists.
-      try {
-        if(thisVout.scriptPubKey.addresses) addr = thisVout.scriptPubKey.addresses
-        if(thisVout.tokens) tokenQty = thisVout.tokens
-      } catch(e) {}
-
-      vout.push({
-        address: addr,
-        tokensOut: tokenQty
-      })
-    }
-
-    // Consolidate the metadata.
-    const result = {
-      inputs: vin,
-      outputs: vout,
-      symbol: txObj.tokenInfo.symbol,
-      tokenId: txObj.tokenInfo.id,
-      decimals: txObj.tokenInfo.decimals
-    }
-*/
-    const result = true
+    // Get TX info + token info
+    const result = await tmpbitboxNetwork.getTransactionDetails(txid)
 
     //return await slpValidator.isValidSlpTxid(txid)
     return result

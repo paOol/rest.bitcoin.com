@@ -1095,6 +1095,7 @@ async function txDetails(
   next: express.NextFunction
 ) {
   try {
+
     // Validate input parameter
     const txid = req.params.txid
     if (!txid || txid === "") {
@@ -1120,8 +1121,8 @@ async function txDetails(
     // Get TX info + token info
     const result = await tmpbitboxNetwork.getTransactionDetails(txid)
 
-    //return await slpValidator.isValidSlpTxid(txid)
-    return result
+    res.status(200)
+    return res.json(result)
   } catch (err) {
     //console.log(`Error in tokenTransfer(): `, err)
 

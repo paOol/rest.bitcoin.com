@@ -785,7 +785,7 @@ describe("#SLP", () => {
     })
   })
 
-  describe("tokenTransfer()", () => {
+  describe("txDetails()", () => {
     let txDetails = slpRoute.testableComponents.txDetails
 
     it("should throw 400 if txid is empty", async () => {
@@ -814,7 +814,7 @@ describe("#SLP", () => {
           "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b94578223333"
 
         const result = await txDetails(req, res)
-        console.log(`result: ${util.inspect(result)}`)
+        //console.log(`result: ${util.inspect(result)}`)
 
         assert.hasAllKeys(result, ["error"])
         assert.include(result.error, "TXID not found")

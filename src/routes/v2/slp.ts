@@ -52,6 +52,7 @@ router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
+router.get("/validateTxid/:txid", validateSingle)
 router.get("/txDetails/:txid", txDetails)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
@@ -739,7 +740,7 @@ async function validateBulk(
   try {
     const txids = req.body.txids
 
-    // Reject if address is not an array.
+    // Reject if txids is not an array.
     if (!Array.isArray(txids)) {
       res.status(400)
       return res.json({ error: "txids needs to be an array" })
@@ -781,6 +782,46 @@ async function validateBulk(
 
     res.status(200)
     return res.json(validTxids)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+async function validateSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    const txid = req.params.txid
+
+    // Validate input
+    if (!txid || txid === "") {
+      res.status(400)
+      return res.json({ error: "txid can not be empty" })
+    }
+
+    logger.debug(`Executing slp/validate/:txid with this txid: `, txid)
+
+    // Validate txid
+    // Dev note: must call module.exports to allow stubs in unit tests.
+    const isValid = await module.exports.testableComponents.isValidSlpTxid(txid)
+
+    let tmp: any = {
+      txid: txid,
+      valid: isValid ? true : false
+    }
+
+    res.status(200)
+    return res.json(tmp)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

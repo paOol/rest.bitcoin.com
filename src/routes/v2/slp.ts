@@ -39,8 +39,9 @@ const password = process.env.RPC_PASSWORD
 
 // Setup REST and TREST URLs used by slpjs
 // Dev note: this allows for unit tests to mock the URL.
-if(!process.env.REST_URL) process.env.REST_URL = `https://rest.bitcoin.com/v2/`
-if(!process.env.TREST_URL) process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
+if (!process.env.REST_URL) process.env.REST_URL = `https://rest.bitcoin.com/v2/`
+if (!process.env.TREST_URL)
+  process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
 
 router.get("/", root)
 router.get("/list", list)
@@ -472,7 +473,6 @@ async function balancesForAddress(
 
     // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
-
       // An array of txids, each representing a token class possed by this address.
       let keys = Object.keys(balances.slpTokenBalances)
 
@@ -493,7 +493,7 @@ async function balancesForAddress(
       const axiosResult: Array<any> = await axios.all(axiosPromises)
       return res.json(axiosResult)
 
-    // If no balances for this address exist, exit.
+      // If no balances for this address exist, exit.
     } else {
       return res.json("No balances for this address")
     }
@@ -521,7 +521,6 @@ async function balancesForAddressByTokenID(
   next: express.NextFunction
 ) {
   try {
-
     // Validate input data.
     let address: string = req.params.address
     if (!address || address === "") {
@@ -575,13 +574,11 @@ async function balancesForAddressByTokenID(
 
     // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
-
       // An array of txids, each representing a token class possed by this address.
       let keys = Object.keys(balances.slpTokenBalances)
 
       // Query the token information for each token class found.
       const axiosPromises = keys.map(async (key: any) => {
-
         let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
 
         return {
@@ -604,9 +601,16 @@ async function balancesForAddressByTokenID(
         }
       }
 
-      return res.json("No balance for this address and tokenId")
+      let tokenData: any = await tmpbitboxNetwork.getTokenInformation(
+        req.params.tokenId
+      )
+      return res.json({
+        tokenId: req.params.tokenId,
+        balance: 0,
+        decimalCount: tokenData.decimals
+      })
 
-    // If no balances for this address exist, exit.
+      // If no balances for this address exist, exit.
     } else {
       return res.json("No balance for this address and tokenId")
     }
@@ -1095,7 +1099,6 @@ async function txDetails(
   next: express.NextFunction
 ) {
   try {
-
     // Validate input parameter
     const txid = req.params.txid
     if (!txid || txid === "") {
@@ -1105,12 +1108,12 @@ async function txDetails(
 
     if (txid.length !== 64) {
       res.status(400)
-      return res.json({error: "This is not a txid"})
+      return res.json({ error: "This is not a txid" })
     }
 
     // Bullshit code to get the coverage test to pass.
     // TODO: remove this code paragraph.
-    for(var i=0; i < 1; i++) {
+    for (var i = 0; i < 1; i++) {
       let a = 0
 
       let b = 1
@@ -1121,15 +1124,14 @@ async function txDetails(
 
       c = b + a
 
-      b =  a + b
+      b = a + b
     }
 
     // Create a local instantiation of BITBOX
     let tmpBITBOX
-    if(process.env.NETWORK === "testnet")
+    if (process.env.NETWORK === "testnet")
       tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
-    else
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
+    else tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
 
     // Initialize slpjs with BITBOX and our local validator.
     const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
@@ -1150,9 +1152,9 @@ async function txDetails(
     }
 
     // Handle corner case of mis-typted txid
-    if(err.error.indexOf('Not found') > -1) {
+    if (err.error.indexOf("Not found") > -1) {
       res.status(400)
-      return res.json({ error: 'TXID not found'})
+      return res.json({ error: "TXID not found" })
     }
 
     res.status(500)

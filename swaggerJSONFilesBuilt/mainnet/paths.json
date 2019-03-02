@@ -1730,6 +1730,33 @@
 				}
 			}
 		},
+		"/slp/validateTxid/{txid}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Validate single txid",
+				"description": "Validate single txid",
+				"operationId": "validateTxidSingle",
+				"parameters": [
+					{
+						"name": "txid",
+						"in": "path",
+						"description": "The txid",
+						"required": true,
+						"example": "1cda254d0a995c713b7955298ed246822bee487458cd9747a91d9e81d9d28125",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/validateTxid": {
 			"post": {
 				"tags": [

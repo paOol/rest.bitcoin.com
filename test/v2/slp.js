@@ -15,15 +15,19 @@ const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
+const proxyquire = require("proxyquire").noPreserveCache()
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
 const slpRoute = require("../../dist/routes/v2/slp")
+const pathStub = {} // Used to stub methods within slpjs.
+const slpRouteStub = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
 // Mocking data.
 const { mockReq, mockRes } = require("./mocks/express-mocks")
 const mockData = require("./mocks/slp-mocks")
+const slpjsMock = require("./mocks/slpjs-mocks")
 
 // Used for debugging.
 const util = require("util")
@@ -36,13 +40,21 @@ describe("#SLP", () => {
   before(() => {
     // Save existing environment variables.
     originalEnvVars = {
-      BITDB_URL: process.env.BITDB_URL
+      BITDB_URL: process.env.BITDB_URL,
+      BITCOINCOM_BASEURL: process.env.BITCOINCOM_BASEURL,
+      SLP_VALIDATE_URL: process.env.SLP_VALIDATE_URL,
+      SLP_VALIDATE_FAILOVER_URL: process.env.SLP_VALIDATE_FAILOVER_URL
     }
 
     // Set default environment variables for unit tests.
     if (!process.env.TEST) process.env.TEST = "unit"
+
+    // Block network connections for unit tests.
     if (process.env.TEST === "unit") {
       process.env.BITDB_URL = "http://fakeurl/"
+      process.env.BITCOINCOM_BASEURL = "http://fakeurl/"
+      process.env.SLP_VALIDATE_URL = "http://fakeurl/"
+      process.env.SLP_VALIDATE_FAILOVER_URL = "http://fakeurl/"
       mockServerUrl = `http://fakeurl`
     }
   })
@@ -54,7 +66,7 @@ describe("#SLP", () => {
     res = mockRes
 
     // Explicitly reset the parmas and body.
-    req.body = {}
+    //req.params = {}
     req.body = {}
     req.query = {}
 
@@ -75,6 +87,10 @@ describe("#SLP", () => {
   after(() => {
     // Restore any pre-existing environment variables.
     process.env.BITDB_URL = originalEnvVars.BITDB_URL
+    process.env.BITCOINCOM_BASEURL = originalEnvVars.BITCOINCOM_BASEURL
+    process.env.SLP_VALIDATE_URL = originalEnvVars.SLP_VALIDATE_URL
+    process.env.SLP_VALIDATE_FAILOVER_URL =
+      originalEnvVars.SLP_VALIDATE_FAILOVER_URL
   })
 
   describe("#root", async () => {
@@ -369,7 +385,7 @@ describe("#SLP", () => {
   })
 
   describe("balancesForAddress()", () => {
-    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
+    let balancesForAddress = slpRoute.testableComponents.balancesForAddress
 
     it("should throw 400 if address is empty", async () => {
       const result = await balancesForAddress(req, res)
@@ -400,35 +416,56 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid")
     })
 
-    // I don't think balancesForAddress() works yet, as it comes from slp-sdk?
-    /*
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      // Save the existing rest URL settings.
+      const saveUrl1 = process.env.REST_URL
+      const saveUrl2 = process.env.TREST_URL
 
-      // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      // manipulate the rest url used by slpjs
+      process.env.REST_URL = "https://fakeurl/"
+      process.env.TREST_URL = "https://fakeurl/"
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
       const result = await balancesForAddress(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      //console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      // Restore the functionality of slpjs
+      process.env.REST_URL = saveUrl1
+      process.env.TREST_URL = saveUrl2
 
-      assert.isAbove(res.statusCode, 499, "HTTP status code 500 or greater expected.")
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
+      )
       assert.include(
         result.error,
         "Network error: Could not communicate",
         "Error message expected"
       )
     })
-*/
+
+    it("should get token balance for an address", async () => {
+      let bitboxNetwork
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        balancesForAddress = slpRouteStub.testableComponents.balancesForAddress
+      }
+
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+
+      const result = await balancesForAddress(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
+    })
   })
 
   describe("balancesForAddressByTokenID()", () => {
-    const balancesForAddressByTokenID =
+    let balancesForAddressByTokenID =
       slpRoute.testableComponents.balancesForAddressByTokenID
 
     it("should throw 400 if address is empty", async () => {
@@ -475,29 +512,56 @@ describe("#SLP", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "Invalid")
     })
-    //
-    // it("should throw 503 when network issues", async () => {
-    //   // Save the existing BITDB_URL.
-    //   const savedUrl2 = process.env.BITDB_URL
-    //
-    //   // Manipulate the URL to cause a 500 network error.
-    //   process.env.BITDB_URL = "http://fakeurl/api/"
-    //
-    //   req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
-    //
-    //   const result = await balancesForAddress(req, res)
-    //   console.log(`result: ${util.inspect(result)}`)
-    //
-    //   // Restore the saved URL.
-    //   process.env.BITDB_URL = savedUrl2
-    //
-    //   assert.equal(res.statusCode, 503, "HTTP status code 503 expected.")
-    //   assert.include(
-    //     result.error,
-    //     "Network error: Could not communicate with full node",
-    //     "Error message expected"
-    //   )
-    // })
+
+    it("should throw 5XX error when network issues", async () => {
+      // Save the existing rest URL settings.
+      const saveUrl1 = process.env.REST_URL
+      const saveUrl2 = process.env.TREST_URL
+
+      // manipulate the rest url used by slpjs
+      process.env.REST_URL = "https://fakeurl/"
+      process.env.TREST_URL = "https://fakeurl/"
+
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.tokenId =
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+
+      const result = await balancesForAddressByTokenID(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      // Restore the functionality of slpjs
+      process.env.REST_URL = saveUrl1
+      process.env.TREST_URL = saveUrl2
+
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
+      )
+      assert.include(
+        result.error,
+        "Network error: Could not communicate",
+        "Error message expected"
+      )
+    })
+
+    it("should get token information", async () => {
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        //pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        balancesForAddressByTokenID =
+          slpRouteStub.testableComponents.balancesForAddressByTokenID
+      }
+
+      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.tokenId =
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+
+      const result = await balancesForAddressByTokenID(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+    })
   })
 
   describe("convertAddressSingle()", () => {
@@ -718,6 +782,59 @@ describe("#SLP", () => {
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
       assert.equal(result.length, 2)
+    })
+  })
+
+  describe("txDetails()", () => {
+    let txDetails = slpRoute.testableComponents.txDetails
+
+    it("should throw 400 if txid is empty", async () => {
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "txid can not be empty")
+    })
+
+    it("should throw 400 for malformed txid", async () => {
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "This is not a txid")
+    })
+
+    it("should throw 400 for non-existant txid", async () => {
+      // Integration test
+      if (process.env.TEST !== "unit") {
+        req.params.txid =
+          "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b94578223333"
+
+        const result = await txDetails(req, res)
+        //console.log(`result: ${util.inspect(result)}`)
+
+        assert.hasAllKeys(result, ["error"])
+        assert.include(result.error, "TXID not found")
+      }
+    })
+
+    it("should get tx details with token info", async () => {
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+        txDetails = slpRouteStub.testableComponents.txDetails
+      }
+
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+
+      const result = await txDetails(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
     })
   })
 })

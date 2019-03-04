@@ -46,6 +46,7 @@ function root(
 }
 
 // Retrieve transaction data from the Insight API
+// This function is also used by the SLP route library.
 async function transactionsFromInsight(txid: string) {
   try {
     let path = `${process.env.BITCOINCOM_BASEURL}tx/${txid}`
@@ -162,6 +163,7 @@ async function detailsSingle(
 
 module.exports = {
   router,
+  transactionsFromInsight,
   testableComponents: {
     root,
     detailsBulk,

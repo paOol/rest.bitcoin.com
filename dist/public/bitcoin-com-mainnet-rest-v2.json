@@ -1115,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "2.4.1",
+		"version": "3.0.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2853,6 +2853,33 @@
 				}
 			}
 		},
+		"/slp/validateTxid/{txid}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Validate single txid",
+				"description": "Validate single txid",
+				"operationId": "validateTxidSingle",
+				"parameters": [
+					{
+						"name": "txid",
+						"in": "path",
+						"description": "The txid",
+						"required": true,
+						"example": "1cda254d0a995c713b7955298ed246822bee487458cd9747a91d9e81d9d28125",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/validateTxid": {
 			"post": {
 				"tags": [
@@ -2872,6 +2899,33 @@
 						}
 					}
 				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/txDetails/{txid}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "SLP transaction details",
+				"description": "Transaction details on a token transfer.",
+				"operationId": "txDetails",
+				"parameters": [
+					{
+						"name": "txid",
+						"in": "path",
+						"description": "The BCH transaction ID",
+						"required": true,
+						"example": "8ab4ac5dea3f9024e3954ee5b61452955d659a34561f79ef62ac44e133d0980e",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "successful response"

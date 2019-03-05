@@ -76,7 +76,10 @@ const mockRes = {
   setHeader: sinon.stub().returns({})
 }
 
-const mockNext = sinon.stub().returns({})
+const mockNext = sinon.stub().returns()
+//const mockNext = function(invar) {
+//  console.log(`in: ${util.inspect(invar)}`)
+//}
 
 module.exports = {
   mockReq,

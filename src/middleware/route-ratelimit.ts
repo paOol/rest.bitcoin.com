@@ -6,7 +6,9 @@ const util = require("util")
 util.inspect.defaultOptions = { depth: 3 }
 
 // Set max requests per minute
-const maxRequests = process.env.RATE_LIMIT_MAX_REQUESTS ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) : 60
+const maxRequests = process.env.RATE_LIMIT_MAX_REQUESTS
+  ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS)
+  : 60
 
 // Unique route mapped to its rate limit
 const uniqueRateLimits: any = {}
@@ -23,7 +25,12 @@ const routeRateLimit = function(
 
   // Current route
   const path = req.baseUrl + req.path
-  const route = req.method + path.split("/").slice(0,4).join("/")
+  const route =
+    req.method +
+    path
+      .split("/")
+      .slice(0, 4)
+      .join("/")
 
   // Create new RateLimit if none exists for this route
   if (!uniqueRateLimits[route]) {
@@ -32,13 +39,9 @@ const routeRateLimit = function(
       delayMs: 0, // disable delaying - full speed until the max limit is reached
       max: maxRequests, // start blocking after maxRequests
       handler: function(req: express.Request, res: express.Response /*next*/) {
-        res.format({
-          json: function() {
-            res.status(429)
-            return res.json({
-              error: "Too many requests. Limits are 60 requests per minute."
-            })
-          }
+        res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+        return res.json({
+          error: "Too many requests. Limits are 60 requests per minute."
         })
       }
     })
@@ -46,10 +49,6 @@ const routeRateLimit = function(
 
   // Call rate limit for this route
   uniqueRateLimits[route](req, res, next)
-
-  console.log(`rate limit function called.`)
 }
 
-export {
-  routeRateLimit
-}
+export { routeRateLimit }

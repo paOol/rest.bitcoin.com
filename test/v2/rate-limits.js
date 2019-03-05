@@ -54,15 +54,24 @@ describe("#route-ratelimits", () => {
       const result = await routeRateLimit(req, res, next)
       assert.equal(result, undefined)
     })
-    /*
+
     it("should return error if rate limits exceeded", async () => {
       req.baseUrl = "/v2"
       req.path = "/control/getInfo"
       req.method = "GET"
 
-      const result = await routeRateLimit(req, res, next)
-      assert.equal(result, undefined)
+      for (let i = 0; i < 65; i++) {
+        await routeRateLimit(req, res, next)
+
+        next.reset()
+      }
+
+      // Note: next() will be called unless the rate-limit kicks in.
+      assert.equal(
+        next.called,
+        false,
+        `next should not be called if rate limit was triggered.`
+      )
     })
-*/
   })
 })

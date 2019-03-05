@@ -300,7 +300,7 @@ async function listBulkToken(
 
     // Enforce no more than 20 txids.
     if (tokenIds.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} tokenIds`
       })
@@ -693,7 +693,7 @@ async function convertAddressBulk(
 
   // Enforce no more than 20 txids.
   if (addresses.length > FREEMIUM_INPUT_SIZE) {
-    res.status(400)
+    res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
     return res.json({
       error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
     })
@@ -748,7 +748,7 @@ async function validateBulk(
 
     // Enforce no more than 20 txids.
     if (txids.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
       })

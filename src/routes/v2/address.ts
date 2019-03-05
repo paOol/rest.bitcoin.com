@@ -115,7 +115,7 @@ async function detailsBulk(
 
     // Enforce no more than 20 addresses.
     if (addresses.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
       })
@@ -301,7 +301,7 @@ async function utxoBulk(
 
     // Enforce no more than 20 addresses.
     if (addresses.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: "Array too large. Max 20 addresses"
       })
@@ -444,7 +444,7 @@ async function unconfirmedBulk(
 
     // Enforce no more than 20 addresses.
     if (addresses.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: "Array too large. Max 20 addresses"
       })
@@ -645,7 +645,7 @@ async function transactionsBulk(
 
     // Enforce no more than 20 addresses.
     if (addresses.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: "Array too large. Max 20 addresses"
       })

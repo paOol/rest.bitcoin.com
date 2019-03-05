@@ -86,9 +86,9 @@ async function detailsByHashBulk(
 
     // Enforce no more than 20 addresses.
     if (hashes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hashes`
       })
     }
 
@@ -194,9 +194,9 @@ async function detailsByHeightBulk(
 
     // Enforce no more than 20 addresses.
     if (heights.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} heights`
       })
     }
 

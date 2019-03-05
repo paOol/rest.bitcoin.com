@@ -108,7 +108,7 @@ async function decodeRawTransactionBulk(
     }
 
     if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
       })
@@ -264,7 +264,7 @@ async function decodeScriptBulk(
       return res.json({ error: "hexes must be an array" })
     }
     if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
       })
@@ -361,7 +361,7 @@ async function getRawTransactionBulk(
       return res.json({ error: "txids must be an array" })
     }
     if (txids.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
       })
@@ -479,7 +479,7 @@ async function sendRawTransactionBulk(
 
     // Reject if there are too many elements in the array.
     if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
       })

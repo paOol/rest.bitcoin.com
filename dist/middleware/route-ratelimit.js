@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var RateLimit = require("express-rate-limit");
+// Used for debugging.
+var util = require("util");
+util.inspect.defaultOptions = { depth: 3 };
 // Set max requests per minute
 var maxRequests = process.env.RATE_LIMIT_MAX_REQUESTS ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) : 60;
 // Unique route mapped to its rate limit
@@ -22,7 +25,8 @@ var routeRateLimit = function (req, res, next) {
             handler: function (req, res /*next*/) {
                 res.format({
                     json: function () {
-                        res.status(500).json({
+                        res.status(429);
+                        return res.json({
                             error: "Too many requests. Limits are 60 requests per minute."
                         });
                     }
@@ -32,5 +36,6 @@ var routeRateLimit = function (req, res, next) {
     }
     // Call rate limit for this route
     uniqueRateLimits[route](req, res, next);
+    console.log("rate limit function called.");
 };
 exports.routeRateLimit = routeRateLimit;

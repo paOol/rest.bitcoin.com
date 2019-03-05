@@ -1,6 +1,10 @@
 import * as express from "express"
 const RateLimit = require("express-rate-limit")
 
+// Used for debugging.
+const util = require("util")
+util.inspect.defaultOptions = { depth: 3 }
+
 // Set max requests per minute
 const maxRequests = process.env.RATE_LIMIT_MAX_REQUESTS ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) : 60
 
@@ -42,6 +46,8 @@ const routeRateLimit = function(
 
   // Call rate limit for this route
   uniqueRateLimits[route](req, res, next)
+
+  console.log(`rate limit function called.`)
 }
 
 export {

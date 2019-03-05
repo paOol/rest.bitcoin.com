@@ -46,16 +46,18 @@ describe("#route-ratelimits", () => {
     const routeRateLimit = rateLimitMiddleware.routeRateLimit
     const getInfo = controlRoute.testableComponents.getInfo
 
-    it("should pass through", async () => {
+    it("should pass through rate-limit middleware", async () => {
       req.baseUrl = "/v2"
       req.path = "/control/getInfo"
       req.method = "GET"
 
-      const result = await routeRateLimit(req, res, next)
-      assert.equal(result, undefined)
+      await routeRateLimit(req, res, next)
+
+      // next() will be called if rate-limit is not triggered
+      assert.equal(next.called, true)
     })
 
-    it("should return error if rate limits exceeded", async () => {
+    it("should trigger rate-limit handler if rate limits exceeds 60 request per minute", async () => {
       req.baseUrl = "/v2"
       req.path = "/control/getInfo"
       req.method = "GET"
@@ -63,7 +65,7 @@ describe("#route-ratelimits", () => {
       for (let i = 0; i < 65; i++) {
         await routeRateLimit(req, res, next)
 
-        next.reset()
+        next.reset() // reset the stubbed next() function.
       }
 
       // Note: next() will be called unless the rate-limit kicks in.

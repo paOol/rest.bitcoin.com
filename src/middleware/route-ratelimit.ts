@@ -30,7 +30,8 @@ const routeRateLimit = function(
       handler: function(req: express.Request, res: express.Response /*next*/) {
         res.format({
           json: function() {
-            res.status(500).json({
+            res.status(429)
+            return res.json({
               error: "Too many requests. Limits are 60 requests per minute."
             })
           }

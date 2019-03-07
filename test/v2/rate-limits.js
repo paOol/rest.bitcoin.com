@@ -12,7 +12,7 @@ util.inspect.defaultOptions = { depth: 1 }
 const { mockReq, mockRes, mockNext } = require("./mocks/express-mocks")
 
 // Libraries under test
-const rateLimitMiddleware = require("../../dist/middleware/route-ratelimit")
+let rateLimitMiddleware = require("../../dist/middleware/route-ratelimit")
 const controlRoute = require("../../dist/routes/v2/control")
 
 let req, res, next
@@ -43,7 +43,7 @@ describe("#route-ratelimits", () => {
   })
 
   describe("#routeRateLimit", () => {
-    const routeRateLimit = rateLimitMiddleware.routeRateLimit
+    let routeRateLimit = rateLimitMiddleware.routeRateLimit
     const getInfo = controlRoute.testableComponents.getInfo
 
     it("should pass through rate-limit middleware", async () => {
@@ -63,9 +63,10 @@ describe("#route-ratelimits", () => {
       req.method = "GET"
 
       for (let i = 0; i < 65; i++) {
-        await routeRateLimit(req, res, next)
-
         next.reset() // reset the stubbed next() function.
+
+        await routeRateLimit(req, res, next)
+        //console.log(`next() called: ${next.called}`)
       }
 
       // Note: next() will be called unless the rate-limit kicks in.
@@ -75,5 +76,89 @@ describe("#route-ratelimits", () => {
         `next should not be called if rate limit was triggered.`
       )
     })
+
+    it("should NOT trigger rate-limit handler for pro-tier at 65 RPM", async () => {
+      // Clear the require cache before running this test.
+      delete require.cache[
+        require.resolve("../../dist/middleware/route-ratelimit")
+      ]
+      rateLimitMiddleware = require("../../dist/middleware/route-ratelimit")
+      routeRateLimit = rateLimitMiddleware.routeRateLimit
+
+      req.baseUrl = "/v2"
+      req.path = "/control/getInfo"
+      req.method = "GET"
+
+      req.locals.rateLimit = true
+
+      //console.log(`req.locals before test: ${util.inspect(req.locals)}`)
+
+      // Prepare the authorization header
+      //req.headers.authorization = generateAuthHeader("BITBOX")
+
+      for (let i = 0; i < 65; i++) {
+        next.reset() // reset the stubbed next() function.
+
+        await routeRateLimit(req, res, next)
+        //console.log(`next() called: ${next.called}`)
+      }
+
+      //console.log(`req.locals after test: ${util.inspect(req.locals)}`)
+
+      // Note: next() will be called unless the rate-limit kicks in.
+      assert.equal(
+        next.called,
+        true,
+        `next should be called if rate limit was not triggered.`
+      )
+    })
+
+    it("rate-limiting should still kick in at a higher RPM for pro-tier", async () => {
+      // Clear the require cache before running this test.
+      delete require.cache[
+        require.resolve("../../dist/middleware/route-ratelimit")
+      ]
+      rateLimitMiddleware = require("../../dist/middleware/route-ratelimit")
+      routeRateLimit = rateLimitMiddleware.routeRateLimit
+
+      req.baseUrl = "/v2"
+      req.path = "/control/getInfo"
+      req.method = "GET"
+
+      req.locals.rateLimit = true
+
+      //console.log(`req.locals before test: ${util.inspect(req.locals)}`)
+
+      // Prepare the authorization header
+      //req.headers.authorization = generateAuthHeader("BITBOX")
+
+      for (let i = 0; i < 650; i++) {
+        next.reset() // reset the stubbed next() function.
+
+        await routeRateLimit(req, res, next)
+        //console.log(`next() called: ${next.called}`)
+      }
+
+      //console.log(`req.locals after test: ${util.inspect(req.locals)}`)
+
+      // Note: next() will be called unless the rate-limit kicks in.
+      assert.equal(
+        next.called,
+        false,
+        `next should NOT be called if rate limit was triggered.`
+      )
+    })
   })
 })
+
+// Generates a Basic authorization header.
+function generateAuthHeader(pass) {
+  // https://en.wikipedia.org/wiki/Basic_access_authentication
+  const username = "BITBOX"
+  const combined = `${username}:${pass}`
+
+  var base64Credential = Buffer.from(combined).toString("base64")
+  var readyCredential = `Basic ${base64Credential}`
+
+  return readyCredential
+}

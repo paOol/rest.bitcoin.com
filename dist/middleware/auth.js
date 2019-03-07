@@ -24,6 +24,7 @@ var AuthMW = /** @class */ (function () {
         _this = this;
         // Initialize passport for 'basic' authentication.
         passport.use(new BasicStrategy({ passReqToCallback: true }, function (req, username, password, done) {
+            console.log("req: " + util.inspect(req));
             console.log("username: " + username);
             console.log("password: " + password);
             // Create the req.locals property if it does not yet exist.

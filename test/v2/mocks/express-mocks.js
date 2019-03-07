@@ -44,7 +44,8 @@ const mockReq = {
   params: {},
   query: {},
   session: {},
-  locals: {}
+  locals: {},
+  headers: {}
 }
 
 const mockRes = {

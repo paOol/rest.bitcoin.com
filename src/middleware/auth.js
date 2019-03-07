@@ -37,6 +37,7 @@ class AuthMW {
         password,
         done
       ) {
+        console.log(`req: ${util.inspect(req)}`)
         console.log(`username: ${username}`)
         console.log(`password: ${password}`)
 

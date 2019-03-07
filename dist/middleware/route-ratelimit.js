@@ -35,6 +35,7 @@ var routeRateLimit = function (req, res, next) {
     var proRateLimits = req.locals.rateLimit;
     // Pro level rate limits
     if (proRateLimits) {
+        //console.log(`pro`)
         // Create new RateLimit if none exists for this route
         if (!uniqueRateLimits[route]) {
             uniqueRateLimits[route] = new RateLimit({
@@ -42,6 +43,7 @@ var routeRateLimit = function (req, res, next) {
                 delayMs: 0,
                 max: PRO_RPM,
                 handler: function (req, res /*next*/) {
+                    //console.log(`pro-tier rate-handler triggered.`)
                     res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
                     return res.json({
                         error: "Too many requests. Limits are " + PRO_RPM + " requests per minute."
@@ -52,6 +54,7 @@ var routeRateLimit = function (req, res, next) {
         // Freemium level rate limits
     }
     else {
+        //console.log(`freemium`)
         // Create new RateLimit if none exists for this route
         if (!uniqueRateLimits[route]) {
             uniqueRateLimits[route] = new RateLimit({
@@ -59,6 +62,7 @@ var routeRateLimit = function (req, res, next) {
                 delayMs: 0,
                 max: maxRequests,
                 handler: function (req, res /*next*/) {
+                    //console.log(`freemium rate-handler triggered.`)
                     res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
                     return res.json({
                         error: "Too many requests. Limits are " + maxRequests + " requests per minute."

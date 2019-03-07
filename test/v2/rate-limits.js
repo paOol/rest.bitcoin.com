@@ -89,7 +89,7 @@ describe("#route-ratelimits", () => {
       req.path = "/control/getInfo"
       req.method = "GET"
 
-      req.locals.rateLimit = true
+      req.locals.proLimit = true
 
       //console.log(`req.locals before test: ${util.inspect(req.locals)}`)
 
@@ -125,7 +125,7 @@ describe("#route-ratelimits", () => {
       req.path = "/control/getInfo"
       req.method = "GET"
 
-      req.locals.rateLimit = true
+      req.locals.proLimit = true
 
       //console.log(`req.locals before test: ${util.inspect(req.locals)}`)
 

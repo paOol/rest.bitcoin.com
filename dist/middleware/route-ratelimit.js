@@ -32,7 +32,7 @@ var routeRateLimit = function (req, res, next) {
             .slice(0, 4)
             .join("/");
     // This boolean value is passed from the auth.js middleware.
-    var proRateLimits = req.locals.rateLimit;
+    var proRateLimits = req.locals.proLimit;
     // Pro level rate limits
     if (proRateLimits) {
         //console.log(`pro`)

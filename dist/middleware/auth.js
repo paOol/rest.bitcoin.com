@@ -5,7 +5,7 @@
   call for the prescence of a Basic authorization header:
   https://en.wikipedia.org/wiki/Basic_access_authentication
 
-  If the header is found and validated, the req.locals.rateLimit Boolean value
+  If the header is found and validated, the req.locals.proLimit Boolean value
   is set and passed to the route-ratelimits.ts middleware.
 */
 "use strict";
@@ -33,10 +33,10 @@ var AuthMW = /** @class */ (function () {
             // Evaluate the username and password and set the rate limit accordingly.
             if (username === "BITBOX" && password === PRO_PASS) {
                 // Success
-                req.locals.rateLimit = true;
+                req.locals.proLimit = true;
             }
             else {
-                req.locals.rateLimit = false;
+                req.locals.proLimit = false;
             }
             console.log("req.locals: " + util.inspect(req.locals));
             return done(null, true);

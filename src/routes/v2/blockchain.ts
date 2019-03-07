@@ -16,8 +16,6 @@ const logger = require("./logging.js")
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
 
-const FREEMIUM_INPUT_SIZE = 20
-
 // Define routes.
 router.get("/", root)
 router.get("/getBestBlockHash", getBestBlockHash)
@@ -235,11 +233,11 @@ async function getBlockHeaderBulk(
       })
     }
 
-    // Enforce no more than 20 addresses.
-    if (hashes.length > FREEMIUM_INPUT_SIZE) {
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, hashes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hashes`
+        error: `Array too large.`
       })
     }
 
@@ -428,11 +426,11 @@ async function getMempoolEntryBulk(
       })
     }
 
-    // Enforce no more than 20 addresses.
-    if (txids.length > FREEMIUM_INPUT_SIZE) {
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
+        error: `Array too large.`
       })
     }
 
@@ -682,11 +680,11 @@ async function getTxOutProofBulk(
       })
     }
 
-    // Enforce no more than 20 addresses.
-    if (txids.length > FREEMIUM_INPUT_SIZE) {
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
+        error: `Array too large.`
       })
     }
 
@@ -877,11 +875,11 @@ async function verifyTxOutProofBulk(
       })
     }
 
-    // Enforce no more than 20 addresses.
-    if (proofs.length > FREEMIUM_INPUT_SIZE) {
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, proofs)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} proofs`
+        error: `Array too large.`
       })
     }
 

@@ -10,9 +10,6 @@ const logger = require("./logging.js")
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
 
-// Max number of items per request for freemium access.
-const FREEMIUM_INPUT_SIZE = 20
-
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 3 }
@@ -81,11 +78,11 @@ async function detailsBulk(
       return res.json({ error: "txids needs to be an array" })
     }
 
-    // Enforce no more than 20 txids.
-    if (txids.length > FREEMIUM_INPUT_SIZE) {
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
+        error: `Array too large.`
       })
     }
 

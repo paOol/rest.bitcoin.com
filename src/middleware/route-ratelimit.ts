@@ -1,3 +1,12 @@
+/*
+  This file controls the request-per-minute (RPM) rate limits.
+
+  It is assumed that this middleware is run AFTER the auth.js middleware which
+  checks for Basic auth. If the user adds the correct Basic auth to the header
+  of their API request, they will get pro-tier rate limits. By default, the
+  freemium rate limits apply.
+*/
+
 import * as express from "express"
 const RateLimit = require("express-rate-limit")
 
@@ -25,13 +34,8 @@ const routeRateLimit = function(
   res: express.Response,
   next: express.NextFunction
 ) {
-  if (req.locals)
-    console.log(`route-ratelimit req.locals: ${util.inspect(req.locals)}`)
-
   // Disable rate limiting if 0 passed from RATE_LIMIT_MAX_REQUESTS
   if (maxRequests === 0) return next()
-
-  // TODO: Auth: Set or disable rate limit if authenticated user
 
   // Current route
   const path = req.baseUrl + req.path
@@ -45,9 +49,28 @@ const routeRateLimit = function(
   // This boolean value is passed from the auth.js middleware.
   const proRateLimits = req.locals.rateLimit
 
-  // Freemium level rate limits
-  if (!proRateLimits) {
-    console.log(`applying rate limits`)
+  // Pro level rate limits
+  if (proRateLimits) {
+    // Create new RateLimit if none exists for this route
+    if (!uniqueRateLimits[route]) {
+      uniqueRateLimits[route] = new RateLimit({
+        windowMs: 60 * 1000, // 1 minute window
+        delayMs: 0, // disable delaying - full speed until the max limit is reached
+        max: PRO_RPM, // start blocking after this many requests per minute
+        handler: function(
+          req: express.Request,
+          res: express.Response /*next*/
+        ) {
+          res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+          return res.json({
+            error: `Too many requests. Limits are ${PRO_RPM} requests per minute.`
+          })
+        }
+      })
+    }
+
+    // Freemium level rate limits
+  } else {
     // Create new RateLimit if none exists for this route
     if (!uniqueRateLimits[route]) {
       uniqueRateLimits[route] = new RateLimit({
@@ -65,34 +88,10 @@ const routeRateLimit = function(
         }
       })
     }
-
-    // Call rate limit for this route
-    uniqueRateLimits[route](req, res, next)
-
-  // Pro level rate limits
-  } else {
-
-    // Create new RateLimit if none exists for this route
-    if (!uniqueRateLimits[route]) {
-      uniqueRateLimits[route] = new RateLimit({
-        windowMs: 60 * 1000, // 1 minute window
-        delayMs: 0, // disable delaying - full speed until the max limit is reached
-        max: PRO_RPM, // start blocking after maxRequests
-        handler: function(
-          req: express.Request,
-          res: express.Response /*next*/
-        ) {
-          res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
-          return res.json({
-            error: `Too many requests. Limits are ${PRO_RPM} requests per minute.`
-          })
-        }
-      })
-    }
-
-    console.log(`user passed proper auth. skipping rate limits`)
-    return next()
   }
+
+  // Call rate limit for this route
+  uniqueRateLimits[route](req, res, next)
 }
 
 export { routeRateLimit }

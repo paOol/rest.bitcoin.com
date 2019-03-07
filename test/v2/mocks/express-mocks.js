@@ -43,7 +43,8 @@ const mockReq = {
   is: sinon.stub().returns({}),
   params: {},
   query: {},
-  session: {}
+  session: {},
+  locals: {}
 }
 
 const mockRes = {

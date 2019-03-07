@@ -15,6 +15,14 @@ const helmet = require("helmet")
 const debug = require("debug")("rest-cloud:server")
 const http = require("http")
 const cors = require("cors")
+const AuthMW = require("./middleware/auth")
+
+declare namespace Express {
+   export interface Request {
+      locals?: any
+   }
+}
+
 
 const BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder")
 
@@ -91,16 +99,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, "public")))
 
-//
-// let username = process.env.USERNAME;
-// let password = process.env.PASSWORD;
-//
-// app.use(basicAuth(
-//   {
-//     users: { username: password }
-//   }
-// ));
-
 interface ICustomRequest extends express.Request {
   io: any
 }
@@ -132,6 +130,32 @@ app.use(`/${v1prefix}/` + `util`, utilV1)
 app.use(`/${v1prefix}/` + `dataRetrieval`, dataRetrievalV1)
 app.use(`/${v1prefix}/` + `payloadCreation`, payloadCreationV1)
 app.use(`/${v1prefix}/` + `slp`, slpV1)
+
+
+
+//passport.authenticate('basic', { session : false });
+
+// Read any auth tokens with passport.
+/*
+app.use(
+  `/${v2prefix}/`,
+  passport.authenticate("basic", {
+    session: false
+  })
+)
+*/
+const auth = new AuthMW()
+app.use(`/${v2prefix}/`, auth.mw())
+
+//
+// let username = process.env.USERNAME;
+// let password = process.env.PASSWORD;
+//
+// app.use(basicAuth(
+//   {
+//     users: { username: password }
+//   }
+// ));
 
 // Rate limit on all v2 routes
 app.use(`/${v2prefix}/`, routeRateLimit)

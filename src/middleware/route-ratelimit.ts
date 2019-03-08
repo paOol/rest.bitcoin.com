@@ -38,13 +38,17 @@ const routeRateLimit = function(
   if (maxRequests === 0) return next()
 
   // Current route
+  const rateLimitTier = req.locals.proLimit ? "PRO" : "BASIC"
   const path = req.baseUrl + req.path
   const route =
+    rateLimitTier +
     req.method +
     path
       .split("/")
       .slice(0, 4)
       .join("/")
+
+
 
   // This boolean value is passed from the auth.js middleware.
   const proRateLimits = req.locals.proLimit

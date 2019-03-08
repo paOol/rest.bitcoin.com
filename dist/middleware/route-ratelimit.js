@@ -25,8 +25,10 @@ var routeRateLimit = function (req, res, next) {
     if (maxRequests === 0)
         return next();
     // Current route
+    var rateLimitTier = req.locals.proLimit ? "PRO" : "BASIC";
     var path = req.baseUrl + req.path;
-    var route = req.method +
+    var route = rateLimitTier +
+        req.method +
         path
             .split("/")
             .slice(0, 4)

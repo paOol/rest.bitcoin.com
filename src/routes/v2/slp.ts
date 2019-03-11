@@ -1259,24 +1259,11 @@ async function tokenStats(
       txnsSinceGenesis: tokenStatsData.qty_valid_txns_since_genesis,
       validUtxos: tokenStatsData.qty_valid_token_utxos,
       validAddresses: tokenStatsData.qty_valid_token_addresses,
-      circulatingSupply: createBigNumber(
-        tokenStatsData.qty_token_circulating_supply.e,
-        tokenStatsData.qty_token_circulating_supply.c
-      )
-        .dividedBy(10 ** decimals)
-        .toString(),
-      totalBurned: createBigNumber(
-        tokenStatsData.qty_token_burned.e,
-        tokenStatsData.qty_token_burned.c
-      )
-        .dividedBy(10 ** decimals)
-        .toString(),
-      totalMinted: createBigNumber(
-        tokenStatsData.qty_token_minted.e,
-        tokenStatsData.qty_token_minted.c
-      )
-        .dividedBy(10 ** decimals)
-        .toString(),
+      circulatingSupply: parseFloat(
+        tokenStatsData.qty_token_circulating_supply
+      ),
+      totalBurned: parseFloat(tokenStatsData.qty_token_burned),
+      totalMinted: parseFloat(tokenStatsData.qty_token_minted),
       satoshisLockedUp: tokenStatsData.qty_satoshis_locked_up
     }
 

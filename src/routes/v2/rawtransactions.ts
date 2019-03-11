@@ -607,6 +607,7 @@ async function sendRawTransactionSingle(
 
 module.exports = {
   router,
+  getRawTransactionsFromNode,
   testableComponents: {
     root,
     decodeRawTransactionSingle,

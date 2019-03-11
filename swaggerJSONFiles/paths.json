@@ -1628,6 +1628,31 @@
         }
       }
     },
+    "/slp/validateTxid/{txid}": {
+      "get": {
+        "tags": ["slp"],
+        "summary": "Validate single txid",
+        "description": "Validate single txid",
+        "operationId": "validateTxidSingle",
+        "parameters": [
+          {
+            "name": "txid",
+            "in": "path",
+            "description": "The txid",
+            "required": true,
+            "example": "1cda254d0a995c713b7955298ed246822bee487458cd9747a91d9e81d9d28125",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/validateTxid": {
       "post": {
         "tags": ["slp"],
@@ -1665,6 +1690,31 @@
             "description": "The token id",
             "required": true,
             "example": "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
+    "/slp/txDetails/{txid}": {
+      "get": {
+        "tags": ["slp"],
+        "summary": "SLP transaction details",
+        "description": "Transaction details on a token transfer.",
+        "operationId": "txDetails",
+        "parameters": [
+          {
+            "name": "txid",
+            "in": "path",
+            "description": "The BCH transaction ID",
+            "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }

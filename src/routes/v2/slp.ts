@@ -43,8 +43,8 @@ if (!process.env.REST_URL) process.env.REST_URL = `https://rest.bitcoin.com/v2/`
 if (!process.env.TREST_URL)
   process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
 
-if (!process.env.SLPDB_URL)
-  process.env.SLPDB_URL = `https://slpdb.bchdata.cash/`
+// if (!process.env.SLPDB_URL)
+//   process.env.SLPDB_URL = `https://slpdb.bchdata.cash/`
 
 router.get("/", root)
 router.get("/list", list)

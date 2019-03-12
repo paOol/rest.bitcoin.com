@@ -42,8 +42,7 @@ describe("#SLP", () => {
     originalEnvVars = {
       BITDB_URL: process.env.BITDB_URL,
       BITCOINCOM_BASEURL: process.env.BITCOINCOM_BASEURL,
-      SLP_VALIDATE_URL: process.env.SLP_VALIDATE_URL,
-      SLP_VALIDATE_FAILOVER_URL: process.env.SLP_VALIDATE_FAILOVER_URL
+      SLPDB_URL: process.env.SLPDB_URL
     }
 
     // Set default environment variables for unit tests.
@@ -53,8 +52,7 @@ describe("#SLP", () => {
     if (process.env.TEST === "unit") {
       process.env.BITDB_URL = "http://fakeurl/"
       process.env.BITCOINCOM_BASEURL = "http://fakeurl/"
-      process.env.SLP_VALIDATE_URL = "http://fakeurl/"
-      process.env.SLP_VALIDATE_FAILOVER_URL = "http://fakeurl/"
+      process.env.SLPDB_URL = "http://fakeurl/"
       mockServerUrl = `http://fakeurl`
     }
   })
@@ -88,9 +86,7 @@ describe("#SLP", () => {
     // Restore any pre-existing environment variables.
     process.env.BITDB_URL = originalEnvVars.BITDB_URL
     process.env.BITCOINCOM_BASEURL = originalEnvVars.BITCOINCOM_BASEURL
-    process.env.SLP_VALIDATE_URL = originalEnvVars.SLP_VALIDATE_URL
-    process.env.SLP_VALIDATE_FAILOVER_URL =
-      originalEnvVars.SLP_VALIDATE_FAILOVER_URL
+    process.env.SLPDB_URL = originalEnvVars.SLPDB_URL
   })
 
   describe("#root", async () => {

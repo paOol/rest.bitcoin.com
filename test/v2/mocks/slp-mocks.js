@@ -3037,11 +3037,52 @@ const mockTokenStats = {
   qty_satoshis_locked_up: 81900
 }
 
+const mockBalance = {
+  addresses: [
+    {
+      address: "simpleledger:qp9d8mn8ypryfvea2mev0ggc3wg6plpn4suuaeuss3",
+      satoshis_balance: 546,
+      token_balance: "1000"
+    }
+  ]
+}
+
+const mockTransactions = [
+  {
+    txid: "a302f045be8efa1cd982833a7f187ff4fac8baac36da0c887eb2787d8b45e2af",
+    tokenDetails: {
+      valid: true,
+      detail: {
+        decimals: null,
+        tokenIdHex:
+          "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a",
+        timestamp: null,
+        transactionType: "MINT",
+        versionType: 1,
+        documentUri: null,
+        documentSha256Hex: null,
+        symbol: null,
+        name: null,
+        batonVout: 2,
+        containsBaton: true,
+        genesisOrMintQuantity: {
+          $numberDecimal: "1000"
+        },
+        sendOutputs: null
+      },
+      invalidReason: null,
+      schema_version: 30
+    }
+  }
+]
+
 module.exports = {
   mockList,
   mockSingleToken,
   mockConvert,
   mockTokenDetails,
   mockTokenStats,
-  mockTx
+  mockTx,
+  mockBalance,
+  mockTransactions
 }

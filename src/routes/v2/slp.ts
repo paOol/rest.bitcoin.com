@@ -48,6 +48,7 @@ router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
 router.post("/list", listBulkToken)
 router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balancesForToken/:tokenId", balancesForTokenSingle)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
@@ -55,6 +56,7 @@ router.post("/validateTxid", validateBulk)
 router.get("/validateTxid/:txid", validateSingle)
 router.get("/txDetails/:txid", txDetails)
 router.get("/tokenStats/:tokenId", tokenStats)
+router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -512,6 +514,66 @@ async function balancesForAddress(
     res.status(500)
     return res.json({
       error: `Error in /balancesForAddress/:address: ${err.message}`
+    })
+  }
+}
+
+// Retrieve token balances for all addresses by single tokenId.
+async function balancesForTokenSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    // Validate the input data.
+    let tokenId = req.params.tokenId
+    if (!tokenId || tokenId === "") {
+      res.status(400)
+      return res.json({ error: "tokenId can not be empty" })
+    }
+
+    const query = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { addresses: 1 },
+        limit: 1000
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
+      delete addy.satoshis_balance
+      addy.tokenBalance = parseFloat(addy.token_balance)
+      addy.slpAddress = addy.address
+      delete addy.address
+      delete addy.token_balance
+      return addy
+    })
+    return res.json(resBalances)
+  } catch (err) {
+    //console.log(`Error object: ${util.inspect(err)}`)
+
+    // Decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({
+      error: `Error in /balancesForToken/:tokenId: ${err.message}`
     })
   }
 }
@@ -1272,6 +1334,77 @@ async function tokenStats(
   }
 }
 
+// Retrieve transactions by tokenId and address.
+async function txsTokenIdAddressSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    // Validate the input data.
+    let tokenId = req.params.tokenId
+    if (!tokenId || tokenId === "") {
+      res.status(400)
+      return res.json({ error: "tokenId can not be empty" })
+    }
+
+    let address = req.params.address
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+
+    const query = {
+      v: 3,
+      q: {
+        find: {
+          db: ["c", "u"],
+          $query: {
+            $or: [
+              {
+                "in.e.a": address
+              },
+              {
+                "out.e.a": address
+              }
+            ],
+            "slp.detail.tokenIdHex": tokenId
+          },
+          $orderby: {
+            "blk.i": -1
+          }
+        },
+        limit: 100
+      },
+      r: {
+        f: "[.[] | { txid: .tx.h, tokenDetails: .slp } ]"
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    return res.json(tokenRes.data.c)
+  } catch (err) {
+    //console.log(`Error object: ${util.inspect(err)}`)
+
+    // Decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({
+      error: `Error in /transactions/:tokenId/:address: ${err.message}`
+    })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -1291,6 +1424,8 @@ module.exports = {
     burnTokenType1,
     burnAllTokenType1,
     txDetails,
-    tokenStats
+    tokenStats,
+    balancesForTokenSingle,
+    txsTokenIdAddressSingle
   }
 }

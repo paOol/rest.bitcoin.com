@@ -43,6 +43,9 @@ if (!process.env.REST_URL) process.env.REST_URL = `https://rest.bitcoin.com/v2/`
 if (!process.env.TREST_URL)
   process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
 
+if (!process.env.SLPDB_URL)
+  process.env.SLPDB_URL = `https://slpdb.bchdata.cash/`
+
 router.get("/", root)
 router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
@@ -54,6 +57,7 @@ router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
 router.get("/validateTxid/:txid", validateSingle)
 router.get("/txDetails/:txid", txDetails)
+router.get("/tokenStats/:tokenId", tokenStats)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -1203,6 +1207,75 @@ async function txDetails(
   }
 }
 
+async function tokenStats(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  let tokenId: string = req.params.tokenId
+  if (!tokenId || tokenId === "") {
+    res.status(400)
+    return res.json({ error: "tokenId can not be empty" })
+  }
+
+  try {
+    const query = {
+      v: 3,
+      c: ["t"],
+      q: {
+        find: {
+          "tokenDetails.tokenIdHex": tokenId
+        },
+        limit: 10
+      },
+      r: {
+        f: "[.[] | { tokenDetails: .tokenDetails, tokenStats: .tokenStats } ]"
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const response = await axios.get(url)
+
+    let tokenDetailsData = response.data.t[0].tokenDetails
+    let tokenStatsData = response.data.t[0].tokenStats
+    let decimals = tokenDetailsData.decimals
+    let tokenStats = {
+      tokenId: tokenDetailsData.tokenIdHex,
+      documentUri: tokenDetailsData.documentUri,
+      documentHash: tokenDetailsData.documentSha256,
+      symbol: tokenDetailsData.symbol,
+      name: tokenDetailsData.name,
+      decimals: tokenDetailsData.decimals,
+      txnsSinceGenesis: tokenStatsData.qty_valid_txns_since_genesis,
+      validUtxos: tokenStatsData.qty_valid_token_utxos,
+      validAddresses: tokenStatsData.qty_valid_token_addresses,
+      circulatingSupply: parseFloat(
+        tokenStatsData.qty_token_circulating_supply
+      ),
+      totalBurned: parseFloat(tokenStatsData.qty_token_burned),
+      totalMinted: parseFloat(tokenStatsData.qty_token_minted),
+      satoshisLockedUp: tokenStatsData.qty_satoshis_locked_up
+    }
+
+    res.json(tokenStats)
+
+    return tokenStats
+  } catch (err) {
+    console.log("ERRRRROR", err)
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /tokenStats: ${err.message}` })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -1221,6 +1294,7 @@ module.exports = {
     sendTokenType1,
     burnTokenType1,
     burnAllTokenType1,
-    txDetails
+    txDetails,
+    tokenStats
   }
 }

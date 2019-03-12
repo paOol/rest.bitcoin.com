@@ -48,6 +48,7 @@ router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
 router.post("/list", listBulkToken)
 router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balancesForToken/:tokenId", balancesForToken)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
@@ -512,6 +513,64 @@ async function balancesForAddress(
     res.status(500)
     return res.json({
       error: `Error in /balancesForAddress/:address: ${err.message}`
+    })
+  }
+}
+
+// Retrieve token balances for all addresses by single tokenId.
+async function balancesForToken(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
+  try {
+    // Validate the input data.
+    let tokenId = req.params.tokenId
+    if (!tokenId || tokenId === "") {
+      res.status(400)
+      return res.json({ error: "tokenId can not be empty" })
+    }
+
+    const query = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { addresses: 1 },
+        limit: 1000
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
+      delete addy.satoshis_balance
+      addy.tokenBalance = parseFloat(addy.token_balance)
+      delete addy.token_balance
+      return addy
+    })
+    return res.json({ balances: resBalances })
+  } catch (err) {
+    //console.log(`Error object: ${util.inspect(err)}`)
+
+    // Decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({
+      error: `Error in /balancesForToken/:tokenId: ${err.message}`
     })
   }
 }

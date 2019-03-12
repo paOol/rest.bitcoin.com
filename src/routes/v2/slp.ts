@@ -48,7 +48,7 @@ router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
 router.post("/list", listBulkToken)
 router.get("/balancesForAddress/:address", balancesForAddress)
-router.get("/balancesForToken/:tokenId", balancesForToken)
+router.get("/balancesForToken/:tokenId", balancesForTokenSingle)
 router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
@@ -518,7 +518,7 @@ async function balancesForAddress(
 }
 
 // Retrieve token balances for all addresses by single tokenId.
-async function balancesForToken(
+async function balancesForTokenSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -1350,6 +1350,7 @@ module.exports = {
     burnTokenType1,
     burnAllTokenType1,
     txDetails,
-    tokenStats
+    tokenStats,
+    balancesForTokenSingle
   }
 }

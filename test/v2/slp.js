@@ -832,6 +832,40 @@ describe("#SLP", () => {
     })
   })
 
+  describe("balancesForTokenSingle()", () => {
+    const balancesForTokenSingle =
+      slpRoute.testableComponents.balancesForTokenSingle
+
+    it("should throw 400 if tokenID is empty", async () => {
+      req.params.tokenId = ""
+      const result = await balancesForTokenSingle(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "tokenId can not be empty")
+    })
+    //
+    it("should get balances for tokenId", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        console.log(mockData.mockBalance)
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, {
+            t: [mockData.mockBalance]
+          })
+      }
+
+      req.params.tokenId =
+        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+
+      const result = await balancesForTokenSingle(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result.balances[0], ["address", "tokenBalance"])
+    })
+  })
+
   describe("txDetails()", () => {
     let txDetails = slpRoute.testableComponents.txDetails
 

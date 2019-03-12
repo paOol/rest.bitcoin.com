@@ -3037,11 +3037,22 @@ const mockTokenStats = {
   qty_satoshis_locked_up: 81900
 }
 
+const mockBalance = {
+  addresses: [
+    {
+      address: "simpleledger:qp9d8mn8ypryfvea2mev0ggc3wg6plpn4suuaeuss3",
+      satoshis_balance: 546,
+      token_balance: "1000"
+    }
+  ]
+}
+
 module.exports = {
   mockList,
   mockSingleToken,
   mockConvert,
   mockTokenDetails,
   mockTokenStats,
-  mockTx
+  mockTx,
+  mockBalance
 }

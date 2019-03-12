@@ -1598,7 +1598,7 @@
         "tags": ["slp"],
         "summary": "list SLP addresses and balances for tokenId",
         "description": "List SLP addresses and balances for tokenId",
-        "operationId": "balancesForToken",
+        "operationId": "balancesForTokenSingle",
         "parameters": [
           {
             "name": "tokenId",

@@ -848,7 +848,6 @@ describe("#SLP", () => {
     it("should get balances for tokenId", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        console.log(mockData.mockBalance)
         nock(`${process.env.SLPDB_URL}`)
           .get(uri => uri.includes("/"))
           .reply(200, {
@@ -916,6 +915,50 @@ describe("#SLP", () => {
       //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
+    })
+  })
+
+  describe("txsTokenIdAddressSingle()", () => {
+    const txsTokenIdAddressSingle =
+      slpRoute.testableComponents.txsTokenIdAddressSingle
+
+    it("should throw 400 if tokenId is empty", async () => {
+      req.params.tokenId = ""
+      const result = await txsTokenIdAddressSingle(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "tokenId can not be empty")
+    })
+
+    it("should throw 400 if address is empty", async () => {
+      req.params.tokenId =
+        "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a"
+      req.params.address = ""
+      const result = await txsTokenIdAddressSingle(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "address can not be empty")
+    })
+
+    it("should get tx details with tokenId and address", async () => {
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, {
+            c: mockData.mockTransactions
+          })
+      }
+
+      req.params.tokenId =
+        "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a"
+      req.params.address = "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz"
+
+      const result = await txsTokenIdAddressSingle(req, res)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAnyKeys(result.transactions[0], ["txid", "tokenDetails"])
     })
   })
 })

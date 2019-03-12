@@ -554,6 +554,8 @@ async function balancesForTokenSingle(
     let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
       delete addy.satoshis_balance
       addy.tokenBalance = parseFloat(addy.token_balance)
+      addy.slpAddress = addy.address
+      delete addy.address
       delete addy.token_balance
       return addy
     })

@@ -1751,6 +1751,41 @@
           }
         }
       }
+    },
+    "/slp/transactions/{tokenId}/{address}": {
+      "get": {
+        "tags": ["slp"],
+        "summary": "SLP transactions by tokenId and address",
+        "description": "Transactions by tokenId and address.",
+        "operationId": "txsTokenIdAddressSingle",
+        "parameters": [
+          {
+            "name": "tokenId",
+            "in": "path",
+            "description": "The BCH tokenId",
+            "required": true,
+            "example": "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "The slp address",
+            "required": true,
+            "example": "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
     }
   }
 }

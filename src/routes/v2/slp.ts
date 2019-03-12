@@ -560,7 +560,7 @@ async function balancesForTokenSingle(
       delete addy.token_balance
       return addy
     })
-    return res.json({ balances: resBalances })
+    return res.json(resBalances)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)
 
@@ -1387,7 +1387,7 @@ async function txsTokenIdAddressSingle(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
-    return res.json({ transactions: tokenRes.data.c })
+    return res.json(tokenRes.data.c)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)
 

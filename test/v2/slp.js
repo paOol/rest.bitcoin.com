@@ -862,7 +862,7 @@ describe("#SLP", () => {
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result[0], ["slpAddress", "tokenBalance"])
+      assert.hasAllKeys(result[0], ["tokenId", "slpAddress", "tokenBalance"])
     })
   })
 

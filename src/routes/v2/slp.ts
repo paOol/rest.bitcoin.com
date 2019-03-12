@@ -552,8 +552,9 @@ async function balancesForTokenSingle(
     const tokenRes = await axios.get(url)
     let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
       delete addy.satoshis_balance
-      addy.tokenBalance = parseFloat(addy.token_balance)
+      addy.tokenBalance = parseFloat(addy.token_balance["$numberDecimal"])
       addy.slpAddress = addy.address
+      addy.tokenId = tokenId
       delete addy.address
       delete addy.token_balance
       return addy

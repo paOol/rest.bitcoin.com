@@ -14,6 +14,8 @@ util.inspect.defaultOptions = { depth: 1 }
 const router: express.Router = express.Router()
 //const BitboxHTTP = bitbox.getInstance()
 
+const FREEMIUM_INPUT_SIZE = 20
+
 router.get("/", root)
 router.get("/detailsByHash/:hash", detailsByHashSingle)
 router.post("/detailsByHash", detailsByHashBulk)
@@ -82,11 +84,11 @@ async function detailsByHashBulk(
       })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hashes)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (hashes.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
       })
     }
 
@@ -190,11 +192,11 @@ async function detailsByHeightBulk(
       })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, heights)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (heights.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
       })
     }
 

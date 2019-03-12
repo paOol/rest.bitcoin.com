@@ -17,6 +17,9 @@ util.inspect.defaultOptions = { depth: 1 }
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
 
+// Max number of items per request for freemium access.
+const FREEMIUM_INPUT_SIZE = 20
+
 // Use the default (and max) page size of 1000
 // https://github.com/bitpay/insight-api#notes-on-upgrading-from-v03
 const PAGE_SIZE = 1000
@@ -110,11 +113,11 @@ async function detailsBulk(
       })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (addresses.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
       })
     }
 
@@ -296,14 +299,13 @@ async function utxoBulk(
       return res.json({ error: "addresses needs to be an array" })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (addresses.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: "Array too large. Max 20 addresses"
       })
     }
-
 
     // Validate each element in the address array.
     for (let i = 0; i < addresses.length; i++) {
@@ -440,11 +442,11 @@ async function unconfirmedBulk(
 
     logger.debug(`Executing address/utxo with these addresses: `, addresses)
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (addresses.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: "Array too large. Max 20 addresses"
       })
     }
 
@@ -641,11 +643,11 @@ async function transactionsBulk(
 
     logger.debug(`Executing address/utxo with these addresses: `, addresses)
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (addresses.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: "Array too large. Max 20 addresses"
       })
     }
 

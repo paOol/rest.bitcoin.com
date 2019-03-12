@@ -43,9 +43,7 @@ const mockReq = {
   is: sinon.stub().returns({}),
   params: {},
   query: {},
-  session: {},
-  locals: {},
-  headers: {}
+  session: {}
 }
 
 const mockRes = {
@@ -74,17 +72,10 @@ const mockRes = {
   statusCode: null, // Default value before calling stats();
   type: sinon.stub().returns({}),
   vary: sinon.stub().returns({}),
-  write: sinon.stub().returns({}),
-  setHeader: sinon.stub().returns({})
+  write: sinon.stub().returns({})
 }
-
-const mockNext = sinon.stub().returns()
-//const mockNext = function(invar) {
-//  console.log(`in: ${util.inspect(invar)}`)
-//}
 
 module.exports = {
   mockReq,
-  mockRes,
-  mockNext
+  mockRes
 }

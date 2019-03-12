@@ -1115,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.1.0",
+		"version": "3.2.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2823,7 +2823,7 @@
 				],
 				"summary": "list SLP addresses and balances for tokenId",
 				"description": "List SLP addresses and balances for tokenId",
-				"operationId": "balancesForToken",
+				"operationId": "balancesForTokenSingle",
 				"parameters": [
 					{
 						"name": "tokenId",

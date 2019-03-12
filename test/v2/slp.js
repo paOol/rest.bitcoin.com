@@ -861,7 +861,7 @@ describe("#SLP", () => {
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result.balances[0], ["slpAddress", "tokenBalance"])
+      assert.hasAllKeys(result[0], ["slpAddress", "tokenBalance"])
     })
   })
 
@@ -958,7 +958,7 @@ describe("#SLP", () => {
       const result = await txsTokenIdAddressSingle(req, res)
       // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
-      assert.hasAnyKeys(result.transactions[0], ["txid", "tokenDetails"])
+      assert.hasAnyKeys(result[0], ["txid", "tokenDetails"])
     })
   })
 })

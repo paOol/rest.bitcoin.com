@@ -556,6 +556,7 @@ async function balancesForTokenSingle(
       delete addy.satoshis_balance
       addy.tokenBalance = parseFloat(addy.token_balance)
       addy.slpAddress = addy.address
+      addy.tokenId = tokenId
       delete addy.address
       delete addy.token_balance
       return addy

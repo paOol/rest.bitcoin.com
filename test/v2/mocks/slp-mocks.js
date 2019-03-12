@@ -3017,9 +3017,72 @@ const mockConvert = {
   legacyAddress: "mvQPGnzRT6gMWASZBMg7NcT3vmvsSKSQtf"
 }
 
+const mockTokenDetails = {
+  tokenIdHex:
+    "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+  documentUri: "",
+  documentSha256: "",
+  symbol: "NAKAMOTO",
+  name: "NAKAMOTO",
+  decimals: 8
+}
+
+const mockTokenStats = {
+  qty_valid_txns_since_genesis: 241,
+  qty_valid_token_utxos: 151,
+  qty_valid_token_addresses: 113,
+  qty_token_circulating_supply: "20995990",
+  qty_token_burned: "4010",
+  qty_token_minted: "21000000",
+  qty_satoshis_locked_up: 81900
+}
+
+const mockBalance = {
+  addresses: [
+    {
+      address: "simpleledger:qp9d8mn8ypryfvea2mev0ggc3wg6plpn4suuaeuss3",
+      satoshis_balance: 546,
+      token_balance: "1000"
+    }
+  ]
+}
+
+const mockTransactions = [
+  {
+    txid: "a302f045be8efa1cd982833a7f187ff4fac8baac36da0c887eb2787d8b45e2af",
+    tokenDetails: {
+      valid: true,
+      detail: {
+        decimals: null,
+        tokenIdHex:
+          "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a",
+        timestamp: null,
+        transactionType: "MINT",
+        versionType: 1,
+        documentUri: null,
+        documentSha256Hex: null,
+        symbol: null,
+        name: null,
+        batonVout: 2,
+        containsBaton: true,
+        genesisOrMintQuantity: {
+          $numberDecimal: "1000"
+        },
+        sendOutputs: null
+      },
+      invalidReason: null,
+      schema_version: 30
+    }
+  }
+]
+
 module.exports = {
   mockList,
   mockSingleToken,
+  mockConvert,
+  mockTokenDetails,
+  mockTokenStats,
   mockTx,
-  mockConvert
+  mockBalance,
+  mockTransactions
 }

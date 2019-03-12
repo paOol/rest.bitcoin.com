@@ -1115,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.0.1",
+		"version": "3.2.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2816,6 +2816,33 @@
 				}
 			}
 		},
+		"/slp/balancesForToken/{tokenId}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list SLP addresses and balances for tokenId",
+				"description": "List SLP addresses and balances for tokenId",
+				"operationId": "balancesForTokenSingle",
+				"parameters": [
+					{
+						"name": "tokenId",
+						"in": "path",
+						"description": "The slp tokenId",
+						"required": true,
+						"example": "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/balance/{address}/{tokenId}": {
 			"get": {
 				"tags": [
@@ -2906,6 +2933,33 @@
 				}
 			}
 		},
+		"/slp/tokenStats/{tokenId}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "List stats for a single slp token",
+				"description": "List stats for a single slp token",
+				"operationId": "singleTokenStats",
+				"parameters": [
+					{
+						"name": "tokenId",
+						"in": "path",
+						"description": "The token id",
+						"required": true,
+						"example": "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/txDetails/{txid}": {
 			"get": {
 				"tags": [
@@ -2921,6 +2975,43 @@
 						"description": "The BCH transaction ID",
 						"required": true,
 						"example": "8ab4ac5dea3f9024e3954ee5b61452955d659a34561f79ef62ac44e133d0980e",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/transactions/{tokenId}/{address}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "SLP transactions by tokenId and address",
+				"description": "Transactions by tokenId and address.",
+				"operationId": "txsTokenIdAddressSingle",
+				"parameters": [
+					{
+						"name": "tokenId",
+						"in": "path",
+						"description": "The BCH tokenId",
+						"required": true,
+						"example": "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a",
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "address",
+						"in": "path",
+						"description": "The slp address",
+						"required": true,
+						"example": "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz",
 						"schema": {
 							"type": "string"
 						}

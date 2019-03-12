@@ -8,15 +8,6 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
-let BigNumber = require("bignumber.js")
-
-let createBigNumber = (e, c) => {
-  let a = new BigNumber(0)
-  a.e = e
-  a.c = c
-  return a
-}
-
 const FREEMIUM_INPUT_SIZE = 20
 
 // Used to convert error messages to strings, to safely pass to users.

@@ -42,8 +42,7 @@ describe("#SLP", () => {
     originalEnvVars = {
       BITDB_URL: process.env.BITDB_URL,
       BITCOINCOM_BASEURL: process.env.BITCOINCOM_BASEURL,
-      SLP_VALIDATE_URL: process.env.SLP_VALIDATE_URL,
-      SLP_VALIDATE_FAILOVER_URL: process.env.SLP_VALIDATE_FAILOVER_URL
+      SLPDB_URL: process.env.SLPDB_URL
     }
 
     // Set default environment variables for unit tests.
@@ -53,8 +52,7 @@ describe("#SLP", () => {
     if (process.env.TEST === "unit") {
       process.env.BITDB_URL = "http://fakeurl/"
       process.env.BITCOINCOM_BASEURL = "http://fakeurl/"
-      process.env.SLP_VALIDATE_URL = "http://fakeurl/"
-      process.env.SLP_VALIDATE_FAILOVER_URL = "http://fakeurl/"
+      process.env.SLPDB_URL = "http://fakeurl/"
       mockServerUrl = `http://fakeurl`
     }
   })
@@ -88,9 +86,7 @@ describe("#SLP", () => {
     // Restore any pre-existing environment variables.
     process.env.BITDB_URL = originalEnvVars.BITDB_URL
     process.env.BITCOINCOM_BASEURL = originalEnvVars.BITCOINCOM_BASEURL
-    process.env.SLP_VALIDATE_URL = originalEnvVars.SLP_VALIDATE_URL
-    process.env.SLP_VALIDATE_FAILOVER_URL =
-      originalEnvVars.SLP_VALIDATE_FAILOVER_URL
+    process.env.SLPDB_URL = originalEnvVars.SLPDB_URL
   })
 
   describe("#root", async () => {
@@ -782,6 +778,57 @@ describe("#SLP", () => {
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
       assert.equal(result.length, 2)
+    })
+  })
+
+  describe("tokenStatsSingle()", () => {
+    const tokenStatsSingle = slpRoute.testableComponents.tokenStats
+
+    it("should throw 400 if tokenID is empty", async () => {
+      req.params.tokenId = ""
+      const result = await tokenStatsSingle(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "tokenId can not be empty")
+    })
+    //
+    it("should get token stats for tokenId", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, {
+            t: [
+              {
+                tokenDetails: mockData.mockTokenDetails,
+                tokenStats: mockData.mockTokenStats
+              }
+            ]
+          })
+      }
+
+      req.params.tokenId =
+        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+
+      const result = await tokenStatsSingle(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, [
+        "circulatingSupply",
+        "decimals",
+        "documentHash",
+        "documentUri",
+        "name",
+        "satoshisLockedUp",
+        "symbol",
+        "tokenId",
+        "totalBurned",
+        "totalMinted",
+        "txnsSinceGenesis",
+        "validAddresses",
+        "validUtxos"
+      ])
     })
   })
 

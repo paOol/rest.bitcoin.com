@@ -1115,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.0.0",
+		"version": "3.1.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2899,6 +2899,33 @@
 						}
 					}
 				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/tokenStats/{tokenId}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "List stats for a single slp token",
+				"description": "List stats for a single slp token",
+				"operationId": "singleTokenStats",
+				"parameters": [
+					{
+						"name": "tokenId",
+						"in": "path",
+						"description": "The token id",
+						"required": true,
+						"example": "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "successful response"

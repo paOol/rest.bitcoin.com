@@ -3017,9 +3017,31 @@ const mockConvert = {
   legacyAddress: "mvQPGnzRT6gMWASZBMg7NcT3vmvsSKSQtf"
 }
 
+const mockTokenDetails = {
+  tokenIdHex:
+    "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+  documentUri: "",
+  documentSha256: "",
+  symbol: "NAKAMOTO",
+  name: "NAKAMOTO",
+  decimals: 8
+}
+
+const mockTokenStats = {
+  qty_valid_txns_since_genesis: 241,
+  qty_valid_token_utxos: 151,
+  qty_valid_token_addresses: 113,
+  qty_token_circulating_supply: "20995990",
+  qty_token_burned: "4010",
+  qty_token_minted: "21000000",
+  qty_satoshis_locked_up: 81900
+}
+
 module.exports = {
   mockList,
   mockSingleToken,
-  mockTx,
-  mockConvert
+  mockConvert,
+  mockTokenDetails,
+  mockTokenStats,
+  mockTx
 }

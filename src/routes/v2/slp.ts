@@ -8,6 +8,8 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
+const FREEMIUM_INPUT_SIZE = 20
+
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
@@ -299,11 +301,11 @@ async function listBulkToken(
       })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, tokenIds)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 txids.
+    if (tokenIds.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} tokenIds`
       })
     }
 
@@ -753,11 +755,11 @@ async function convertAddressBulk(
     })
   }
 
-  // Enforce array size rate limits
-  if(!routeUtils.validateArraySize(req, addresses)) {
-    res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+  // Enforce no more than 20 txids.
+  if (addresses.length > FREEMIUM_INPUT_SIZE) {
+    res.status(400)
     return res.json({
-      error: `Array too large.`
+      error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
     })
   }
 
@@ -808,11 +810,11 @@ async function validateBulk(
       return res.json({ error: "txids needs to be an array" })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 txids.
+    if (txids.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
       })
     }
 

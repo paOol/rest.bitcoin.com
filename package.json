@@ -46,8 +46,6 @@
     "mongoose": "^4.10.5",
     "morgan": "^1.9.1",
     "mqtt": "^2.8.0",
-    "passport": "^0.4.0",
-    "passport-http": "^0.3.0",
     "pg": "^6.2.3",
     "pg-hstore": "^2.3.2",
     "sequelize": "^3.30.4",

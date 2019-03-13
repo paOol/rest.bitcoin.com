@@ -10,6 +10,8 @@ const logger = require("./logging.js")
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
 
+const FREEMIUM_INPUT_SIZE = 20
+
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
@@ -102,11 +104,11 @@ async function validateAddressBulk(
       })
     }
 
-    // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    // Enforce no more than 20 addresses.
+    if (addresses.length > FREEMIUM_INPUT_SIZE) {
+      res.status(400)
       return res.json({
-        error: `Array too large.`
+        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
       })
     }
 

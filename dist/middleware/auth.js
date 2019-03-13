@@ -20,15 +20,29 @@ var _this;
 var PRO_PASS = process.env.PRO_PASS
     ? parseInt(process.env.PRO_PASS)
     : "BITBOX";
+// Auth Middleware
 var AuthMW = /** @class */ (function () {
     function AuthMW() {
         _this = this;
+        // Initialize passport for 'anonymous' authentication.
+        /*
+        passport.use(
+          new AnonymousStrategy({ passReqToCallback: true }, function(
+            req,
+            username,
+            password,
+            done
+          ) {
+            console.log(`anonymous auth handler triggered.`)
+          })
+        )
+        */
         passport.use(new AnonymousStrategy());
         // Initialize passport for 'basic' authentication.
         passport.use(new BasicStrategy({ passReqToCallback: true }, function (req, username, password, done) {
-            console.log("req: " + util.inspect(req));
-            console.log("username: " + username);
-            console.log("password: " + password);
+            //console.log(`req: ${util.inspect(req)}`)
+            //console.log(`username: ${username}`)
+            //console.log(`password: ${password}`)
             // Create the req.locals property if it does not yet exist.
             if (!req.locals)
                 req.locals = {};
@@ -40,7 +54,7 @@ var AuthMW = /** @class */ (function () {
             else {
                 req.locals.proLimit = false;
             }
-            console.log("req.locals: " + util.inspect(req.locals));
+            //console.log(`req.locals: ${util.inspect(req.locals)}`)
             return done(null, true);
         }));
     }

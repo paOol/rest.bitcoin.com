@@ -35,6 +35,9 @@ const routeRateLimit = function(
   res: express.Response,
   next: express.NextFunction
 ) {
+  // Create a res.locals object if not passed in.
+  if(!req.locals) req.locals = {}
+  
   // Disable rate limiting if 0 passed from RATE_LIMIT_MAX_REQUESTS
   if (maxRequests === 0) return next()
 

@@ -173,13 +173,12 @@ describe("#Raw-Transactions", () => {
       for (var i = 0; i < 25; i++) testArray.push("")
 
       req.body.hexes = testArray
-      req.locals.proLimit = false
 
       const result = await decodeRawTransactionBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large.")
+      assert.include(result.error, "Array too large. Max 20 hexes")
     })
 
     it("should throw 400 error if hexes is empty", async () => {
@@ -338,13 +337,12 @@ describe("#Raw-Transactions", () => {
       for (var i = 0; i < 25; i++) testArray.push("")
 
       req.body.hexes = testArray
-      req.locals.proLimit = false
 
       const result = await decodeScriptBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large.")
+      assert.include(result.error, "Array too large. Max 20 hexes")
     })
 
     it("should throw 400 error if hexes is empty", async () => {
@@ -431,13 +429,12 @@ describe("#Raw-Transactions", () => {
       for (var i = 0; i < 25; i++) testArray.push("")
 
       req.body.txids = testArray
-      req.locals.proLimit = false
 
       const result = await getRawTransactionBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large.")
+      assert.include(result.error, "Array too large. Max 20 txids")
     })
 
     it("should throw 400 error if txid is empty", async () => {
@@ -626,13 +623,12 @@ describe("#Raw-Transactions", () => {
       for (var i = 0; i < 25; i++) testArray.push("")
 
       req.body.hexes = testArray
-      req.locals.proLimit = false
 
       const result = await sendRawTransaction(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large.")
+      assert.include(result.error, "Array too large. Max 20 hexes")
     })
 
     it("should throw 400 error if hex array element is empty", async () => {

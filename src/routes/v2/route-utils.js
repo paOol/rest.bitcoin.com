@@ -15,25 +15,7 @@ const BITBOX = new BITBOXCli()
 module.exports = {
   validateNetwork, // Prevents a common user error
   setEnvVars, // Allows RPC variables to be set dynamically based on changing env vars.
-  decodeError, // Extract and interpret error messages.
-  validateArraySize // Ensure the passed array meets rate limiting requirements.
-}
-
-// This function expects the Request Express.js object and an array as input.
-// The array is then validated against freemium and pro-tier rate limiting
-// requirements. A boolean is returned to indicate if the array size if valid
-// or not.
-function validateArraySize(req, array) {
-  const FREEMIUM_INPUT_SIZE = 20
-  const PRO_INPUT_SIZE = 100
-
-  if (req.locals && req.locals.proLimit) {
-    if (array.length <= PRO_INPUT_SIZE) return true
-  } else if (array.length <= FREEMIUM_INPUT_SIZE) {
-    return true
-  }
-
-  return false
+  decodeError // Extract and interpret error messages.
 }
 
 // Returns true if user-provided cash address matches the correct network,

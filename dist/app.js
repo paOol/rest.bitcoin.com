@@ -12,7 +12,6 @@ var helmet = require("helmet");
 var debug = require("debug")("rest-cloud:server");
 var http = require("http");
 var cors = require("cors");
-var AuthMW = require("./middleware/auth");
 var BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder");
 var zmq = require("zeromq");
 var sock = zmq.socket("sub");
@@ -92,9 +91,6 @@ app.use("/" + v1prefix + "/" + "util", utilV1);
 app.use("/" + v1prefix + "/" + "dataRetrieval", dataRetrievalV1);
 app.use("/" + v1prefix + "/" + "payloadCreation", payloadCreationV1);
 app.use("/" + v1prefix + "/" + "slp", slpV1);
-// Instantiate the authorization middleware, used to implement pro-tier rate limiting.
-var auth = new AuthMW();
-app.use("/" + v2prefix + "/", auth.mw());
 // Rate limit on all v2 routes
 app.use("/" + v2prefix + "/", route_ratelimit_1.routeRateLimit);
 app.use("/", indexV2);

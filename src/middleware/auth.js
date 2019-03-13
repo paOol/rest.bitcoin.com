@@ -61,7 +61,7 @@ class AuthMW {
 
   // Middleware called by the route.
   mw() {
-    return passport.authenticate("basic", {
+    return passport.authenticate(["basic", "anonymous"], {
       session: false
     })
   }

@@ -11,6 +11,7 @@
 "use strict";
 var passport = require("passport");
 var BasicStrategy = require("passport-http").BasicStrategy;
+var AnonymousStrategy = require("passport-anonymous");
 // Used for debugging and iterrogating JS objects.
 var util = require("util");
 util.inspect.defaultOptions = { depth: 1 };
@@ -22,6 +23,7 @@ var PRO_PASS = process.env.PRO_PASS
 var AuthMW = /** @class */ (function () {
     function AuthMW() {
         _this = this;
+        passport.use(new AnonymousStrategy());
         // Initialize passport for 'basic' authentication.
         passport.use(new BasicStrategy({ passReqToCallback: true }, function (req, username, password, done) {
             console.log("req: " + util.inspect(req));

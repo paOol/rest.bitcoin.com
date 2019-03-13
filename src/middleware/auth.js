@@ -13,6 +13,7 @@
 
 const passport = require("passport")
 const BasicStrategy = require("passport-http").BasicStrategy
+const AnonymousStrategy = require("passport-anonymous")
 
 // Used for debugging and iterrogating JS objects.
 const util = require("util")
@@ -28,6 +29,8 @@ const PRO_PASS = process.env.PRO_PASS
 class AuthMW {
   constructor() {
     _this = this
+
+    passport.use(new AnonymousStrategy())
 
     // Initialize passport for 'basic' authentication.
     passport.use(

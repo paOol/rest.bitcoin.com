@@ -26,10 +26,24 @@ const PRO_PASS = process.env.PRO_PASS
   ? parseInt(process.env.PRO_PASS)
   : "BITBOX"
 
+// Auth Middleware
 class AuthMW {
   constructor() {
     _this = this
 
+    // Initialize passport for 'anonymous' authentication.
+    /*
+    passport.use(
+      new AnonymousStrategy({ passReqToCallback: true }, function(
+        req,
+        username,
+        password,
+        done
+      ) {
+        console.log(`anonymous auth handler triggered.`)
+      })
+    )
+    */
     passport.use(new AnonymousStrategy())
 
     // Initialize passport for 'basic' authentication.
@@ -40,9 +54,9 @@ class AuthMW {
         password,
         done
       ) {
-        console.log(`req: ${util.inspect(req)}`)
-        console.log(`username: ${username}`)
-        console.log(`password: ${password}`)
+        //console.log(`req: ${util.inspect(req)}`)
+        //console.log(`username: ${username}`)
+        //console.log(`password: ${password}`)
 
         // Create the req.locals property if it does not yet exist.
         if (!req.locals) req.locals = {}
@@ -55,7 +69,7 @@ class AuthMW {
           req.locals.proLimit = false
         }
 
-        console.log(`req.locals: ${util.inspect(req.locals)}`)
+        //console.log(`req.locals: ${util.inspect(req.locals)}`)
 
         return done(null, true)
       })

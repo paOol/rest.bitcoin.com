@@ -17,9 +17,6 @@ util.inspect.defaultOptions = { depth: 1 }
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
 
-// Max number of items per request for freemium access.
-const FREEMIUM_INPUT_SIZE = 20
-
 // Use the default (and max) page size of 1000
 // https://github.com/bitpay/insight-api#notes-on-upgrading-from-v03
 const PAGE_SIZE = 1000
@@ -105,11 +102,11 @@ async function detailsBulk(
     let addresses = req.body.addresses
     const currentPage = req.body.page ? parseInt(req.body.page, 10) : 0
 
-    // Reject if addresses is not an array.
-    if (!Array.isArray(addresses)) {
-      res.status(400)
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, addresses)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: "addresses needs to be an array. Use GET for single address."
+        error: `Array too large.`
       })
     }
 

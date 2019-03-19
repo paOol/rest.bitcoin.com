@@ -34,8 +34,12 @@ var wlogger = winston.createLogger({
     ]
 });
 // This controls the logs to CONSOLE
-wlogger.add(new winston.transports.Console({
+/*
+wlogger.add(
+  new winston.transports.Console({
     format: winston.format.simple(),
     level: "info"
-}));
+  })
+)
+*/
 module.exports = wlogger;

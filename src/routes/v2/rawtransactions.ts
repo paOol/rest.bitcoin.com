@@ -6,7 +6,7 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 import { IResponse } from "./interfaces/IResponse"
 const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
+const logger = require("../../utils/gray-logging.js")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")

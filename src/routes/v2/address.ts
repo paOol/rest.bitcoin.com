@@ -102,6 +102,14 @@ async function detailsBulk(
     let addresses = req.body.addresses
     const currentPage = req.body.page ? parseInt(req.body.page, 10) : 0
 
+    // Reject if addresses is not an array.
+    if (!Array.isArray(addresses)) {
+      res.status(400)
+      return res.json({
+        error: "addresses needs to be an array. Use GET for single address."
+      })
+    }
+
     // Enforce array size rate limits
     if(!routeUtils.validateArraySize(req, addresses)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330

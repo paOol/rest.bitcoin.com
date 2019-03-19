@@ -5,7 +5,7 @@ const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
+const logger = require("../../utils/gray-logging.js")
 
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()

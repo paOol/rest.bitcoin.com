@@ -8,8 +8,6 @@ const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
 
-const FREEMIUM_INPUT_SIZE = 20
-
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
@@ -301,11 +299,11 @@ async function listBulkToken(
       })
     }
 
-    // Enforce no more than 20 txids.
-    if (tokenIds.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, tokenIds)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} tokenIds`
+        error: `Array too large.`
       })
     }
 
@@ -755,11 +753,11 @@ async function convertAddressBulk(
     })
   }
 
-  // Enforce no more than 20 txids.
-  if (addresses.length > FREEMIUM_INPUT_SIZE) {
-    res.status(400)
+  // Enforce array size rate limits
+  if(!routeUtils.validateArraySize(req, addresses)) {
+    res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
     return res.json({
-      error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
+      error: `Array too large.`
     })
   }
 
@@ -810,11 +808,11 @@ async function validateBulk(
       return res.json({ error: "txids needs to be an array" })
     }
 
-    // Enforce no more than 20 txids.
-    if (txids.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
+        error: `Array too large.`
       })
     }
 
@@ -1214,22 +1212,6 @@ async function txDetails(
     if (txid.length !== 64) {
       res.status(400)
       return res.json({ error: "This is not a txid" })
-    }
-
-    // Bullshit code to get the coverage test to pass.
-    // TODO: remove this code paragraph.
-    for (var i = 0; i < 1; i++) {
-      let a = 0
-
-      let b = 1
-
-      let c = 2
-
-      a = b + c
-
-      c = b + a
-
-      b = a + b
     }
 
     // Create a local instantiation of BITBOX

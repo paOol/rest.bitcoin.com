@@ -535,14 +535,12 @@ async function balancesForTokenSingle(
     const query = {
       v: 3,
       q: {
-        db: ["t"],
         find: {
-          $query: {
-            "tokenDetails.tokenIdHex": tokenId
-          }
+          "tokenDetails.tokenIdHex": tokenId,
+          token_balance: { $gte: 0 }
         },
-        project: { addresses: 1 },
-        limit: 1000
+        limit: 10000,
+        project: { address: 1, satoshis_balance: 1, token_balance: 1, _id: 0 }
       }
     }
 
@@ -552,9 +550,9 @@ async function balancesForTokenSingle(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
-    let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
+    let resBalances: any[] = tokenRes.data.a.map((addy, index) => {
       delete addy.satoshis_balance
-      addy.tokenBalance = parseFloat(addy.token_balance["$numberDecimal"])
+      addy.tokenBalance = parseFloat(addy.token_balance)
       addy.slpAddress = addy.address
       addy.tokenId = tokenId
       delete addy.address
@@ -563,7 +561,7 @@ async function balancesForTokenSingle(
     })
     return res.json(resBalances)
   } catch (err) {
-    //console.log(`Error object: ${util.inspect(err)}`)
+    // console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

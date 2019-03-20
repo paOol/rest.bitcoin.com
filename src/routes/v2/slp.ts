@@ -488,57 +488,42 @@ async function balancesForAddress(
     }
 
     // Prevent a common user error. Ensure they are using the correct network address.
-    let cashAddr = utils.toCashAddress(address)
-    const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    if (!networkIsValid) {
-      res.status(400)
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      })
+    // let cashAddr = utils.toCashAddress(address)
+    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    // if (!networkIsValid) {
+    //   res.status(400)
+    //   return res.json({
+    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+    //   })
+    // }
+
+    const query = {
+      v: 3,
+      q: {
+        db: ["a"],
+        find: {
+          address: SLP.Address.toSLPAddress(address),
+          token_balance: { $gte: 0 }
+        },
+        limit: 10000
+      },
+      r: {
+        f:
+          "[.[] | { tokenId: .tokenDetails.tokenIdHex, decimals: .tokenDetails, balance: .token_balance }]"
+      }
     }
 
-    let isMainnet = SLP.Address.isMainnetAddress(address)
-    let tmpSLP: any
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+    console.log(url)
 
-    if (isMainnet) {
-      tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
+    const tokenRes = await axios.get(url)
+    if (tokenRes.data.a.length > 0) {
+      tokenRes.data.a[0].balance = parseFloat(tokenRes.data.a[0].balance)
+      return res.json(tokenRes.data.a[0])
     } else {
-      tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
-    }
-
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpSLP, slpValidator)
-
-    // Convert input to an simpleledger: address.
-    const slpAddr = SLP.Address.toSLPAddress(req.params.address)
-
-    // Get balances and utxos for the address of interest.
-    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-
-    // If balances for this address exist, continue processing.
-    if (balances.slpTokenBalances) {
-      // An array of txids, each representing a token class possed by this address.
-      let keys = Object.keys(balances.slpTokenBalances)
-
-      // Query the token information for each token class found.
-      const axiosPromises = keys.map(async (key: any) => {
-        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
-
-        return {
-          tokenId: key,
-          balance: balances.slpTokenBalances[key]
-            .div(10 ** tokenMetadata.decimals)
-            .toString(),
-          decimalCount: tokenMetadata.decimals
-        }
-      })
-
-      // Wait for all parallel promises to return.
-      const axiosResult: Array<any> = await axios.all(axiosPromises)
-      return res.json(axiosResult)
-
-      // If no balances for this address exist, exit.
-    } else {
-      return res.json("No balances for this address")
+      return res.json("No balance for this address")
     }
   } catch (err) {
     console.log(`Error object: ${util.inspect(err)}`)
@@ -552,7 +537,7 @@ async function balancesForAddress(
 
     res.status(500)
     return res.json({
-      error: `Error in /balancesForAddress/:address: ${err.message}`
+      error: `Error in /ddress/:address: ${err.message}`
     })
   }
 }
@@ -911,17 +896,33 @@ async function validateSingle(
 
     logger.debug(`Executing slp/validate/:txid with this txid: `, txid)
 
-    // Validate txid
-    // Dev note: must call module.exports to allow stubs in unit tests.
-    const isValid = await module.exports.testableComponents.isValidSlpTxid(txid)
-
-    let tmp: any = {
-      txid: txid,
-      valid: isValid ? true : false
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": [txid, txid]
+        },
+        limit: 300,
+        project: { "slp.valid": 1 }
+      },
+      r: {
+        f: "[.[] | {valid: .slp.valid}]"
+      }
     }
 
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
     res.status(200)
-    return res.json(tmp)
+    return res.json({
+      txid: txid,
+      valid: tokenRes.data.c[0].valid
+    })
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

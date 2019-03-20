@@ -4,8 +4,7 @@ import * as express from "express"
 import * as requestUtils from "./services/requestUtils"
 import { IResponse } from "./interfaces/IResponse"
 import axios from "axios"
-const logger = require("../../utils/gray-logging.js")
-const wlog = require("../../utils/winston-logging")
+const logger = require("./logging.js")
 const routeUtils = require("./route-utils")
 
 //const router = express.Router()
@@ -87,7 +86,6 @@ async function detailsFromInsight(
     return retData
   } catch (err) {
     logger.debug(`Error in detailsFromInsight().`)
-    wlog.error(`Error in address.js/detailsFromInsight(): `, err)
     throw err
   }
 }
@@ -121,7 +119,6 @@ async function detailsBulk(
     }
 
     logger.debug(`Executing address/details with these addresses: `, addresses)
-    wlog.debug(`Executing address/details with these addresses: `, addresses)
 
     // Validate each element in the address array.
     for (let i = 0; i < addresses.length; i++) {
@@ -161,7 +158,6 @@ async function detailsBulk(
     return res.json(result)
   } catch (err) {
     //logger.error(`Error in detailsBulk(): `, err)
-    wlog.error(`Error in detailsBulk(): `, err)
 
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -199,7 +195,6 @@ async function detailsSingle(
     }
 
     logger.debug(`Executing address/detailsSingle with this address: `, address)
-    wlog.debug(`Executing address/detailsSingle with this address: `, address)
 
     // Ensure the input is a valid BCH address.
     try {
@@ -236,7 +231,6 @@ async function detailsSingle(
 
     // Write out error to error log.
     //logger.error(`Error in address.ts/detailsSingle: `, err)
-    wlog.error(`Error in address.ts/detailsSingle(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -282,8 +276,7 @@ async function utxoFromInsight(thisAddress: string) {
 
     return retData
   } catch (err) {
-    //logger.debug(`Error in address.js/utxoFromInsight()`)
-    wlog.error(`Error in address.js/utxoFromInsight(): `, err)
+    logger.debug(`Error in address.js/utxoFromInsight()`)
     throw err
   }
 }
@@ -337,7 +330,6 @@ async function utxoBulk(
     }
 
     logger.debug(`Executing address/utxoBulk with these addresses: `, addresses)
-    wlog.debug(`Executing address/utxoBulk with these addresses: `, addresses)
 
     // Loops through each address and creates an array of Promises, querying
     // Insight API in parallel.
@@ -360,7 +352,6 @@ async function utxoBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/decodeRawTransaction(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -389,7 +380,6 @@ async function utxoSingle(
     }
 
     logger.debug(`Executing address/utxoSingle with this address: `, address)
-    wlog.debug(`Executing address/utxoSingle with this address: `, address)
 
     // Ensure the input is a valid BCH address.
     try {
@@ -426,7 +416,6 @@ async function utxoSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/utxoSingle(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -449,7 +438,6 @@ async function unconfirmedBulk(
     }
 
     logger.debug(`Executing address/utxo with these addresses: `, addresses)
-    wlog.debug(`Executing address/utxo with these addresses: `, addresses)
 
     // Enforce array size rate limits
     if(!routeUtils.validateArraySize(req, addresses)) {
@@ -516,7 +504,6 @@ async function unconfirmedBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/unconfirmedBulk(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -545,7 +532,6 @@ async function unconfirmedSingle(
     }
 
     logger.debug(`Executing address/utxoSingle with this address: `, address)
-    wlog.debug(`Executing address/utxoSingle with this address: `, address)
 
     // Ensure the input is a valid BCH address.
     try {
@@ -605,7 +591,6 @@ async function unconfirmedSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/unconfirmedSingle(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -633,7 +618,6 @@ async function transactionsFromInsight(
 
     return retData
   } catch (err) {
-    wlog.error(`Error in address.js/transactionsFromInsight(): `, err)
     throw err
   }
 }
@@ -655,7 +639,6 @@ async function transactionsBulk(
     }
 
     logger.debug(`Executing address/utxo with these addresses: `, addresses)
-    wlog.debug(`Executing address/utxo with these addresses: `, addresses)
 
     // Enforce array size rate limits
     if(!routeUtils.validateArraySize(req, addresses)) {
@@ -710,7 +693,6 @@ async function transactionsBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/transactionsBulk(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -741,10 +723,6 @@ async function transactionsSingle(
     }
 
     logger.debug(
-      `Executing address/transactionsSingle with this address: `,
-      address
-    )
-    wlog.debug(
       `Executing address/transactionsSingle with this address: `,
       address
     )
@@ -785,7 +763,6 @@ async function transactionsSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/transactionsSingle(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -815,7 +792,6 @@ async function fromXPubSingle(
     }
 
     logger.debug(`Executing address/fromXPub with this xpub: `, xpub)
-    wlog.debug(`Executing address/fromXPub with this xpub: `, xpub)
 
     let cashAddr = BITBOX.Address.fromXPub(xpub, hdPath)
     let legacyAddr = BITBOX.Address.toLegacyAddress(cashAddr)
@@ -834,7 +810,6 @@ async function fromXPubSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
-    wlog.error(`Error in address.js/fromXPubSingle(): `, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

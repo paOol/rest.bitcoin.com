@@ -10,7 +10,7 @@ const router = express.Router()
 import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
-const logger = require("../../utils/gray-logging.js")
+const logger = require("./logging.js")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")

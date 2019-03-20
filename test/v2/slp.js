@@ -204,7 +204,7 @@ describe("#SLP", () => {
         "259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["id"])
       assert.include(result.id, "not found")
@@ -852,7 +852,7 @@ describe("#SLP", () => {
         nock(`${process.env.SLPDB_URL}`)
           .get(uri => uri.includes("/"))
           .reply(200, {
-            t: [mockData.mockBalance]
+            a: [mockData.mockBalance]
           })
       }
 

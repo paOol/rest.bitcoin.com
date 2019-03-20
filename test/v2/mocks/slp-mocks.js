@@ -3038,13 +3038,9 @@ const mockTokenStats = {
 }
 
 const mockBalance = {
-  addresses: [
-    {
-      address: "simpleledger:qp9d8mn8ypryfvea2mev0ggc3wg6plpn4suuaeuss3",
-      satoshis_balance: 546,
-      token_balance: "1000"
-    }
-  ]
+  slpAddress: "simpleledger:qp9d8mn8ypryfvea2mev0ggc3wg6plpn4suuaeuss3",
+  satoshis_balance: 546,
+  token_balance: "1000"
 }
 
 const mockTransactions = [

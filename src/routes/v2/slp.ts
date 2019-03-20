@@ -359,14 +359,20 @@ async function lookupToken(tokenId) {
     const query = {
       v: 3,
       q: {
-        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
         limit: 1000
       }
     }
 
     const s = JSON.stringify(query)
     const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.BITDB_URL}q/${b64}`
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes = await axios.get(url)
 
@@ -375,45 +381,64 @@ async function lookupToken(tokenId) {
 
     let formattedTokens: Array<any> = []
 
-    if (tokenRes.data.u.length) {
-      tokenRes.data.u.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
+    // if (tokenRes.data.u.length) {
+    //   tokenRes.data.u.forEach((token: any) => {
+    //     let div = "1"
+    //     for (let i = 0; i < parseInt(token.out[0].h8); i++) {
+    //       div += "0"
+    //     }
+    //
+    //     formattedTokens.push({
+    //       id: token.tx.h,
+    //       timestamp: token.blk
+    //         ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
+    //         : "unconfirmed",
+    //       symbol: token.out[0].s4,
+    //       name: token.out[0].s5,
+    //       documentUri: token.out[0].s6,
+    //       documentHash: token.out[0].h7,
+    //       decimals: parseInt(token.out[0].h8),
+    //       initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
+    //     })
+    //   })
+    // }
 
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: token.blk
-            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-            : "unconfirmed",
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
-      })
-    }
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token.tokenDetails.id = token.tokenDetails.tokenIdHex
+        delete token.tokenDetails.tokenIdHex
+        token.tokenDetails.documentHash = token.tokenDetails.documentSha256
+        delete token.tokenDetails.documentSha256
+        token.tokenDetails.initialTokenQty = parseFloat(
+          token.tokenDetails.genesisOrMintQuantity
+        )
+        delete token.tokenDetails.genesisOrMintQuantity
+        delete token.tokenDetails.transactionType
+        delete token.tokenDetails.batonVout
+        delete token.tokenDetails.sendOutputs
 
-    if (tokenRes.data.c.length) {
-      tokenRes.data.c.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
+        token.tokenDetails.blockCreated = token.tokenStats.block_created
+        token.tokenDetails.block_last_active_send =
+          token.tokenStats.block_last_active_send
+        token.tokenDetails.block_last_active_mint =
+          token.tokenStats.block_last_active_mint
+        token.tokenDetails.txnsSinceGenesis =
+          token.tokenStats.qty_valid_txns_since_genesis
+        token.tokenDetails.addresses =
+          token.tokenStats.qty_valid_token_addresses
+        token.tokenDetails.minted = parseFloat(
+          token.tokenStats.qty_token_minted
+        )
+        token.tokenDetails.burned = parseFloat(
+          token.tokenStats.qty_token_burned
+        )
+        token.tokenDetails.circulatingSupply = parseFloat(
+          token.tokenStats.qty_token_circulating_supply
+        )
+        token.tokenDetails.mintingBatonStatus =
+          token.tokenStats.minting_baton_status
 
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000)),
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
+        formattedTokens.push(token.tokenDetails)
       })
     }
 
@@ -520,7 +545,6 @@ async function balancesForAddress(
       return res.json("No balances for this address")
     }
   } catch (err) {
-    console.log("asdf", err)
     console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.

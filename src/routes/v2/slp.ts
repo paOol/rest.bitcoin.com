@@ -511,15 +511,11 @@ async function balancesForAddress(
     // Convert input to an simpleledger: address.
     const slpAddr = SLP.Address.toSLPAddress(req.params.address)
 
-    console.log("slP", slpAddr)
     // Get balances and utxos for the address of interest.
-    console.log("tmpbitboxNetwork", tmpbitboxNetwork)
     const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-    console.log("asdf", balances)
 
     // If balances for this address exist, continue processing.
     if (balances.slpTokenBalances) {
-      console.log("asdf")
       // An array of txids, each representing a token class possed by this address.
       let keys = Object.keys(balances.slpTokenBalances)
 

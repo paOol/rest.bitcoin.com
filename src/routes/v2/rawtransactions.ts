@@ -12,8 +12,6 @@ const logger = require("./logging.js")
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
 
-const FREEMIUM_INPUT_SIZE = 20
-
 const BitboxHTTP = axios.create({
   baseURL: process.env.RPC_BASEURL
 })
@@ -107,10 +105,11 @@ async function decodeRawTransactionBulk(
       return res.json({ error: "hexes must be an array" })
     }
 
-    if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, hexes)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+        error: `Array too large.`
       })
     }
 
@@ -263,10 +262,12 @@ async function decodeScriptBulk(
       res.status(400)
       return res.json({ error: "hexes must be an array" })
     }
-    if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, hexes)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+        error: `Array too large.`
       })
     }
 
@@ -360,10 +361,12 @@ async function getRawTransactionBulk(
       res.status(400)
       return res.json({ error: "txids must be an array" })
     }
-    if (txids.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} txids`
+        error: `Array too large.`
       })
     }
 
@@ -477,11 +480,11 @@ async function sendRawTransactionBulk(
       requestConfig
     } = routeUtils.setEnvVars()
 
-    // Reject if there are too many elements in the array.
-    if (hexes.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, hexes)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} hexes`
+        error: `Array too large.`
       })
     }
 

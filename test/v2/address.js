@@ -138,7 +138,7 @@ describe("#AddressRouter", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 addresses")
+      assert.include(result.error, "Array too large")
     })
 
     it("should detect a network mismatch", async () => {
@@ -620,7 +620,7 @@ describe("#AddressRouter", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 addresses")
+      assert.include(result.error, "Array too large")
     })
   })
 
@@ -769,7 +769,7 @@ describe("#AddressRouter", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 addresses")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw an error for an invalid address", async () => {
@@ -1009,7 +1009,7 @@ describe("#AddressRouter", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 addresses")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw an error for an invalid address", async () => {

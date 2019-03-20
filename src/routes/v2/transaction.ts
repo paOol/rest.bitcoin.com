@@ -78,10 +78,11 @@ async function detailsBulk(
       return res.json({ error: "txids needs to be an array" })
     }
 
-    // Enforce no more than 20 txids.
-    if (txids.length > 20) {
-      res.json({
-        error: "Array too large. Max 20 txids"
+    // Enforce array size rate limits
+    if(!routeUtils.validateArraySize(req, txids)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      return res.json({
+        error: `Array too large.`
       })
     }
 

@@ -901,13 +901,10 @@ async function validateSingle(
       q: {
         db: ["c", "u"],
         find: {
-          "tx.h": [txid, txid]
+          "tx.h": txid
         },
         limit: 300,
-        project: { "slp.valid": 1 }
-      },
-      r: {
-        f: "[.[] | {valid: .slp.valid}]"
+        project: { "slp.valid": 1, "tx.h": 1 }
       }
     }
 
@@ -918,10 +915,18 @@ async function validateSingle(
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
 
+    let valid
+    if (tokenRes.data.c.length > 0) {
+      valid = tokenRes.data.c[0].slp.valid
+    } else if (tokenRes.data.u.length > 0) {
+      valid = tokenRes.data.u[0].slp.valid
+    } else {
+      valid = false
+    }
     res.status(200)
     return res.json({
       txid: txid,
-      valid: tokenRes.data.c[0].valid
+      valid: valid
     })
   } catch (err) {
     // Attempt to decode the error message.

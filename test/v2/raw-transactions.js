@@ -21,7 +21,7 @@ let originalEnvVars // Used during transition from integration to unit tests.
 
 // Mocking data.
 //delete require.cache[require.resolve("./mocks/express-mocks")] // Fixes bug
-const { mockReq, mockRes } = require("./mocks/express-mocks")
+const { mockReq, mockRes, mockNext } = require("./mocks/express-mocks")
 const mockData = require("./mocks/raw-transactions-mocks")
 
 // Used for debugging.
@@ -29,7 +29,7 @@ const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
 
 describe("#Raw-Transactions", () => {
-  let req, res
+  let req, res, next
 
   before(() => {
     // Save existing environment variables.
@@ -55,11 +55,13 @@ describe("#Raw-Transactions", () => {
     // Mock the req and res objects used by Express routes.
     req = mockReq
     res = mockRes
+    next = mockNext
 
     // Explicitly reset the parmas and body.
     req.params = {}
     req.body = {}
     req.query = {}
+    req.locals = {}
 
     // Activate nock if it's inactive.
     if (!nock.isActive()) nock.activate()
@@ -178,7 +180,7 @@ describe("#Raw-Transactions", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 hexes")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw 400 error if hexes is empty", async () => {
@@ -342,7 +344,7 @@ describe("#Raw-Transactions", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 hexes")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw 400 error if hexes is empty", async () => {
@@ -434,7 +436,7 @@ describe("#Raw-Transactions", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 txids")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw 400 error if txid is empty", async () => {
@@ -628,7 +630,7 @@ describe("#Raw-Transactions", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Array too large. Max 20 hexes")
+      assert.include(result.error, "Array too large")
     })
 
     it("should throw 400 error if hex array element is empty", async () => {

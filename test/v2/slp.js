@@ -67,6 +67,7 @@ describe("#SLP", () => {
     //req.params = {}
     req.body = {}
     req.query = {}
+    req.locals = {}
 
     // Activate nock if it's inactive.
     if (!nock.isActive()) nock.activate()

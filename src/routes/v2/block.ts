@@ -3,7 +3,7 @@
 import * as express from "express"
 import * as requestUtils from "./services/requestUtils"
 import * as bitbox from "./services/bitbox"
-const logger = require("../../utils/gray-logging.js")
+const logger = require("./logging.js")
 import axios from "axios"
 const routeUtils = require("./route-utils")
 

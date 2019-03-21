@@ -162,6 +162,41 @@ const requestConfig: IRequestConfig = {
   }
 }
 
+function formatTokenOutput(token) {
+  token.tokenDetails.id = token.tokenDetails.tokenIdHex
+  delete token.tokenDetails.tokenIdHex
+  token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
+  delete token.tokenDetails.documentSha256Hex
+  token.tokenDetails.initialTokenQty = parseFloat(
+    token.tokenDetails.genesisOrMintQuantity
+  )
+  delete token.tokenDetails.genesisOrMintQuantity
+  delete token.tokenDetails.transactionType
+  delete token.tokenDetails.batonVout
+  delete token.tokenDetails.sendOutputs
+
+  token.tokenDetails.blockCreated = token.tokenStats.block_created
+  token.tokenDetails.blockLastActiveSend =
+    token.tokenStats.block_last_active_send
+  token.tokenDetails.blockLastActiveMint =
+    token.tokenStats.block_last_active_mint
+  token.tokenDetails.txnsSinceGenesis =
+    token.tokenStats.qty_valid_txns_since_genesis
+  token.tokenDetails.addresses = token.tokenStats.qty_valid_token_addresses
+  token.tokenDetails.minted = parseFloat(token.tokenStats.qty_token_minted)
+  token.tokenDetails.burned = parseFloat(token.tokenStats.qty_token_burned)
+  token.tokenDetails.circulatingSupply = parseFloat(
+    token.tokenStats.qty_token_circulating_supply
+  )
+  token.tokenDetails.mintingBatonStatus = token.tokenStats.minting_baton_status
+
+  delete token.tokenStats.block_last_active_send
+  delete token.tokenStats.block_last_active_mint
+  delete token.tokenStats.qty_valid_txns_since_genesis
+  delete token.tokenStats.qty_valid_token_addresses
+  return token
+}
+
 function root(
   req: express.Request,
   res: express.Response,
@@ -199,68 +234,12 @@ async function list(
 
     if (tokenRes.data.t.length) {
       tokenRes.data.t.forEach((token: any) => {
-        token.tokenDetails.id = token.tokenDetails.tokenIdHex
-        delete token.tokenDetails.tokenIdHex
-        token.tokenDetails.documentHash = token.tokenDetails.documentSha256
-        delete token.tokenDetails.documentSha256
-        token.tokenDetails.initialTokenQty = parseFloat(
-          token.tokenDetails.genesisOrMintQuantity
-        )
-        delete token.tokenDetails.genesisOrMintQuantity
-        delete token.tokenDetails.transactionType
-        delete token.tokenDetails.batonVout
-        delete token.tokenDetails.sendOutputs
-
-        token.tokenDetails.blockCreated = token.tokenStats.block_created
-        token.tokenDetails.block_last_active_send =
-          token.tokenStats.block_last_active_send
-        token.tokenDetails.block_last_active_mint =
-          token.tokenStats.block_last_active_mint
-        token.tokenDetails.txnsSinceGenesis =
-          token.tokenStats.qty_valid_txns_since_genesis
-        token.tokenDetails.addresses =
-          token.tokenStats.qty_valid_token_addresses
-        token.tokenDetails.minted = parseFloat(
-          token.tokenStats.qty_token_minted
-        )
-        token.tokenDetails.burned = parseFloat(
-          token.tokenStats.qty_token_burned
-        )
-        token.tokenDetails.circulatingSupply = parseFloat(
-          token.tokenStats.qty_token_circulating_supply
-        )
-        token.tokenDetails.mintingBatonStatus =
-          token.tokenStats.minting_baton_status
-
+        token = formatTokenOutput(token)
         formattedTokens.push(token.tokenDetails)
       })
     }
 
-    res.json(formattedTokens)
-    //
-    // if (tokenRes.data.u.length) {
-    //   tokenRes.data.u.forEach((token: any) => {
-    //     let div = "1"
-    //     for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-    //       div += "0"
-    //     }
-    //
-    //     formattedTokens.push({
-    //       id: token.tx.h,
-    //       timestamp: token.blk
-    //         ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-    //         : "unconfirmed",
-    //       symbol: token.out[0].s4,
-    //       name: token.out[0].s5,
-    //       documentUri: token.out[0].s6,
-    //       documentHash: token.out[0].h7,
-    //       decimals: parseInt(token.out[0].h8),
-    //       initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-    //     })
-    //   })
-    // }
-
-    return formattedTokens
+    return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -376,73 +355,14 @@ async function lookupToken(tokenId) {
 
     const tokenRes = await axios.get(url)
 
-    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data)}`)
-    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
-
     let formattedTokens: Array<any> = []
-
-    // if (tokenRes.data.u.length) {
-    //   tokenRes.data.u.forEach((token: any) => {
-    //     let div = "1"
-    //     for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-    //       div += "0"
-    //     }
-    //
-    //     formattedTokens.push({
-    //       id: token.tx.h,
-    //       timestamp: token.blk
-    //         ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-    //         : "unconfirmed",
-    //       symbol: token.out[0].s4,
-    //       name: token.out[0].s5,
-    //       documentUri: token.out[0].s6,
-    //       documentHash: token.out[0].h7,
-    //       decimals: parseInt(token.out[0].h8),
-    //       initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-    //     })
-    //   })
-    // }
 
     if (tokenRes.data.t.length) {
       tokenRes.data.t.forEach((token: any) => {
-        token.tokenDetails.id = token.tokenDetails.tokenIdHex
-        delete token.tokenDetails.tokenIdHex
-        token.tokenDetails.documentHash = token.tokenDetails.documentSha256
-        delete token.tokenDetails.documentSha256
-        token.tokenDetails.initialTokenQty = parseFloat(
-          token.tokenDetails.genesisOrMintQuantity
-        )
-        delete token.tokenDetails.genesisOrMintQuantity
-        delete token.tokenDetails.transactionType
-        delete token.tokenDetails.batonVout
-        delete token.tokenDetails.sendOutputs
-
-        token.tokenDetails.blockCreated = token.tokenStats.block_created
-        token.tokenDetails.block_last_active_send =
-          token.tokenStats.block_last_active_send
-        token.tokenDetails.block_last_active_mint =
-          token.tokenStats.block_last_active_mint
-        token.tokenDetails.txnsSinceGenesis =
-          token.tokenStats.qty_valid_txns_since_genesis
-        token.tokenDetails.addresses =
-          token.tokenStats.qty_valid_token_addresses
-        token.tokenDetails.minted = parseFloat(
-          token.tokenStats.qty_token_minted
-        )
-        token.tokenDetails.burned = parseFloat(
-          token.tokenStats.qty_token_burned
-        )
-        token.tokenDetails.circulatingSupply = parseFloat(
-          token.tokenStats.qty_token_circulating_supply
-        )
-        token.tokenDetails.mintingBatonStatus =
-          token.tokenStats.minting_baton_status
-
+        token = formatTokenOutput(token)
         formattedTokens.push(token.tokenDetails)
       })
     }
-
-    //console.log(`formattedTokens: ${JSON.stringify(formattedTokens,null,2)}`)
 
     let t
     formattedTokens.forEach((token: any) => {

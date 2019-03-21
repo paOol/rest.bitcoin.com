@@ -781,22 +781,26 @@ async function validateBulk(
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
 
-    let formattedTokens: Array<any> = []
+    let formattedTokens: any[] = []
 
-    let valid
-    if (tokenRes.data.c.length > 0) {
-      tokenRes.data.c.forEach((token: any) => {
+    let concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
+    let tokenIds: string[] = []
+    if (concatArray.length > 0) {
+      concatArray.forEach((token: any) => {
+        tokenIds.push(token.tx.h)
         formattedTokens.push({
           txid: token.tx.h,
           valid: token.slp.valid
         })
       })
-    } else if (tokenRes.data.u.length > 0) {
-      tokenRes.data.u.forEach((token: any) => {
-        formattedTokens.push({
-          txid: token.tx.h,
-          valid: token.slp.valid
-        })
+
+      txids.forEach((tokenId: string) => {
+        if (!tokenIds.includes(tokenId)) {
+          formattedTokens.push({
+            txid: tokenId,
+            valid: false
+          })
+        }
       })
     }
 
@@ -1240,15 +1244,15 @@ async function tokenStats(
   try {
     const query = {
       v: 3,
-      c: ["t"],
       q: {
+        db: ["t"],
         find: {
-          "tokenDetails.tokenIdHex": tokenId
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
         },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
         limit: 10
-      },
-      r: {
-        f: "[.[] | { tokenDetails: .tokenDetails, tokenStats: .tokenStats } ]"
       }
     }
 
@@ -1256,33 +1260,22 @@ async function tokenStats(
     const b64 = Buffer.from(s).toString("base64")
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from SLPDB.
-    const response = await axios.get(url)
+    // Get data from BitDB.
+    const tokenRes = await axios.get(url)
 
-    let tokenDetailsData = response.data.t[0].tokenDetails
-    let tokenStatsData = response.data.t[0].tokenStats
-    let decimals = tokenDetailsData.decimals
-    let tokenStats = {
-      tokenId: tokenDetailsData.tokenIdHex,
-      documentUri: tokenDetailsData.documentUri,
-      documentHash: tokenDetailsData.documentSha256,
-      symbol: tokenDetailsData.symbol,
-      name: tokenDetailsData.name,
-      decimals: tokenDetailsData.decimals,
-      txnsSinceGenesis: tokenStatsData.qty_valid_txns_since_genesis,
-      validUtxos: tokenStatsData.qty_valid_token_utxos,
-      validAddresses: tokenStatsData.qty_valid_token_addresses,
-      circulatingSupply: parseFloat(
-        tokenStatsData.qty_token_circulating_supply
-      ),
-      totalBurned: parseFloat(tokenStatsData.qty_token_burned),
-      totalMinted: parseFloat(tokenStatsData.qty_token_minted),
-      satoshisLockedUp: tokenStatsData.qty_satoshis_locked_up
+    let formattedTokens: Array<any> = []
+
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        console.log("TOKEN", token)
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
+      })
     }
+    console.log(formattedTokens)
 
-    res.json(tokenStats)
-
-    return tokenStats
+    res.status(200)
+    return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {

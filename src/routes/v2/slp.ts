@@ -439,27 +439,32 @@ async function balancesForAddress(
           token_balance: { $gte: 0 }
         },
         limit: 10000
-      },
-      r: {
-        f:
-          "[.[] | { tokenId: .tokenDetails.tokenIdHex, decimals: .tokenDetails, balance: .token_balance }]"
       }
     }
 
     const s = JSON.stringify(query)
     const b64 = Buffer.from(s).toString("base64")
     const url = `${process.env.SLPDB_URL}q/${b64}`
-    console.log(url)
 
     const tokenRes = await axios.get(url)
+    // TODO - add decimalCount
     if (tokenRes.data.a.length > 0) {
-      tokenRes.data.a[0].balance = parseFloat(tokenRes.data.a[0].balance)
-      return res.json(tokenRes.data.a[0])
+      tokenRes.data.a = tokenRes.data.a.map(token => {
+        token.tokenId = token.tokenDetails.tokenIdHex
+        token.balance = parseFloat(token.token_balance)
+        delete token.tokenDetails
+        delete token.satoshis_balance
+        delete token.token_balance
+        delete token._id
+        delete token.address
+        return token
+      })
+      return res.json(tokenRes.data.a)
     } else {
       return res.json("No balance for this address")
     }
   } catch (err) {
-    console.log(`Error object: ${util.inspect(err)}`)
+    // console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

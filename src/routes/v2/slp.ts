@@ -421,14 +421,14 @@ async function balancesForAddress(
     }
 
     // Prevent a common user error. Ensure they are using the correct network address.
-    // let cashAddr = utils.toCashAddress(address)
-    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    // if (!networkIsValid) {
-    //   res.status(400)
-    //   return res.json({
-    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-    //   })
-    // }
+    let cashAddr = utils.toCashAddress(address)
+    const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    if (!networkIsValid) {
+      res.status(400)
+      return res.json({
+        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+      })
+    }
 
     const query = {
       v: 3,
@@ -452,6 +452,7 @@ async function balancesForAddress(
       tokenRes.data.a = tokenRes.data.a.map(token => {
         token.tokenId = token.tokenDetails.tokenIdHex
         token.balance = parseFloat(token.token_balance)
+        token.slpAddress = token.address
         delete token.tokenDetails
         delete token.satoshis_balance
         delete token.token_balance
@@ -779,32 +780,45 @@ async function validateBulk(
 
     logger.debug(`Executing slp/validate with these txids: `, txids)
 
-    // Validate each txid
-    const validatePromises = txids.map(async txid => {
-      try {
-        // Dev note: must call module.exports to allow stubs in unit tests.
-        const isValid = await module.exports.testableComponents.isValidSlpTxid(
-          txid
-        )
-
-        let tmp: any = {
-          txid: txid,
-          valid: isValid ? true : false
-        }
-        return tmp
-      } catch (err) {
-        //console.log(`err obj: ${util.inspect(err)}`)
-        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
-        throw err
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": { $in: txids }
+        },
+        limit: 300,
+        project: { "slp.valid": 1, "tx.h": 1 }
       }
-    })
+    }
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Filter array to only valid txid results
-    const validateResults = await axios.all(validatePromises)
-    const validTxids = validateResults.filter(result => result)
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
+    let formattedTokens: Array<any> = []
+
+    let valid
+    if (tokenRes.data.c.length > 0) {
+      tokenRes.data.c.forEach((token: any) => {
+        formattedTokens.push({
+          txid: token.tx.h,
+          valid: token.slp.valid
+        })
+      })
+    } else if (tokenRes.data.u.length > 0) {
+      tokenRes.data.u.forEach((token: any) => {
+        formattedTokens.push({
+          txid: token.tx.h,
+          valid: token.slp.valid
+        })
+      })
+    }
 
     res.status(200)
-    return res.json(validTxids)
+    return res.json(formattedTokens)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

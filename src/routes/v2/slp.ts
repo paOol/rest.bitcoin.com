@@ -580,64 +580,47 @@ async function balancesForAddressByTokenID(
       })
     }
 
-    let isMainnet = SLP.Address.isMainnetAddress(address)
-    let tmpSLP: any
-
-    if (isMainnet) {
-      tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
-    } else {
-      tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
-    }
-
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpSLP, slpValidator)
-
     // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
 
-    // Get balances and utxos for the address of interest.
-    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-
-    // If balances for this address exist, continue processing.
-    if (balances.slpTokenBalances) {
-      // An array of txids, each representing a token class possed by this address.
-      let keys = Object.keys(balances.slpTokenBalances)
-
-      // Query the token information for each token class found.
-      const axiosPromises = keys.map(async (key: any) => {
-        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
-
-        return {
-          tokenId: key,
-          balance: balances.slpTokenBalances[key]
-            .div(10 ** tokenMetadata.decimals)
-            .toString(),
-          decimalCount: tokenMetadata.decimals
-        }
-      })
-
-      // Wait for all parallel promises to return.
-      const axiosResult: Array<any> = await axios.all(axiosPromises)
-
-      // Loop through the returned token classes for this address
-      for (let result of axiosResult) {
-        // Return the token class of interest.
-        if (result.tokenId === req.params.tokenId) {
-          return res.json(result)
-        }
+    const query = {
+      v: 3,
+      q: {
+        db: ["a"],
+        find: {
+          address: slpAddr,
+          token_balance: { $gte: 0 }
+        },
+        limit: 10000
       }
+    }
 
-      let tokenData: any = await tmpbitboxNetwork.getTokenInformation(
-        req.params.tokenId
-      )
-      return res.json({
-        tokenId: req.params.tokenId,
-        balance: 0,
-        decimalCount: tokenData.decimals
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    res.status(200)
+    if (tokenRes.data.a.length > 0) {
+      tokenRes.data.a.forEach(token => {
+        if (token.tokenDetails.tokenIdHex === tokenId) {
+          return res.json({
+            tokenId: tokenRes.data.a[0].tokenDetails.tokenIdHex,
+            balance: parseFloat(tokenRes.data.a[0].token_balance)
+          })
+        } else {
+          return res.json({
+            tokenId: tokenId,
+            balance: 0
+          })
+        }
       })
-
-      // If no balances for this address exist, exit.
     } else {
-      return res.json("No balance for this address and tokenId")
+      return res.json({
+        tokenId: tokenId,
+        balance: 0
+      })
     }
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)

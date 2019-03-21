@@ -763,7 +763,6 @@ async function validateBulk(
 ) {
   try {
     const txids = req.body.txids
-    // console.log("TXIDSSS", txids)
 
     // Reject if txids is not an array.
     if (!Array.isArray(txids)) {

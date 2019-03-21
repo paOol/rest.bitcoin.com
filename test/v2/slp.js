@@ -744,47 +744,11 @@ describe("#SLP", () => {
       assert.include(result.error, "Array too large")
     })
 
-    it("should error appropriately for mainnet tx on testnet", async () => {
-      // Mock the RPC call for unit tests.
-      if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .post(``)
-          .reply(200, { result: mockData.mockConvert })
-      }
-
-      req.body.txids = [
-        "88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa"
-      ]
-
-      const result = await validateBulk(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "No such mempool")
-    })
-
-    it("should error appropriately for nonsensical txid", async () => {
-      // Mock the RPC call for unit tests.
-      if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .post(``)
-          .reply(200, { result: mockData.mockConvert })
-      }
-
-      req.body.txids = ["abc123"]
-
-      const result = await validateBulk(req, res)
-      console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "parameter 1 must be of length 64")
-    })
-
     it("should validate array with single element", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         nock(`${process.env.SLPDB_URL}`)
-          .post(``)
+          .get(``)
           .reply(200, { result: mockData.mockFoobar })
       }
 
@@ -793,7 +757,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
@@ -803,7 +767,7 @@ describe("#SLP", () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         nock(`${process.env.SLPDB_URL}`)
-          .post(``)
+          .get(``)
           .reply(200, { result: mockData.mockConvert })
       }
 
@@ -813,7 +777,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])

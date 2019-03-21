@@ -239,6 +239,7 @@ async function list(
       })
     }
 
+    res.status(200)
     return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
@@ -303,23 +304,37 @@ async function listBulkToken(
       })
     }
 
-    // Lookup each token in the array
-    const tokens = []
-    for (let i = 0; i < tokenIds.length; i++) {
-      const tokenId = tokenIds[i]
-
-      // Validate each element.
-      if (!tokenId || tokenId === "") {
-        res.status(400)
-        return res.json({ error: `Empty tokenId encountered in entry ${i}` })
+    const query = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          "tokenDetails.tokenIdHex": {
+            $in: tokenIds
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        limit: 1000
       }
+    }
 
-      const thisToken = await lookupToken(tokenId)
-      tokens.push(thisToken)
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    const tokenRes = await axios.get(url)
+
+    let formattedTokens: Array<any> = []
+
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
+      })
     }
 
     res.status(200)
-    return res.json(tokens)
+    return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -331,8 +346,6 @@ async function listBulkToken(
   }
 }
 
-// This is a utility function in order to keep code DRY. It is used by the
-// single and bulk list*Token functions.
 async function lookupToken(tokenId) {
   try {
     const query = {

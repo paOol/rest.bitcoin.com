@@ -14,6 +14,7 @@
 const passport = require("passport")
 const BasicStrategy = require("passport-http").BasicStrategy
 const AnonymousStrategy = require("passport-anonymous")
+const wlogger = require("../util/winston-logging")
 
 // Used for debugging and iterrogating JS objects.
 const util = require("util")
@@ -60,6 +61,8 @@ class AuthMW {
 
         // Create the req.locals property if it does not yet exist.
         if (!req.locals) req.locals = {}
+
+        wlogger.verbose(`Auth passed with password ${password}`)
 
         // Evaluate the username and password and set the rate limit accordingly.
         if (username === "BITBOX" && password === PRO_PASS) {

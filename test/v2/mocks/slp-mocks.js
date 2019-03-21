@@ -65,6 +65,25 @@ const mockSingleToken = {
   ]
 }
 
+const mockSingleTokenError = {
+  t: []
+}
+
+const mockSingleAddress = {
+  a: [
+    {
+      _id: "5c93ed62a19119333d1595bc",
+      tokenDetails: {
+        tokenIdHex:
+          "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
+      },
+      address: "simpleledger:qzr0mnqavpx744wu3eztfhqthgqgm95wsvteu72jue",
+      satoshis_balance: 546,
+      token_balance: "4616984"
+    }
+  ]
+}
+
 const mockTx = {
   txid: "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446",
   version: 2,
@@ -253,6 +272,11 @@ const mockTransactions = [
   }
 ]
 
+const mockFoobar = {
+  c: [],
+  u: []
+}
+
 module.exports = {
   mockList,
   mockSingleToken,
@@ -261,5 +285,8 @@ module.exports = {
   mockTokenStats,
   mockTx,
   mockBalance,
-  mockTransactions
+  mockTransactions,
+  mockSingleTokenError,
+  mockSingleAddress,
+  mockFoobar
 }

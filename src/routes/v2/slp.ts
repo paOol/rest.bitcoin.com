@@ -163,7 +163,7 @@ const requestConfig: IRequestConfig = {
 }
 
 function formatTokenOutput(token) {
-  token.tokenDetails.id = token.tokenDetails.tokenIdHex
+  token.tokenDetails.tokenId = token.tokenDetails.tokenIdHex
   delete token.tokenDetails.tokenIdHex
   token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
   delete token.tokenDetails.documentSha256Hex
@@ -182,9 +182,9 @@ function formatTokenOutput(token) {
     token.tokenStats.block_last_active_mint
   token.tokenDetails.txnsSinceGenesis =
     token.tokenStats.qty_valid_txns_since_genesis
-  token.tokenDetails.addresses = token.tokenStats.qty_valid_token_addresses
-  token.tokenDetails.minted = parseFloat(token.tokenStats.qty_token_minted)
-  token.tokenDetails.burned = parseFloat(token.tokenStats.qty_token_burned)
+  token.tokenDetails.validAddresses = token.tokenStats.qty_valid_token_addresses
+  token.tokenDetails.totalMinted = parseFloat(token.tokenStats.qty_token_minted)
+  token.tokenDetails.totalBurned = parseFloat(token.tokenStats.qty_token_burned)
   token.tokenDetails.circulatingSupply = parseFloat(
     token.tokenStats.qty_token_circulating_supply
   )
@@ -338,7 +338,7 @@ async function listBulkToken(
     tokenIds.forEach((tokenId: string) => {
       if (!txids.includes(tokenId)) {
         formattedTokens.push({
-          txid: tokenId,
+          id: tokenId,
           valid: false
         })
       }
@@ -390,7 +390,7 @@ async function lookupToken(tokenId) {
 
     let t
     formattedTokens.forEach((token: any) => {
-      if (token.id === tokenId) t = token
+      if (token.tokenId === tokenId) t = token
     })
 
     // If token could not be found.
@@ -431,15 +431,16 @@ async function balancesForAddress(
       })
     }
 
+    // TODO - uncomment once tslpdb is live.
     // Prevent a common user error. Ensure they are using the correct network address.
-    let cashAddr = utils.toCashAddress(address)
-    const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    if (!networkIsValid) {
-      res.status(400)
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      })
-    }
+    // let cashAddr = utils.toCashAddress(address)
+    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    // if (!networkIsValid) {
+    //   res.status(400)
+    //   return res.json({
+    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+    //   })
+    // }
 
     const query = {
       v: 3,
@@ -581,15 +582,16 @@ async function balancesForAddressByTokenID(
       })
     }
 
+    // TODO - uncomment once tslpdb is live
     // Prevent a common user error. Ensure they are using the correct network address.
-    let cashAddr = utils.toCashAddress(address)
-    const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    if (!networkIsValid) {
-      res.status(400)
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      })
-    }
+    // let cashAddr = utils.toCashAddress(address)
+    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    // if (!networkIsValid) {
+    //   res.status(400)
+    //   return res.json({
+    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+    //   })
+    // }
 
     // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
@@ -612,27 +614,31 @@ async function balancesForAddressByTokenID(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
+    let resVal: any
     res.status(200)
     if (tokenRes.data.a.length > 0) {
       tokenRes.data.a.forEach(token => {
         if (token.tokenDetails.tokenIdHex === tokenId) {
-          return res.json({
+          resVal = {
             tokenId: tokenRes.data.a[0].tokenDetails.tokenIdHex,
             balance: parseFloat(tokenRes.data.a[0].token_balance)
-          })
+          }
         } else {
-          return res.json({
+          console.log("TTTHEEER")
+          resVal = {
             tokenId: tokenId,
             balance: 0
-          })
+          }
         }
       })
     } else {
-      return res.json({
+      console.log("NNOOTTTHEEER")
+      resVal = {
         tokenId: tokenId,
         balance: 0
-      })
+      }
     }
+    return res.json(resVal)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)
 
@@ -757,6 +763,7 @@ async function validateBulk(
 ) {
   try {
     const txids = req.body.txids
+    // console.log("TXIDSSS", txids)
 
     // Reject if txids is not an array.
     if (!Array.isArray(txids)) {
@@ -1284,7 +1291,7 @@ async function tokenStats(
     }
 
     res.status(200)
-    return res.json(formattedTokens)
+    return res.json(formattedTokens[0])
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {

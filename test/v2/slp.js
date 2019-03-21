@@ -226,25 +226,25 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
-        "addresses",
         "blockCreated",
         "blockLastActiveMint",
         "blockLastActiveSend",
-        "burned",
         "circulatingSupply",
         "containsBaton",
-        "minted",
         "mintingBatonStatus",
         "txnsSinceGenesis",
         "versionType",
-        "id",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "tokenId",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
   })
@@ -323,21 +323,21 @@ describe("#SLP", () => {
       if (process.env.TEST === "unit") {
         nock(mockServerUrl)
           .get(uri => uri.includes("/"))
-          .reply(200, mockData.mockSingleToken)
+          .reply(200, mockData.mockSingleTokenError)
       }
 
       req.body.tokenIds =
         // testnet
         //"650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
         // mainnet
-        ["259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"]
+        ["650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"]
 
       const result = await listBulkToken(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
-      assert.hasAllKeys(result[0], ["id"])
-      assert.include(result[0].id, "not found")
+      assert.hasAllKeys(result[0], ["id", "valid"])
+      assert.strictEqual(result[0].valid, false)
     })
 
     it("should get token information for single token ID", async () => {
@@ -357,14 +357,25 @@ describe("#SLP", () => {
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
-        "id",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "circulatingSupply",
+        "containsBaton",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "tokenId",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
 
@@ -389,20 +400,31 @@ describe("#SLP", () => {
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
-        "id",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "circulatingSupply",
+        "containsBaton",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "tokenId",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
   })
 
   describe("balancesForAddress()", () => {
-    let balancesForAddress = slpRoute.testableComponents.balancesForAddress
+    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
 
     it("should throw 400 if address is empty", async () => {
       const result = await balancesForAddress(req, res)
@@ -422,16 +444,17 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid BCH address.")
     })
 
-    it("should throw 400 if address network mismatch", async () => {
-      req.params.address =
-        "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
-
-      const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Invalid")
-    })
+    // TODO - Uncomment out test once tslpdb is live
+    // it("should throw 400 if address network mismatch", async () => {
+    //   req.params.address =
+    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+    //
+    //   const result = await balancesForAddress(req, res)
+    //   // console.log(`result: ${util.inspect(result)}`)
+    //
+    //   assert.hasAllKeys(result, ["error"])
+    //   assert.include(result.error, "Invalid")
+    // })
 
     it("should throw 5XX error when network issues", async () => {
       // Save the existing rest URL settings.
@@ -464,25 +487,33 @@ describe("#SLP", () => {
     })
 
     it("should get token balance for an address", async () => {
-      let bitboxNetwork
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        // Mock the slpjs library for unit tests.
-        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-        balancesForAddress = slpRouteStub.testableComponents.balancesForAddress
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .times(2)
+          .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.address =
+        "simpleledger:qr4e57seacz6x50xfc7da779rakvhuzpn5te3v3s80"
 
       const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
+      // TODO - add decimalCount
       assert.isArray(result)
-      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
+      assert.hasAllKeys(result[0], [
+        "tokenId",
+        "balance",
+        "slpAddress"
+        // "decimalCount"
+      ])
     })
   })
 
   describe("balancesForAddressByTokenID()", () => {
-    let balancesForAddressByTokenID =
+    const balancesForAddressByTokenID =
       slpRoute.testableComponents.balancesForAddressByTokenID
 
     it("should throw 400 if address is empty", async () => {
@@ -519,16 +550,17 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid BCH address.")
     })
 
-    it("should throw 400 if address network mismatch", async () => {
-      req.params.address =
-        "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
-
-      const result = await balancesForAddressByTokenID(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Invalid")
-    })
+    // TODO - uncommnet once tslpdb is live
+    // it("should throw 400 if address network mismatch", async () => {
+    //   req.params.address =
+    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+    //
+    //   const result = await balancesForAddressByTokenID(req, res)
+    //   //console.log(`result: ${util.inspect(result)}`)
+    //
+    //   assert.hasAllKeys(result, ["error"])
+    //   assert.include(result.error, "Invalid")
+    // })
 
     it("should throw 5XX error when network issues", async () => {
       // Save the existing rest URL settings.
@@ -564,10 +596,10 @@ describe("#SLP", () => {
 
     it("should get token information", async () => {
       if (process.env.TEST === "unit") {
-        // Mock the slpjs library for unit tests.
-        //pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-        balancesForAddressByTokenID =
-          slpRouteStub.testableComponents.balancesForAddressByTokenID
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .times(2)
+          .reply(200, mockData.mockSingleAddress)
       }
 
       req.params.address =
@@ -576,9 +608,11 @@ describe("#SLP", () => {
         "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
 
       const result = await balancesForAddressByTokenID(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+      // TODO - add decimalCount
+      // assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+      assert.hasAllKeys(result, ["tokenId", "balance"])
     })
   })
 
@@ -598,7 +632,7 @@ describe("#SLP", () => {
     it("should convert address", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.BITDB_URL}`)
+        nock(`${process.env.SLPDB_URL}`)
           .post(``)
           .reply(200, { result: mockData.mockConvert })
       }
@@ -643,7 +677,7 @@ describe("#SLP", () => {
 
         await convertAddressBulk(req, res)
 
-        assert.equal(true, false, "Unexpected result!")
+        assert.equal(true, false, "Unsupported address format")
       } catch (err) {
         // console.log(`err.message: ${util.inspect(err.message)}`)
 
@@ -711,19 +745,11 @@ describe("#SLP", () => {
     })
 
     it("should error appropriately for mainnet tx on testnet", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
-          response: {
-            status: 500,
-            data: {
-              result: null,
-              error: {
-                message: "No such mempool"
-              }
-            }
-          }
-        })
+        nock(`${process.env.SLPDB_URL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockConvert })
       }
 
       req.body.txids = [
@@ -731,43 +757,35 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "No such mempool")
     })
 
     it("should error appropriately for nonsensical txid", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
-          response: {
-            status: 500,
-            data: {
-              result: null,
-              error: {
-                message: "parameter 1 must be of length 64"
-              }
-            }
-          }
-        })
+        nock(`${process.env.SLPDB_URL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockConvert })
       }
 
       req.body.txids = ["abc123"]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "parameter 1 must be of length 64")
     })
 
     it("should validate array with single element", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        sandbox
-          .stub(slpRoute.testableComponents, "isValidSlpTxid")
-          .resolves(true)
+        nock(`${process.env.SLPDB_URL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockFoobar })
       }
 
       req.body.txids = [
@@ -775,18 +793,18 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
     })
 
     it("should validate array with two elements", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        sandbox
-          .stub(slpRoute.testableComponents, "isValidSlpTxid")
-          .resolves(true)
+        nock(`${process.env.SLPDB_URL}`)
+          .post(``)
+          .reply(200, { result: mockData.mockConvert })
       }
 
       req.body.txids = [
@@ -795,7 +813,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
@@ -837,19 +855,23 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "documentSha256",
+        "initialTokenQty",
+        "mintingBatonStatus",
         "circulatingSupply",
         "decimals",
         "documentHash",
         "documentUri",
         "name",
-        "satoshisLockedUp",
         "symbol",
         "tokenId",
         "totalBurned",
         "totalMinted",
         "txnsSinceGenesis",
-        "validAddresses",
-        "validUtxos"
+        "validAddresses"
       ])
     })
   })

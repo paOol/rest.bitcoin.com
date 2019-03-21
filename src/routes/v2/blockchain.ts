@@ -11,6 +11,7 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
@@ -23,38 +24,20 @@ router.get("/getBestBlockHash", getBestBlockHash)
 //router.get("/getBlock/:hash", getBlock)
 router.get("/getBlockchainInfo", getBlockchainInfo)
 router.get("/getBlockCount", getBlockCount)
-router.get(
-  "/getBlockHeader/:hash",
-  getBlockHeaderSingle
-)
+router.get("/getBlockHeader/:hash", getBlockHeaderSingle)
 router.post("/getBlockHeader", getBlockHeaderBulk)
 
 router.get("/getChainTips", getChainTips)
 router.get("/getDifficulty", getDifficulty)
-router.get(
-  "/getMempoolEntry/:txid",
-  getMempoolEntrySingle
-)
-router.post(
-  "/getMempoolEntry",
-  getMempoolEntryBulk
-)
+router.get("/getMempoolEntry/:txid", getMempoolEntrySingle)
+router.post("/getMempoolEntry", getMempoolEntryBulk)
 router.get("/getMempoolInfo", getMempoolInfo)
 router.get("/getRawMempool", getRawMempool)
 router.get("/getTxOut/:txid/:n", getTxOut)
-router.get(
-  "/getTxOutProof/:txid",
-  getTxOutProofSingle
-)
+router.get("/getTxOutProof/:txid", getTxOutProofSingle)
 router.post("/getTxOutProof", getTxOutProofBulk)
-router.get(
-  "/verifyTxOutProof/:proof",
-  verifyTxOutProofSingle
-)
-router.post(
-  "/verifyTxOutProof",
-  verifyTxOutProofBulk
-)
+router.get("/verifyTxOutProof/:proof", verifyTxOutProofSingle)
+router.post("/verifyTxOutProof", verifyTxOutProofBulk)
 
 function root(
   req: express.Request,
@@ -94,6 +77,7 @@ async function getBestBlockHash(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getBestBlockHash().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -130,6 +114,7 @@ async function getBlockchainInfo(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getBlockchainInfo().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -165,6 +150,7 @@ async function getBlockCount(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getBlockCount().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -211,6 +197,7 @@ async function getBlockHeaderSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getBlockHeaderSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -234,7 +221,7 @@ async function getBlockHeaderBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hashes)) {
+    if (!routeUtils.validateArraySize(req, hashes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -289,6 +276,7 @@ async function getBlockHeaderBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getBlockHeaderBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -324,6 +312,7 @@ async function getChainTips(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getChainTips().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -361,6 +350,7 @@ async function getDifficulty(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getDifficulty().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -405,6 +395,7 @@ async function getMempoolEntrySingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getMempoolEntrySingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -427,7 +418,7 @@ async function getMempoolEntryBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -440,12 +431,12 @@ async function getMempoolEntryBulk(
     )
 
     // Validate each element in the array
-    for(let i=0; i < txids.length; i++) {
+    for (let i = 0; i < txids.length; i++) {
       const txid = txids[i]
 
       if (txid.length !== 64) {
         res.status(400)
-        return res.json({error: "This is not a txid"})
+        return res.json({ error: "This is not a txid" })
       }
     }
 
@@ -458,7 +449,6 @@ async function getMempoolEntryBulk(
 
     // Loop through each txid and creates an array of requests to call in parallel
     const promises = txids.map(async (txid: any) => {
-
       requestConfig.data.id = "getmempoolentry"
       requestConfig.data.method = "getmempoolentry"
       requestConfig.data.params = [txid]
@@ -473,7 +463,6 @@ async function getMempoolEntryBulk(
 
     res.status(200)
     return res.json(result)
-
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -484,6 +473,7 @@ async function getMempoolEntryBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getMempoolEntryBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -519,6 +509,7 @@ async function getMempoolInfo(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getMempoolInfo().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -558,6 +549,7 @@ async function getRawMempool(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getRawMempool().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -613,6 +605,7 @@ async function getTxOut(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getTxOut().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -657,6 +650,7 @@ async function getTxOutProofSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getTxOutProofSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -681,7 +675,7 @@ async function getTxOutProofBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -696,7 +690,7 @@ async function getTxOutProofBulk(
     } = routeUtils.setEnvVars()
 
     // Validate each element in the array.
-    for(let i=0; i < txids.length; i++) {
+    for (let i = 0; i < txids.length; i++) {
       const txid = txids[i]
 
       if (txid.length !== 64) {
@@ -711,7 +705,6 @@ async function getTxOutProofBulk(
 
     // Loop through each txid and creates an array of requests to call in parallel
     const promises = txids.map(async (txid: any) => {
-
       requestConfig.data.id = "gettxoutproof"
       requestConfig.data.method = "gettxoutproof"
       requestConfig.data.params = [[txid]]
@@ -727,7 +720,6 @@ async function getTxOutProofBulk(
 
     res.status(200)
     return res.json(result)
-
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -738,6 +730,7 @@ async function getTxOutProofBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/getTxOutProofBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -853,6 +846,7 @@ async function verifyTxOutProofSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/verifyTxOutProofSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -876,7 +870,7 @@ async function verifyTxOutProofBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, proofs)) {
+    if (!routeUtils.validateArraySize(req, proofs)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -891,7 +885,7 @@ async function verifyTxOutProofBulk(
     } = routeUtils.setEnvVars()
 
     // Validate each element in the array.
-    for(let i=0; i < proofs.length; i++) {
+    for (let i = 0; i < proofs.length; i++) {
       const proof = proofs[i]
 
       if (!proof || proof === "") {
@@ -907,7 +901,6 @@ async function verifyTxOutProofBulk(
 
     // Loop through each proof and creates an array of requests to call in parallel
     const promises = proofs.map(async (proof: any) => {
-
       requestConfig.data.id = "verifytxoutproof"
       requestConfig.data.method = "verifytxoutproof"
       requestConfig.data.params = [proof]
@@ -923,7 +916,6 @@ async function verifyTxOutProofBulk(
 
     res.status(200)
     return res.json(result)
-
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -934,6 +926,7 @@ async function verifyTxOutProofBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in blockchain.ts/verifyTxOutProofBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

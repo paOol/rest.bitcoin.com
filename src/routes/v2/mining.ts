@@ -6,6 +6,7 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
@@ -93,6 +94,8 @@ async function getMiningInfo(
       return res.json({ error: msg })
     }
 
+    wlogger.error(`Error in mining.ts/getMiningInfo().`, err)
+
     res.status(500)
     return res.json({ error: util.inspect(err) })
   }
@@ -130,6 +133,8 @@ async function getNetworkHashPS(
       res.status(status)
       return res.json({ error: msg })
     }
+
+    wlogger.error(`Error in mining.ts/getNetworkHashPS().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

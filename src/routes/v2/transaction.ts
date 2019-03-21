@@ -6,6 +6,7 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
@@ -60,6 +61,7 @@ async function transactionsFromInsight(txid: string) {
 
     return parsed
   } catch (err) {
+    wlogger.error(`Error in transactions.ts/transactionsFromInsight().`, err)
     throw err
   }
 }
@@ -79,7 +81,7 @@ async function detailsBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -106,6 +108,8 @@ async function detailsBulk(
       res.status(status)
       return res.json({ error: msg })
     }
+
+    wlogger.error(`Error in transactions.ts/detailsBulk().`, err)
 
     //console.log(`Error in transaction details: `, err)
     res.status(500)
@@ -156,6 +160,7 @@ async function detailsSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in transactions.ts/detailsSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

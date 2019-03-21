@@ -130,7 +130,7 @@ describe("#SLP", () => {
     it("should GET list", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        const b64 = `eyJ2IjozLCJxIjp7ImZpbmQiOnsib3V0LmgxIjoiNTM0YzUwMDAiLCJvdXQuczMiOiJHRU5FU0lTIn0sImxpbWl0IjoxMDAwfSwiciI6eyJmIjoiWyAuW10gfCB7IGlkOiAudHguaCwgdGltZXN0YW1wOiAoLmJsay50IHwgc3RyZnRpbWUoXCIlWS0lbS0lZCAlSDolTVwiKSksIHN5bWJvbDogLm91dFswXS5zNCwgbmFtZTogLm91dFswXS5zNSwgZG9jdW1lbnQ6IC5vdXRbMF0uczYgfSBdIn19`
+        const b64 = `eyJ2IjozLCJxIjp7ImRiIjpbInQiXSwiZmluZCI6eyIkcXVlcnkiOnt9fSwicHJvamVjdCI6eyJ0b2tlbkRldGFpbHMiOjEsInRva2VuU3RhdHMiOjEsIl9pZCI6MH0sImxpbWl0IjoxMDB9fQ==`
 
         nock(process.env.BITDB_URL)
           .get(uri => uri.includes("/"))
@@ -138,7 +138,7 @@ describe("#SLP", () => {
       }
 
       const result = await list(req, res)
-      //console.log(`test result: ${util.inspect(result)}`)
+      // console.log(`test result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAnyKeys(result[0], [
@@ -220,12 +220,23 @@ describe("#SLP", () => {
 
       req.params.tokenId =
         // testnet
-        "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
+        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
+        "addresses",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "burned",
+        "circulatingSupply",
+        "containsBaton",
+        "minted",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "id",
         "timestamp",
         "symbol",
@@ -264,13 +275,22 @@ describe("#SLP", () => {
     })
 
     it("should throw 400 if tokenId is empty", async () => {
-      req.body.tokenIds = [""]
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .reply(200, mockData.mockEmptyTokenId)
+      }
+      req.body.tokenIds = ""
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Empty tokenId encountered")
+      assert.include(
+        result.error,
+        "tokenIds needs to be an array. Use GET for single tokenId."
+      )
     })
 
     it("should throw 503 when network issues", async () => {
@@ -313,7 +333,7 @@ describe("#SLP", () => {
         ["259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"]
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["id"])
@@ -550,9 +570,10 @@ describe("#SLP", () => {
           slpRouteStub.testableComponents.balancesForAddressByTokenID
       }
 
-      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.address =
+        "simpleledger:qr4e57seacz6x50xfc7da779rakvhuzpn5te3v3s80"
       req.params.tokenId =
-        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
 
       const result = await balancesForAddressByTokenID(req, res)
       //console.log(`result: ${util.inspect(result)}`)

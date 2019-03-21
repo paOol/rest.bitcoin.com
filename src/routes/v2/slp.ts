@@ -109,7 +109,7 @@ async function getRawTransactionsFromNode(txids: string[]) {
           await slpTxDb.put(txid, result)
         }
       } catch (err) {
-        console.log("Error inserting to slpTxDb", err)
+        // console.log("Error inserting to slpTxDb", err)
       }
 
       return result
@@ -325,13 +325,24 @@ async function listBulkToken(
     const tokenRes = await axios.get(url)
 
     let formattedTokens: Array<any> = []
+    let txids: Array<any> = []
 
     if (tokenRes.data.t.length) {
       tokenRes.data.t.forEach((token: any) => {
+        txids.push(token.tokenDetails.tokenIdHex)
         token = formatTokenOutput(token)
         formattedTokens.push(token.tokenDetails)
       })
     }
+
+    tokenIds.forEach((tokenId: string) => {
+      if (!txids.includes(tokenId)) {
+        formattedTokens.push({
+          txid: tokenId,
+          valid: false
+        })
+      }
+    })
 
     res.status(200)
     return res.json(formattedTokens)
@@ -1267,12 +1278,10 @@ async function tokenStats(
 
     if (tokenRes.data.t.length) {
       tokenRes.data.t.forEach((token: any) => {
-        console.log("TOKEN", token)
         token = formatTokenOutput(token)
         formattedTokens.push(token.tokenDetails)
       })
     }
-    console.log(formattedTokens)
 
     res.status(200)
     return res.json(formattedTokens)

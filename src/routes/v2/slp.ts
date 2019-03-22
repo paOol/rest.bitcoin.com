@@ -443,37 +443,45 @@ async function balancesForAddress(
       })
     }
 
-    const query = {
-      v: 3,
-      q: {
-        db: ["a"],
-        find: {
-          address: SLP.Address.toSLPAddress(address),
-          token_balance: { $gte: 0 }
-        },
-        limit: 10000
-      }
+    let isMainnet = SLP.Address.isMainnetAddress(address)
+    let tmpSLP: any
+
+    if (isMainnet) {
+      tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
+    } else {
+      tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
     }
 
-    const s = JSON.stringify(query)
-    const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.SLPDB_URL}q/${b64}`
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpSLP, slpValidator)
 
-    const tokenRes = await axios.get(url)
-    // TODO - add decimalCount
-    if (tokenRes.data.a.length > 0) {
-      tokenRes.data.a = tokenRes.data.a.map(token => {
-        token.tokenId = token.tokenDetails.tokenIdHex
-        token.balance = parseFloat(token.token_balance)
-        token.slpAddress = token.address
-        delete token.tokenDetails
-        delete token.satoshis_balance
-        delete token.token_balance
-        delete token._id
-        delete token.address
-        return token
+    // Convert input to an simpleledger: address.
+    const slpAddr = SLP.Address.toSLPAddress(req.params.address)
+
+    // Get balances and utxos for the address of interest.
+    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
+
+    // If balances for this address exist, continue processing.
+    if (balances.slpTokenBalances) {
+      // An array of txids, each representing a token class possed by this address.
+      let keys = Object.keys(balances.slpTokenBalances)
+
+      // Query the token information for each token class found.
+      const axiosPromises = keys.map(async (key: any) => {
+        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
+
+        return {
+          tokenId: key,
+          balance: balances.slpTokenBalances[key]
+            .div(10 ** tokenMetadata.decimals)
+            .toString(),
+          decimalCount: tokenMetadata.decimals,
+          slpAddress: SLP.Address.toSLPAddress(address)
+        }
       })
-      return res.json(tokenRes.data.a)
+
+      // Wait for all parallel promises to return.
+      const axiosResult: Array<any> = await axios.all(axiosPromises)
+      return res.json(axiosResult)
     } else {
       return res.json("No balance for this address")
     }

@@ -163,7 +163,7 @@ const requestConfig: IRequestConfig = {
 }
 
 function formatTokenOutput(token) {
-  token.tokenDetails.tokenId = token.tokenDetails.tokenIdHex
+  token.tokenDetails.id = token.tokenDetails.tokenIdHex
   delete token.tokenDetails.tokenIdHex
   token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
   delete token.tokenDetails.documentSha256Hex
@@ -219,6 +219,7 @@ async function list(
           $query: {}
         },
         project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        sort: { "tokenStats.block_created": -1 },
         limit: 100
       }
     }
@@ -314,6 +315,7 @@ async function listBulkToken(
           }
         },
         project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        sort: { "tokenStats.block_created": -1 },
         limit: 1000
       }
     }

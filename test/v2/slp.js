@@ -495,8 +495,7 @@ describe("#SLP", () => {
           .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address =
-        "simpleledger:qr4e57seacz6x50xfc7da779rakvhuzpn5te3v3s80"
+      req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
       const result = await balancesForAddress(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -602,10 +601,9 @@ describe("#SLP", () => {
           .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address =
-        "simpleledger:qr4e57seacz6x50xfc7da779rakvhuzpn5te3v3s80"
+      req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
       req.params.tokenId =
-        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
+        "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
 
       const result = await balancesForAddressByTokenID(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -747,9 +745,9 @@ describe("#SLP", () => {
     it("should validate array with single element", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .get(``)
-          .reply(200, { result: mockData.mockFoobar })
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
       }
 
       req.body.txids = [
@@ -766,9 +764,9 @@ describe("#SLP", () => {
     it("should validate array with two elements", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .get(``)
-          .reply(200, { result: mockData.mockConvert })
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
       }
 
       req.body.txids = [
@@ -777,7 +775,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])

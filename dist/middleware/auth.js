@@ -12,6 +12,7 @@
 var passport = require("passport");
 var BasicStrategy = require("passport-http").BasicStrategy;
 var AnonymousStrategy = require("passport-anonymous");
+var wlogger = require("../util/winston-logging");
 // Used for debugging and iterrogating JS objects.
 var util = require("util");
 util.inspect.defaultOptions = { depth: 1 };
@@ -46,6 +47,7 @@ var AuthMW = /** @class */ (function () {
             // Create the req.locals property if it does not yet exist.
             if (!req.locals)
                 req.locals = {};
+            wlogger.verbose("Auth passed with password " + password);
             // Evaluate the username and password and set the rate limit accordingly.
             if (username === "BITBOX" && password === PRO_PASS) {
                 // Success

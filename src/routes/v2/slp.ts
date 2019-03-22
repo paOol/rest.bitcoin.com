@@ -219,6 +219,7 @@ async function list(
           $query: {}
         },
         project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        sort: { "tokenStats.block_created": -1 },
         limit: 100
       }
     }
@@ -314,6 +315,7 @@ async function listBulkToken(
           }
         },
         project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        sort: { "tokenStats.block_created": -1 },
         limit: 1000
       }
     }

@@ -12,16 +12,12 @@ const strftime = require("strftime")
 const util = require("util")
 util.inspect.defaultOptions = { depth: 5 }
 
-// Instantiate BITBOX
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
-
-const SLPSDK = require("slp-sdk/lib/SLP").default
+const SLPSDK = require("slp-sdk")
 const SLP = new SLPSDK()
 
 // Instantiate SLPJS.
 const slp = require("slpjs")
-const slpjs = new slp.Slp(BITBOX)
+const slpjs = new slp.Slp(SLP)
 const utils = slp.Utils
 
 // SLP tx db (LevelDB for caching)
@@ -113,7 +109,7 @@ async function getRawTransactionsFromNode(txids: string[]) {
           await slpTxDb.put(txid, result)
         }
       } catch (err) {
-        console.log("Error inserting to slpTxDb", err)
+        // console.log("Error inserting to slpTxDb", err)
       }
 
       return result
@@ -128,19 +124,19 @@ async function getRawTransactionsFromNode(txids: string[]) {
 
 // Create a validator for validating SLP transactions.
 function createValidator(network: string, getRawTransactions: any = null): any {
-  let tmpBITBOX: any
+  let tmpSLP: any
 
   if (network === "mainnet") {
-    tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
+    tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
   } else {
-    tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
+    tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
   }
 
   const slpValidator: any = new slp.LocalValidator(
-    tmpBITBOX,
+    tmpSLP,
     getRawTransactions
       ? getRawTransactions
-      : tmpBITBOX.RawTransactions.getRawTransaction.bind(this)
+      : tmpSLP.RawTransactions.getRawTransaction.bind(this)
   )
 
   return slpValidator
@@ -153,7 +149,7 @@ const slpValidator = createValidator(
 )
 
 // Instantiate the bitboxproxy class in SLPJS.
-const bitboxproxy = new slp.BitboxNetwork(BITBOX, slpValidator)
+const bitboxproxy = new slp.BitboxNetwork(SLP, slpValidator)
 
 const requestConfig: IRequestConfig = {
   method: "post",
@@ -164,6 +160,41 @@ const requestConfig: IRequestConfig = {
   data: {
     jsonrpc: "1.0"
   }
+}
+
+function formatTokenOutput(token) {
+  token.tokenDetails.tokenId = token.tokenDetails.tokenIdHex
+  delete token.tokenDetails.tokenIdHex
+  token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
+  delete token.tokenDetails.documentSha256Hex
+  token.tokenDetails.initialTokenQty = parseFloat(
+    token.tokenDetails.genesisOrMintQuantity
+  )
+  delete token.tokenDetails.genesisOrMintQuantity
+  delete token.tokenDetails.transactionType
+  delete token.tokenDetails.batonVout
+  delete token.tokenDetails.sendOutputs
+
+  token.tokenDetails.blockCreated = token.tokenStats.block_created
+  token.tokenDetails.blockLastActiveSend =
+    token.tokenStats.block_last_active_send
+  token.tokenDetails.blockLastActiveMint =
+    token.tokenStats.block_last_active_mint
+  token.tokenDetails.txnsSinceGenesis =
+    token.tokenStats.qty_valid_txns_since_genesis
+  token.tokenDetails.validAddresses = token.tokenStats.qty_valid_token_addresses
+  token.tokenDetails.totalMinted = parseFloat(token.tokenStats.qty_token_minted)
+  token.tokenDetails.totalBurned = parseFloat(token.tokenStats.qty_token_burned)
+  token.tokenDetails.circulatingSupply = parseFloat(
+    token.tokenStats.qty_token_circulating_supply
+  )
+  token.tokenDetails.mintingBatonStatus = token.tokenStats.minting_baton_status
+
+  delete token.tokenStats.block_last_active_send
+  delete token.tokenStats.block_last_active_mint
+  delete token.tokenStats.qty_valid_txns_since_genesis
+  delete token.tokenStats.qty_valid_token_addresses
+  return token
 }
 
 function root(
@@ -183,67 +214,33 @@ async function list(
     const query = {
       v: 3,
       q: {
-        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
-        limit: 1000
+        db: ["t"],
+        find: {
+          $query: {}
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        limit: 100
       }
     }
 
     const s = JSON.stringify(query)
     const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.BITDB_URL}q/${b64}`
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
     // Get data from BitDB.
     const tokenRes = await axios.get(url)
 
     let formattedTokens: Array<any> = []
 
-    if (tokenRes.data.u.length) {
-      tokenRes.data.u.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: token.blk
-            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-            : "unconfirmed",
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
       })
     }
 
-    if (tokenRes.data.c.length) {
-      tokenRes.data.c.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: token.blk
-            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-            : "unconfirmed",
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
-      })
-    }
-
-    res.json(formattedTokens)
-
-    return formattedTokens
+    res.status(200)
+    return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -300,30 +297,55 @@ async function listBulkToken(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, tokenIds)) {
+    if (!routeUtils.validateArraySize(req, tokenIds)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
       })
     }
 
-    // Lookup each token in the array
-    const tokens = []
-    for (let i = 0; i < tokenIds.length; i++) {
-      const tokenId = tokenIds[i]
-
-      // Validate each element.
-      if (!tokenId || tokenId === "") {
-        res.status(400)
-        return res.json({ error: `Empty tokenId encountered in entry ${i}` })
+    const query = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          "tokenDetails.tokenIdHex": {
+            $in: tokenIds
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        limit: 1000
       }
-
-      const thisToken = await lookupToken(tokenId)
-      tokens.push(thisToken)
     }
 
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    const tokenRes = await axios.get(url)
+
+    let formattedTokens: Array<any> = []
+    let txids: Array<any> = []
+
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        txids.push(token.tokenDetails.tokenIdHex)
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
+      })
+    }
+
+    tokenIds.forEach((tokenId: string) => {
+      if (!txids.includes(tokenId)) {
+        formattedTokens.push({
+          id: tokenId,
+          valid: false
+        })
+      }
+    })
+
     res.status(200)
-    return res.json(tokens)
+    return res.json(formattedTokens)
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -335,76 +357,40 @@ async function listBulkToken(
   }
 }
 
-// This is a utility function in order to keep code DRY. It is used by the
-// single and bulk list*Token functions.
 async function lookupToken(tokenId) {
   try {
     const query = {
       v: 3,
       q: {
-        find: { "out.h1": "534c5000", "out.s3": "GENESIS" },
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
         limit: 1000
       }
     }
 
     const s = JSON.stringify(query)
     const b64 = Buffer.from(s).toString("base64")
-    const url = `${process.env.BITDB_URL}q/${b64}`
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes = await axios.get(url)
 
-    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data)}`)
-    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
-
     let formattedTokens: Array<any> = []
 
-    if (tokenRes.data.u.length) {
-      tokenRes.data.u.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: token.blk
-            ? strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000))
-            : "unconfirmed",
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
       })
     }
-
-    if (tokenRes.data.c.length) {
-      tokenRes.data.c.forEach((token: any) => {
-        let div = "1"
-        for (let i = 0; i < parseInt(token.out[0].h8); i++) {
-          div += "0"
-        }
-
-        formattedTokens.push({
-          id: token.tx.h,
-          timestamp: strftime("%Y-%m-%d %H:%M", new Date(token.blk.t * 1000)),
-          symbol: token.out[0].s4,
-          name: token.out[0].s5,
-          documentUri: token.out[0].s6,
-          documentHash: token.out[0].h7,
-          decimals: parseInt(token.out[0].h8),
-          initialTokenQty: parseInt(token.out[0].h10, 16) / parseInt(div)
-        })
-      })
-    }
-
-    //console.log(`formattedTokens: ${JSON.stringify(formattedTokens,null,2)}`)
 
     let t
     formattedTokens.forEach((token: any) => {
-      if (token.id === tokenId) t = token
+      if (token.tokenId === tokenId) t = token
     })
 
     // If token could not be found.
@@ -445,62 +431,53 @@ async function balancesForAddress(
       })
     }
 
+    // TODO - uncomment once tslpdb is live.
     // Prevent a common user error. Ensure they are using the correct network address.
-    let cashAddr = utils.toCashAddress(address)
-    const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    if (!networkIsValid) {
-      res.status(400)
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      })
+    // let cashAddr = utils.toCashAddress(address)
+    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    // if (!networkIsValid) {
+    //   res.status(400)
+    //   return res.json({
+    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+    //   })
+    // }
+
+    const query = {
+      v: 3,
+      q: {
+        db: ["a"],
+        find: {
+          address: SLP.Address.toSLPAddress(address),
+          token_balance: { $gte: 0 }
+        },
+        limit: 10000
+      }
     }
 
-    let isMainnet = SLP.Address.isMainnetAddress(address)
-    let tmpBITBOX: any
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    if (isMainnet) {
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
-    } else {
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
-    }
-
-    // Initialize slpjs with BITBOX and our local validator.
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
-
-    // Convert input to an simpleledger: address.
-    const slpAddr = utils.toSlpAddress(req.params.address)
-
-    // Get balances and utxos for the address of interest.
-    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-
-    // If balances for this address exist, continue processing.
-    if (balances.slpTokenBalances) {
-      // An array of txids, each representing a token class possed by this address.
-      let keys = Object.keys(balances.slpTokenBalances)
-
-      // Query the token information for each token class found.
-      const axiosPromises = keys.map(async (key: any) => {
-        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
-
-        return {
-          tokenId: key,
-          balance: balances.slpTokenBalances[key]
-            .div(10 ** tokenMetadata.decimals)
-            .toString(),
-          decimalCount: tokenMetadata.decimals
-        }
+    const tokenRes = await axios.get(url)
+    // TODO - add decimalCount
+    if (tokenRes.data.a.length > 0) {
+      tokenRes.data.a = tokenRes.data.a.map(token => {
+        token.tokenId = token.tokenDetails.tokenIdHex
+        token.balance = parseFloat(token.token_balance)
+        token.slpAddress = token.address
+        delete token.tokenDetails
+        delete token.satoshis_balance
+        delete token.token_balance
+        delete token._id
+        delete token.address
+        return token
       })
-
-      // Wait for all parallel promises to return.
-      const axiosResult: Array<any> = await axios.all(axiosPromises)
-      return res.json(axiosResult)
-
-      // If no balances for this address exist, exit.
+      return res.json(tokenRes.data.a)
     } else {
-      return res.json("No balances for this address")
+      return res.json("No balance for this address")
     }
   } catch (err) {
-    //console.log(`Error object: ${util.inspect(err)}`)
+    // console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -511,7 +488,7 @@ async function balancesForAddress(
 
     res.status(500)
     return res.json({
-      error: `Error in /balancesForAddress/:address: ${err.message}`
+      error: `Error in /ddress/:address: ${err.message}`
     })
   }
 }
@@ -533,14 +510,12 @@ async function balancesForTokenSingle(
     const query = {
       v: 3,
       q: {
-        db: ["t"],
         find: {
-          $query: {
-            "tokenDetails.tokenIdHex": tokenId
-          }
+          "tokenDetails.tokenIdHex": tokenId,
+          token_balance: { $gte: 0 }
         },
-        project: { addresses: 1 },
-        limit: 1000
+        limit: 10000,
+        project: { address: 1, satoshis_balance: 1, token_balance: 1, _id: 0 }
       }
     }
 
@@ -550,9 +525,9 @@ async function balancesForTokenSingle(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
-    let resBalances: any[] = tokenRes.data.t[0].addresses.map((addy, index) => {
+    let resBalances: any[] = tokenRes.data.a.map((addy, index) => {
       delete addy.satoshis_balance
-      addy.tokenBalance = parseFloat(addy.token_balance["$numberDecimal"])
+      addy.tokenBalance = parseFloat(addy.token_balance)
       addy.slpAddress = addy.address
       addy.tokenId = tokenId
       delete addy.address
@@ -561,7 +536,7 @@ async function balancesForTokenSingle(
     })
     return res.json(resBalances)
   } catch (err) {
-    //console.log(`Error object: ${util.inspect(err)}`)
+    // console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -607,76 +582,63 @@ async function balancesForAddressByTokenID(
       })
     }
 
+    // TODO - uncomment once tslpdb is live
     // Prevent a common user error. Ensure they are using the correct network address.
-    let cashAddr = utils.toCashAddress(address)
-    const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    if (!networkIsValid) {
-      res.status(400)
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      })
-    }
-
-    let isMainnet = SLP.Address.isMainnetAddress(address)
-    let tmpBITBOX: any
-
-    if (isMainnet) {
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
-    } else {
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
-    }
-
-    // Initialize slpjs with BITBOX and our local validator.
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
+    // let cashAddr = utils.toCashAddress(address)
+    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    // if (!networkIsValid) {
+    //   res.status(400)
+    //   return res.json({
+    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+    //   })
+    // }
 
     // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
 
-    // Get balances and utxos for the address of interest.
-    const balances = await tmpbitboxNetwork.getAllSlpBalancesAndUtxos(slpAddr)
-
-    // If balances for this address exist, continue processing.
-    if (balances.slpTokenBalances) {
-      // An array of txids, each representing a token class possed by this address.
-      let keys = Object.keys(balances.slpTokenBalances)
-
-      // Query the token information for each token class found.
-      const axiosPromises = keys.map(async (key: any) => {
-        let tokenMetadata: any = await tmpbitboxNetwork.getTokenInformation(key)
-
-        return {
-          tokenId: key,
-          balance: balances.slpTokenBalances[key]
-            .div(10 ** tokenMetadata.decimals)
-            .toString(),
-          decimalCount: tokenMetadata.decimals
-        }
-      })
-
-      // Wait for all parallel promises to return.
-      const axiosResult: Array<any> = await axios.all(axiosPromises)
-
-      // Loop through the returned token classes for this address
-      for (let result of axiosResult) {
-        // Return the token class of interest.
-        if (result.tokenId === req.params.tokenId) {
-          return res.json(result)
-        }
+    const query = {
+      v: 3,
+      q: {
+        db: ["a"],
+        find: {
+          address: slpAddr,
+          token_balance: { $gte: 0 }
+        },
+        limit: 10000
       }
-
-      let tokenData: any = await tmpbitboxNetwork.getTokenInformation(
-        req.params.tokenId
-      )
-      return res.json({
-        tokenId: req.params.tokenId,
-        balance: 0,
-        decimalCount: tokenData.decimals
-      })
-
-      // If no balances for this address exist, exit.
-    } else {
-      return res.json("No balance for this address and tokenId")
     }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    let resVal: any
+    res.status(200)
+    if (tokenRes.data.a.length > 0) {
+      tokenRes.data.a.forEach(token => {
+        if (token.tokenDetails.tokenIdHex === tokenId) {
+          resVal = {
+            tokenId: tokenRes.data.a[0].tokenDetails.tokenIdHex,
+            balance: parseFloat(tokenRes.data.a[0].token_balance)
+          }
+        } else {
+          console.log("TTTHEEER")
+          resVal = {
+            tokenId: tokenId,
+            balance: 0
+          }
+        }
+      })
+    } else {
+      console.log("NNOOTTTHEEER")
+      resVal = {
+        tokenId: tokenId,
+        balance: 0
+      }
+    }
+    return res.json(resVal)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)
 
@@ -721,7 +683,7 @@ async function convertAddressSingle(
     }
     obj.slpAddress = slpAddr
     obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
-    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+    obj.legacyAddress = SLP.Address.toLegacyAddress(obj.cashAddress)
 
     res.status(200)
     return res.json(obj)
@@ -754,7 +716,7 @@ async function convertAddressBulk(
   }
 
   // Enforce array size rate limits
-  if(!routeUtils.validateArraySize(req, addresses)) {
+  if (!routeUtils.validateArraySize(req, addresses)) {
     res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
     return res.json({
       error: `Array too large.`
@@ -785,7 +747,7 @@ async function convertAddressBulk(
     }
     obj.slpAddress = slpAddr
     obj.cashAddress = SLP.Address.toCashAddress(slpAddr)
-    obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+    obj.legacyAddress = SLP.Address.toLegacyAddress(obj.cashAddress)
 
     convertedAddresses.push(obj)
   }
@@ -809,7 +771,7 @@ async function validateBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -818,32 +780,49 @@ async function validateBulk(
 
     logger.debug(`Executing slp/validate with these txids: `, txids)
 
-    // Validate each txid
-    const validatePromises = txids.map(async txid => {
-      try {
-        // Dev note: must call module.exports to allow stubs in unit tests.
-        const isValid = await module.exports.testableComponents.isValidSlpTxid(
-          txid
-        )
-
-        let tmp: any = {
-          txid: txid,
-          valid: isValid ? true : false
-        }
-        return tmp
-      } catch (err) {
-        //console.log(`err obj: ${util.inspect(err)}`)
-        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
-        throw err
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": { $in: txids }
+        },
+        limit: 300,
+        project: { "slp.valid": 1, "tx.h": 1 }
       }
-    })
+    }
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Filter array to only valid txid results
-    const validateResults = await axios.all(validatePromises)
-    const validTxids = validateResults.filter(result => result)
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
+    let formattedTokens: any[] = []
+
+    let concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
+    let tokenIds: string[] = []
+    if (concatArray.length > 0) {
+      concatArray.forEach((token: any) => {
+        tokenIds.push(token.tx.h)
+        formattedTokens.push({
+          txid: token.tx.h,
+          valid: token.slp.valid
+        })
+      })
+
+      txids.forEach((tokenId: string) => {
+        if (!tokenIds.includes(tokenId)) {
+          formattedTokens.push({
+            txid: tokenId,
+            valid: false
+          })
+        }
+      })
+    }
 
     res.status(200)
-    return res.json(validTxids)
+    return res.json(formattedTokens)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -873,17 +852,38 @@ async function validateSingle(
 
     logger.debug(`Executing slp/validate/:txid with this txid: `, txid)
 
-    // Validate txid
-    // Dev note: must call module.exports to allow stubs in unit tests.
-    const isValid = await module.exports.testableComponents.isValidSlpTxid(txid)
-
-    let tmp: any = {
-      txid: txid,
-      valid: isValid ? true : false
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": txid
+        },
+        limit: 300,
+        project: { "slp.valid": 1, "tx.h": 1 }
+      }
     }
 
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
+    let valid
+    if (tokenRes.data.c.length > 0) {
+      valid = tokenRes.data.c[0].slp.valid
+    } else if (tokenRes.data.u.length > 0) {
+      valid = tokenRes.data.u[0].slp.valid
+    } else {
+      valid = false
+    }
     res.status(200)
-    return res.json(tmp)
+    return res.json({
+      txid: txid,
+      valid: valid
+    })
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -1214,14 +1214,12 @@ async function txDetails(
       return res.json({ error: "This is not a txid" })
     }
 
-    // Create a local instantiation of BITBOX
-    let tmpBITBOX
+    let tmpSLP
     if (process.env.NETWORK === "testnet")
-      tmpBITBOX = new BITBOXCli({ restURL: process.env.TREST_URL })
-    else tmpBITBOX = new BITBOXCli({ restURL: process.env.REST_URL })
+      tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
+    else tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
 
-    // Initialize slpjs with BITBOX and our local validator.
-    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpBITBOX, slpValidator)
+    const tmpbitboxNetwork = new slp.BitboxNetwork(tmpSLP, slpValidator)
 
     // Get TX info + token info
     const result = await tmpbitboxNetwork.getTransactionDetails(txid)
@@ -1263,15 +1261,15 @@ async function tokenStats(
   try {
     const query = {
       v: 3,
-      c: ["t"],
       q: {
+        db: ["t"],
         find: {
-          "tokenDetails.tokenIdHex": tokenId
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
         },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
         limit: 10
-      },
-      r: {
-        f: "[.[] | { tokenDetails: .tokenDetails, tokenStats: .tokenStats } ]"
       }
     }
 
@@ -1279,33 +1277,20 @@ async function tokenStats(
     const b64 = Buffer.from(s).toString("base64")
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from SLPDB.
-    const response = await axios.get(url)
+    // Get data from BitDB.
+    const tokenRes = await axios.get(url)
 
-    let tokenDetailsData = response.data.t[0].tokenDetails
-    let tokenStatsData = response.data.t[0].tokenStats
-    let decimals = tokenDetailsData.decimals
-    let tokenStats = {
-      tokenId: tokenDetailsData.tokenIdHex,
-      documentUri: tokenDetailsData.documentUri,
-      documentHash: tokenDetailsData.documentSha256,
-      symbol: tokenDetailsData.symbol,
-      name: tokenDetailsData.name,
-      decimals: tokenDetailsData.decimals,
-      txnsSinceGenesis: tokenStatsData.qty_valid_txns_since_genesis,
-      validUtxos: tokenStatsData.qty_valid_token_utxos,
-      validAddresses: tokenStatsData.qty_valid_token_addresses,
-      circulatingSupply: parseFloat(
-        tokenStatsData.qty_token_circulating_supply
-      ),
-      totalBurned: parseFloat(tokenStatsData.qty_token_burned),
-      totalMinted: parseFloat(tokenStatsData.qty_token_minted),
-      satoshisLockedUp: tokenStatsData.qty_satoshis_locked_up
+    let formattedTokens: Array<any> = []
+
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
+      })
     }
 
-    res.json(tokenStats)
-
-    return tokenStats
+    res.status(200)
+    return res.json(formattedTokens[0])
   } catch (err) {
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {

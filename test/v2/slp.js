@@ -745,9 +745,9 @@ describe("#SLP", () => {
     it("should validate array with single element", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .get(``)
-          .reply(200, { result: mockData.mockFoobar })
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
       }
 
       req.body.txids = [
@@ -764,9 +764,9 @@ describe("#SLP", () => {
     it("should validate array with two elements", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.SLPDB_URL}`)
-          .get(``)
-          .reply(200, { result: mockData.mockConvert })
+        sandbox
+          .stub(slpRoute.testableComponents, "isValidSlpTxid")
+          .resolves(true)
       }
 
       req.body.txids = [

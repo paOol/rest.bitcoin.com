@@ -241,7 +241,7 @@ describe("#SLP", () => {
         "documentHash",
         "decimals",
         "initialTokenQty",
-        "tokenId",
+        "id",
         "totalBurned",
         "totalMinted",
         "validAddresses"
@@ -372,7 +372,7 @@ describe("#SLP", () => {
         "documentHash",
         "decimals",
         "initialTokenQty",
-        "tokenId",
+        "id",
         "totalBurned",
         "totalMinted",
         "validAddresses"
@@ -415,7 +415,7 @@ describe("#SLP", () => {
         "documentHash",
         "decimals",
         "initialTokenQty",
-        "tokenId",
+        "id",
         "totalBurned",
         "totalMinted",
         "validAddresses"
@@ -831,7 +831,7 @@ describe("#SLP", () => {
         "documentUri",
         "name",
         "symbol",
-        "tokenId",
+        "id",
         "totalBurned",
         "totalMinted",
         "txnsSinceGenesis",

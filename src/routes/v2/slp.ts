@@ -163,7 +163,7 @@ const requestConfig: IRequestConfig = {
 }
 
 function formatTokenOutput(token) {
-  token.tokenDetails.tokenId = token.tokenDetails.tokenIdHex
+  token.tokenDetails.id = token.tokenDetails.tokenIdHex
   delete token.tokenDetails.tokenIdHex
   token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
   delete token.tokenDetails.documentSha256Hex

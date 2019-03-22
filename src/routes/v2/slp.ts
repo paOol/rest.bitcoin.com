@@ -392,7 +392,7 @@ async function lookupToken(tokenId) {
 
     let t
     formattedTokens.forEach((token: any) => {
-      if (token.tokenId === tokenId) t = token
+      if (token.id === tokenId) t = token
     })
 
     // If token could not be found.

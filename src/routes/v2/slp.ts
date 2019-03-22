@@ -433,16 +433,15 @@ async function balancesForAddress(
       })
     }
 
-    // TODO - uncomment once tslpdb is live.
     // Prevent a common user error. Ensure they are using the correct network address.
-    // let cashAddr = utils.toCashAddress(address)
-    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    // if (!networkIsValid) {
-    //   res.status(400)
-    //   return res.json({
-    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-    //   })
-    // }
+    let cashAddr = utils.toCashAddress(address)
+    const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    if (!networkIsValid) {
+      res.status(400)
+      return res.json({
+        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+      })
+    }
 
     const query = {
       v: 3,
@@ -584,16 +583,15 @@ async function balancesForAddressByTokenID(
       })
     }
 
-    // TODO - uncomment once tslpdb is live
     // Prevent a common user error. Ensure they are using the correct network address.
-    // let cashAddr = utils.toCashAddress(address)
-    // const networkIsValid = routeUtils.validateNetwork(cashAddr)
-    // if (!networkIsValid) {
-    //   res.status(400)
-    //   return res.json({
-    //     error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-    //   })
-    // }
+    let cashAddr = utils.toCashAddress(address)
+    const networkIsValid = routeUtils.validateNetwork(cashAddr)
+    if (!networkIsValid) {
+      res.status(400)
+      return res.json({
+        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+      })
+    }
 
     // Convert input to an simpleledger: address.
     const slpAddr = utils.toSlpAddress(req.params.address)
@@ -626,7 +624,6 @@ async function balancesForAddressByTokenID(
             balance: parseFloat(tokenRes.data.a[0].token_balance)
           }
         } else {
-          console.log("TTTHEEER")
           resVal = {
             tokenId: tokenId,
             balance: 0
@@ -634,7 +631,6 @@ async function balancesForAddressByTokenID(
         }
       })
     } else {
-      console.log("NNOOTTTHEEER")
       resVal = {
         tokenId: tokenId,
         balance: 0

@@ -498,7 +498,7 @@ describe("#SLP", () => {
       req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
       const result = await balancesForAddress(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       // TODO - add decimalCount
       assert.isArray(result)

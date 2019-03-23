@@ -445,16 +445,16 @@ describe("#SLP", () => {
     })
 
     // TODO - Uncomment out test once tslpdb is live
-    // it("should throw 400 if address network mismatch", async () => {
-    //   req.params.address =
-    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
-    //
-    //   const result = await balancesForAddress(req, res)
-    //   // console.log(`result: ${util.inspect(result)}`)
-    //
-    //   assert.hasAllKeys(result, ["error"])
-    //   assert.include(result.error, "Invalid")
-    // })
+    it("should throw 400 if address network mismatch", async () => {
+      req.params.address =
+        "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+
+      const result = await balancesForAddress(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Invalid")
+    })
 
     it("should throw 5XX error when network issues", async () => {
       // Save the existing rest URL settings.
@@ -498,15 +498,15 @@ describe("#SLP", () => {
       req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
       const result = await balancesForAddress(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       // TODO - add decimalCount
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
         "tokenId",
         "balance",
-        "slpAddress"
-        // "decimalCount"
+        "slpAddress",
+        "decimalCount"
       ])
     })
   })
@@ -775,7 +775,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])

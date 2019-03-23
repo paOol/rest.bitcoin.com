@@ -183,7 +183,7 @@ describe("#Raw-Transactions", () => {
       }
 
       const result = await rp(options)
-      console.log(`result.body: ${util.inspect(result.body)}`)
+      // console.log(`result.body: ${util.inspect(result.body)}`)
 
       assert.isArray(result.body)
     })

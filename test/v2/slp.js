@@ -107,17 +107,17 @@ describe("#SLP", () => {
     const list = slpRoute.testableComponents.list
 
     it("should throw 500 when network issues", async () => {
-      // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       const result = await list(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -132,7 +132,7 @@ describe("#SLP", () => {
       if (process.env.TEST === "unit") {
         const b64 = `eyJ2IjozLCJxIjp7ImRiIjpbInQiXSwiZmluZCI6eyIkcXVlcnkiOnt9fSwicHJvamVjdCI6eyJ0b2tlbkRldGFpbHMiOjEsInRva2VuU3RhdHMiOjEsIl9pZCI6MH0sImxpbWl0IjoxMDB9fQ==`
 
-        nock(process.env.BITDB_URL)
+        nock(process.env.SLPDB_URL)
           .get(uri => uri.includes("/"))
           .reply(200, mockData.mockList)
       }
@@ -167,10 +167,10 @@ describe("#SLP", () => {
 
     it("should throw 503 when network issues", async () => {
       // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.tokenId =
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
@@ -179,7 +179,7 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -220,7 +220,7 @@ describe("#SLP", () => {
 
       req.params.tokenId =
         // testnet
-        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
+        "e6fe00fc1f53320b72bd5cbed76c0c82e5edfea1b6f9cb0f71bfb28c3b6211a8"
 
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -295,10 +295,10 @@ describe("#SLP", () => {
 
     it("should throw 503 when network issues", async () => {
       // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.body.tokenIds = [
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
@@ -308,7 +308,7 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -330,7 +330,7 @@ describe("#SLP", () => {
         // testnet
         //"650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
         // mainnet
-        ["650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"]
+        ["0b314bc2b2905b8844222871c6b665ae3494117c83b11302824561bb904efb6b"]
 
       const result = await listBulkToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -457,22 +457,19 @@ describe("#SLP", () => {
     // })
 
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing rest URL settings.
-      const saveUrl1 = process.env.REST_URL
-      const saveUrl2 = process.env.TREST_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
-      // manipulate the rest url used by slpjs
-      process.env.REST_URL = "https://fakeurl/"
-      process.env.TREST_URL = "https://fakeurl/"
+      // Manipulate the URL to cause a 500 network error.
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
       const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the functionality of slpjs
-      process.env.REST_URL = saveUrl1
-      process.env.TREST_URL = saveUrl2
+      // Restore the saved URL.
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -562,24 +559,21 @@ describe("#SLP", () => {
     // })
 
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing rest URL settings.
-      const saveUrl1 = process.env.REST_URL
-      const saveUrl2 = process.env.TREST_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
-      // manipulate the rest url used by slpjs
-      process.env.REST_URL = "https://fakeurl/"
-      process.env.TREST_URL = "https://fakeurl/"
+      // Manipulate the URL to cause a 500 network error.
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
       req.params.tokenId =
         "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
 
       const result = await balancesForAddressByTokenID(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the functionality of slpjs
-      process.env.REST_URL = saveUrl1
-      process.env.TREST_URL = saveUrl2
+      // Restore the saved URL.
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -775,7 +769,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
@@ -789,7 +783,7 @@ describe("#SLP", () => {
     it("should throw 400 if tokenID is empty", async () => {
       req.params.tokenId = ""
       const result = await tokenStatsSingle(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "tokenId can not be empty")
@@ -811,7 +805,7 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
 
       const result = await tokenStatsSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -820,12 +814,14 @@ describe("#SLP", () => {
         "blockCreated",
         "blockLastActiveMint",
         "blockLastActiveSend",
-        "documentSha256",
+        "containsBaton",
         "initialTokenQty",
         "mintingBatonStatus",
         "circulatingSupply",
         "decimals",
         "documentHash",
+        "versionType",
+        "timestamp",
         "documentUri",
         "name",
         "symbol",
@@ -862,7 +858,7 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
 
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -958,8 +954,8 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a"
-      req.params.address = "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
+      req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
 
       const result = await txsTokenIdAddressSingle(req, res)
       // console.log(`result: ${JSON.stringify(result, null, 2)}`)

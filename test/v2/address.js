@@ -41,7 +41,7 @@ describe("#AddressRouter", () => {
     if (process.env.TEST === "unit")
       process.env.BITCOINCOM_BASEURL = "http://fakeurl/api/"
 
-    console.log(`Testing type is: ${process.env.TEST}`)
+    // console.log(`Testing type is: ${process.env.TEST}`)
   })
 
   // Setup the mocks before each test.

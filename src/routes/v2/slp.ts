@@ -486,7 +486,7 @@ async function balancesForAddress(
       return res.json("No balance for this address")
     }
   } catch (err) {
-    // console.log(`Error object: ${util.inspect(err)}`)
+    console.log(`Error object: ${util.inspect(err)}`)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -497,7 +497,7 @@ async function balancesForAddress(
 
     res.status(500)
     return res.json({
-      error: `Error in /ddress/:address: ${err.message}`
+      error: `Error in /balancesForAddress/:address: ${err.message}`
     })
   }
 }

@@ -138,7 +138,7 @@ router.get(
         })
         .catch(error => {
           //res.send(error.response.data.error.message)
-          console.log(`Error: `, error)
+          // console.log(`Error: `, error)
         })
     } catch (error) {
       axios
@@ -160,7 +160,7 @@ router.get(
         })
         .catch(error => {
           //res.send(error.response.data.error.message)
-          console.log(`Error: `, error)
+          // console.log(`Error: `, error)
         })
     }
   }

@@ -221,10 +221,12 @@ const mockTokenDetails = {
   tokenIdHex:
     "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
   documentUri: "",
-  documentSha256: "",
   symbol: "NAKAMOTO",
   name: "NAKAMOTO",
-  decimals: 8
+  decimals: 8,
+  timestamp: "",
+  containsBaton: true,
+  versionType: 1
 }
 
 const mockTokenStats = {

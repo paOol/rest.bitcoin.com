@@ -444,17 +444,16 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid BCH address.")
     })
 
-    // TODO - Uncomment out test once tslpdb is live
-    // it("should throw 400 if address network mismatch", async () => {
-    //   req.params.address =
-    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
-    //
-    //   const result = await balancesForAddress(req, res)
-    //   // console.log(`result: ${util.inspect(result)}`)
-    //
-    //   assert.hasAllKeys(result, ["error"])
-    //   assert.include(result.error, "Invalid")
-    // })
+    it("should throw 400 if address network mismatch", async () => {
+      req.params.address =
+        "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+
+      const result = await balancesForAddress(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Invalid")
+    })
 
     it("should throw 5XX error when network issues", async () => {
       // Save the existing SLPDB_URL.
@@ -546,17 +545,16 @@ describe("#SLP", () => {
       assert.include(result.error, "Invalid BCH address.")
     })
 
-    // TODO - uncommnet once tslpdb is live
-    // it("should throw 400 if address network mismatch", async () => {
-    //   req.params.address =
-    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
-    //
-    //   const result = await balancesForAddressByTokenID(req, res)
-    //   //console.log(`result: ${util.inspect(result)}`)
-    //
-    //   assert.hasAllKeys(result, ["error"])
-    //   assert.include(result.error, "Invalid")
-    // })
+    it("should throw 400 if address network mismatch", async () => {
+      req.params.address =
+        "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+
+      const result = await balancesForAddressByTokenID(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "Invalid")
+    })
 
     it("should throw 5XX error when network issues", async () => {
       // Save the existing SLPDB_URL.

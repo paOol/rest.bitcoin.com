@@ -220,7 +220,7 @@ describe("#SLP", () => {
 
       req.params.tokenId =
         // testnet
-        "e6fe00fc1f53320b72bd5cbed76c0c82e5edfea1b6f9cb0f71bfb28c3b6211a8"
+        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
 
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)

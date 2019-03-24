@@ -460,10 +460,12 @@ async function balancesForAddress(
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes = await axios.get(url)
-    // TODO - add decimalCount
+
+    let tokenIds: string[] = []
     if (tokenRes.data.a.length > 0) {
       tokenRes.data.a = tokenRes.data.a.map(token => {
         token.tokenId = token.tokenDetails.tokenIdHex
+        tokenIds.push(token.tokenId)
         token.balance = parseFloat(token.token_balance)
         token.slpAddress = token.address
         delete token.tokenDetails
@@ -473,6 +475,48 @@ async function balancesForAddress(
         delete token.address
         return token
       })
+
+      const promises = tokenIds.map(async tokenId => {
+        try {
+          const query2 = {
+            v: 3,
+            q: {
+              db: ["t"],
+              find: {
+                $query: {
+                  "tokenDetails.tokenIdHex": tokenId
+                }
+              },
+              project: {
+                "tokenDetails.decimals": 1,
+                "tokenDetails.tokenIdHex": 1,
+                _id: 0
+              },
+              limit: 1000
+            }
+          }
+
+          const s2 = JSON.stringify(query2)
+          const b642 = Buffer.from(s2).toString("base64")
+          const url2 = `${process.env.SLPDB_URL}q/${b642}`
+
+          const tokenRes2 = await axios.get(url2)
+          return tokenRes2.data
+        } catch (err) {
+          throw err
+        }
+      })
+
+      const details = await axios.all(promises)
+      tokenRes.data.a = tokenRes.data.a.map(token => {
+        details.forEach(detail => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
+
       return res.json(tokenRes.data.a)
     } else {
       return res.json("No balance for this address")
@@ -604,7 +648,7 @@ async function balancesForAddressByTokenID(
           address: slpAddr,
           token_balance: { $gte: 0 }
         },
-        limit: 10000
+        limit: 10
       }
     }
 
@@ -617,12 +661,43 @@ async function balancesForAddressByTokenID(
     let resVal: any
     res.status(200)
     if (tokenRes.data.a.length > 0) {
-      tokenRes.data.a.forEach(token => {
+      tokenRes.data.a.forEach(async token => {
         if (token.tokenDetails.tokenIdHex === tokenId) {
           resVal = {
             tokenId: tokenRes.data.a[0].tokenDetails.tokenIdHex,
             balance: parseFloat(tokenRes.data.a[0].token_balance)
           }
+          //       const query2 = {
+          //         v: 3,
+          //         q: {
+          //           db: ["t"],
+          //           find: {
+          //             $query: {
+          //               "tokenDetails.tokenIdHex": tokenId
+          //             }
+          //           },
+          //           project: {
+          //             "tokenDetails.decimals": 1,
+          //             "tokenDetails.tokenIdHex": 1,
+          //             _id: 0
+          //           },
+          //           limit: 1000
+          //         }
+          //       }
+          //
+          //       const s2 = JSON.stringify(query2)
+          //       const b642 = Buffer.from(s2).toString("base64")
+          //       const url2 = `${process.env.SLPDB_URL}q/${b642}`
+          //
+          //       const tokenRes2 = await axios.get(url2)
+          //       console.log("hello world", tokenRes2.data.t)
+          //       resVal = {
+          //         tokenId: token.tokenDetails.tokenIdHex,
+          //         balance: parseFloat(token.token_balance),
+          //         decimalCount: tokenRes2.data.t[0].tokenDetails.decimals
+          //       }
+          //       console.log("resVal", resVal)
+          // return res.json(resVal)
         } else {
           resVal = {
             tokenId: tokenId,

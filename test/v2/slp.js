@@ -219,8 +219,7 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        // testnet
-        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
+        "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
 
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -496,13 +495,12 @@ describe("#SLP", () => {
       const result = await balancesForAddress(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      // TODO - add decimalCount
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
         "tokenId",
         "balance",
-        "slpAddress"
-        // "decimalCount"
+        "slpAddress",
+        "decimalCount"
       ])
     })
   })

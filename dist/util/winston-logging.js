@@ -13,7 +13,7 @@ var transport = new winston.transports.DailyRotateFile({
     datePattern: "YYYY-MM-DD",
     zippedArchive: false,
     maxSize: "1m",
-    maxFiles: "14d",
+    maxFiles: "5d",
     format: winston.format.combine(winston.format.timestamp(), winston.format.json())
 });
 transport.on("rotate", function (oldFilename, newFilename) {
@@ -21,7 +21,7 @@ transport.on("rotate", function (oldFilename, newFilename) {
 });
 // This controls what goes into the log FILES
 var wlogger = winston.createLogger({
-    level: "info",
+    level: "verbose",
     format: winston.format.json(),
     transports: [
         //

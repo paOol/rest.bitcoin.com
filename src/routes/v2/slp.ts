@@ -228,7 +228,7 @@ async function list(
     const b64 = Buffer.from(s).toString("base64")
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from BitDB.
+    // Get data from SLPDB.
     const tokenRes = await axios.get(url)
 
     let formattedTokens: Array<any> = []

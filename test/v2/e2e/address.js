@@ -32,9 +32,9 @@ async function testSingleUnconfirmed() {
     }
 
     const result = await rp(options)
-    console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
+    // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
   } catch (err) {
-    console.log(`Error: `, err)
+    // console.log(`Error: `, err)
   }
 }
 testSingleUnconfirmed()
@@ -52,9 +52,9 @@ async function testDoubleUnconfirmed() {
     }
 
     const result = await rp(options)
-    console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
+    // console.log(`result.body: ${JSON.stringify(result.body, null, 2)}`)
   } catch (err) {
-    console.log(`Error: `, err)
+    // console.log(`Error: `, err)
   }
 }
 testDoubleUnconfirmed()

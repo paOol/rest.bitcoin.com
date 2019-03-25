@@ -6,11 +6,10 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 
 const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
 const BITBOX = new BITBOXCli()
-
-const FREEMIUM_INPUT_SIZE = 20
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
@@ -83,6 +82,8 @@ async function validateAddressSingle(
       return res.json({ error: msg })
     }
 
+    wlogger.error(`Error in util.ts/validateAddressSingle().`, err)
+
     res.status(500)
     return res.json({ error: util.inspect(err) })
   }
@@ -104,11 +105,11 @@ async function validateAddressBulk(
       })
     }
 
-    // Enforce no more than 20 addresses.
-    if (addresses.length > FREEMIUM_INPUT_SIZE) {
-      res.status(400)
+    // Enforce array size rate limits
+    if (!routeUtils.validateArraySize(req, addresses)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
-        error: `Array too large. Max ${FREEMIUM_INPUT_SIZE} addresses`
+        error: `Array too large.`
       })
     }
 
@@ -171,6 +172,8 @@ async function validateAddressBulk(
       res.status(status)
       return res.json({ error: msg })
     }
+
+    wlogger.error(`Error in util.ts/validateAddressSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

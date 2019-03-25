@@ -14,6 +14,7 @@
 const passport = require("passport")
 const BasicStrategy = require("passport-http").BasicStrategy
 const AnonymousStrategy = require("passport-anonymous")
+const wlogger = require("../util/winston-logging")
 
 // Used for debugging and iterrogating JS objects.
 const util = require("util")
@@ -22,9 +23,11 @@ util.inspect.defaultOptions = { depth: 1 }
 let _this
 
 // Set default rate limit value for testing
-const PRO_PASS = process.env.PRO_PASS
-  ? parseInt(process.env.PRO_PASS)
-  : "BITBOX"
+const PRO_PASSes = process.env.PRO_PASS ? process.env.PRO_PASS : "BITBOX"
+// Convert the pro-tier password string into an array split by ':'.
+const PRO_PASS = PRO_PASSes.split(":")
+
+//wlogger.verbose(`PRO_PASS set to: ${PRO_PASS}`)
 
 // Auth Middleware
 class AuthMW {
@@ -61,12 +64,23 @@ class AuthMW {
         // Create the req.locals property if it does not yet exist.
         if (!req.locals) req.locals = {}
 
+        // Set pro-tier rate limit to flag to false by default.
+        req.locals.proLimit = false
+
         // Evaluate the username and password and set the rate limit accordingly.
-        if (username === "BITBOX" && password === PRO_PASS) {
-          // Success
-          req.locals.proLimit = true
-        } else {
-          req.locals.proLimit = false
+        //if (username === "BITBOX" && password === PRO_PASS) {
+        if (username === "BITBOX") {
+          for (let i = 0; i < PRO_PASS.length; i++) {
+            const thisPass = PRO_PASS[i]
+
+            if (password === thisPass) {
+              wlogger.verbose(`${req.url} called by ${password.slice(0, 6)}`)
+
+              // Success
+              req.locals.proLimit = true
+              break
+            }
+          }
         }
 
         //console.log(`req.locals: ${util.inspect(req.locals)}`)

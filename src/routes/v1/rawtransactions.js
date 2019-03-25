@@ -398,7 +398,7 @@ router.post(
         res.status(500).send(error.response.data.error)
       }
     } catch (err) {
-      console.log(`Error in /change: `)
+      // console.log(`Error in /change: `)
       res.status(500)
       res.send(`Error in /change: ${err.message}`)
     }

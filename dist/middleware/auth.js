@@ -21,6 +21,7 @@ var _this;
 var PRO_PASS = process.env.PRO_PASS
     ? parseInt(process.env.PRO_PASS)
     : "BITBOX";
+wlogger.verbose("PRO_PASS set to: " + PRO_PASS);
 // Auth Middleware
 var AuthMW = /** @class */ (function () {
     function AuthMW() {

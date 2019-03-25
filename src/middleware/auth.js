@@ -23,9 +23,7 @@ util.inspect.defaultOptions = { depth: 1 }
 let _this
 
 // Set default rate limit value for testing
-const PRO_PASS = process.env.PRO_PASS
-  ? parseInt(process.env.PRO_PASS)
-  : "BITBOX"
+const PRO_PASS = process.env.PRO_PASS ? process.env.PRO_PASS : "BITBOX"
 
 wlogger.verbose(`PRO_PASS set to: ${PRO_PASS}`)
 

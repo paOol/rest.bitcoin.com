@@ -18,10 +18,8 @@ var util = require("util");
 util.inspect.defaultOptions = { depth: 1 };
 var _this;
 // Set default rate limit value for testing
-var PRO_PASS = process.env.PRO_PASS
-    ? parseInt(process.env.PRO_PASS)
-    : "BITBOX";
-wlogger.verbose("PRO_PASS set to: " + PRO_PASS);
+var PRO_PASS = process.env.PRO_PASS ? process.env.PRO_PASS : "BITBOX";
+//wlogger.verbose(`PRO_PASS set to: ${PRO_PASS}`)
 // Auth Middleware
 var AuthMW = /** @class */ (function () {
     function AuthMW() {
@@ -48,7 +46,7 @@ var AuthMW = /** @class */ (function () {
             // Create the req.locals property if it does not yet exist.
             if (!req.locals)
                 req.locals = {};
-            wlogger.verbose("Auth passed with password " + password);
+            //wlogger.verbose(`Auth passed with password ${password}`)
             // Evaluate the username and password and set the rate limit accordingly.
             if (username === "BITBOX" && password === PRO_PASS) {
                 // Success

@@ -6,6 +6,7 @@ import axios from "axios"
 import { IRequestConfig } from "./interfaces/IRequestConfig"
 const logger = require("./logging.js")
 const routeUtils = require("./route-utils")
+const wlogger = require("../../util/winston-logging")
 
 // Used for processing error messages before sending them to the user.
 const util = require("util")
@@ -39,6 +40,8 @@ async function getInfo(
 
     return res.json(response.data.result)
   } catch (error) {
+    wlogger.error(`Error in control.ts/getInfo().`, error)
+
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
 

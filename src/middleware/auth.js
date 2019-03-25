@@ -74,7 +74,7 @@ class AuthMW {
             const thisPass = PRO_PASS[i]
 
             if (password === thisPass) {
-              wlogger.verbose(`Pro-tier activated by ${password.slice(0, 6)}`)
+              wlogger.verbose(`${req.url} called by ${password.slice(0, 6)}`)
 
               // Success
               req.locals.proLimit = true

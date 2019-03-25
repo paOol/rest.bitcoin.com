@@ -1,6 +1,6 @@
 {
   "name": "rest.bitcoin.com",
-  "version": "3.2.2",
+  "version": "3.3.6",
   "description": "REST API for Bitcoin.com's Cloud",
   "author": "Gabriel Cardona <gabriel@bitcoin.com>",
   "contributors": [
@@ -52,8 +52,8 @@
     "pg": "^6.2.3",
     "pg-hstore": "^2.3.2",
     "sequelize": "^3.30.4",
-    "slp-sdk": "2.1.1",
-    "slpjs": "0.15.3",
+    "slp-sdk": "3.2.1",
+    "slpjs": "0.15.5",
     "socket.io": "^2.1.1",
     "strftime": "^0.10.0",
     "swagger-stats": "^0.95.6",

@@ -82,7 +82,7 @@ describe("#rate limits", () => {
 
       assert.equal(true, true, "Not throwing an error is a pass!")
     } catch (err) {
-      console.log(`err.response: ${util.inspect(err.response)}`)
+      // console.log(`err.response: ${util.inspect(err.response)}`)
 
       assert.equal(
         true,

@@ -107,17 +107,17 @@ describe("#SLP", () => {
     const list = slpRoute.testableComponents.list
 
     it("should throw 500 when network issues", async () => {
-      // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       const result = await list(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -130,15 +130,15 @@ describe("#SLP", () => {
     it("should GET list", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        const b64 = `eyJ2IjozLCJxIjp7ImZpbmQiOnsib3V0LmgxIjoiNTM0YzUwMDAiLCJvdXQuczMiOiJHRU5FU0lTIn0sImxpbWl0IjoxMDAwfSwiciI6eyJmIjoiWyAuW10gfCB7IGlkOiAudHguaCwgdGltZXN0YW1wOiAoLmJsay50IHwgc3RyZnRpbWUoXCIlWS0lbS0lZCAlSDolTVwiKSksIHN5bWJvbDogLm91dFswXS5zNCwgbmFtZTogLm91dFswXS5zNSwgZG9jdW1lbnQ6IC5vdXRbMF0uczYgfSBdIn19`
+        const b64 = `eyJ2IjozLCJxIjp7ImRiIjpbInQiXSwiZmluZCI6eyIkcXVlcnkiOnt9fSwicHJvamVjdCI6eyJ0b2tlbkRldGFpbHMiOjEsInRva2VuU3RhdHMiOjEsIl9pZCI6MH0sImxpbWl0IjoxMDB9fQ==`
 
-        nock(process.env.BITDB_URL)
+        nock(process.env.SLPDB_URL)
           .get(uri => uri.includes("/"))
           .reply(200, mockData.mockList)
       }
 
       const result = await list(req, res)
-      //console.log(`test result: ${util.inspect(result)}`)
+      // console.log(`test result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAnyKeys(result[0], [
@@ -167,10 +167,10 @@ describe("#SLP", () => {
 
     it("should throw 503 when network issues", async () => {
       // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.tokenId =
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
@@ -179,7 +179,7 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -204,7 +204,7 @@ describe("#SLP", () => {
         "259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["id"])
       assert.include(result.id, "not found")
@@ -220,20 +220,31 @@ describe("#SLP", () => {
 
       req.params.tokenId =
         // testnet
-        "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
+        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
-        "id",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "circulatingSupply",
+        "containsBaton",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "id",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
   })
@@ -264,21 +275,30 @@ describe("#SLP", () => {
     })
 
     it("should throw 400 if tokenId is empty", async () => {
-      req.body.tokenIds = [""]
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .reply(200, mockData.mockEmptyTokenId)
+      }
+      req.body.tokenIds = ""
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Empty tokenId encountered")
+      assert.include(
+        result.error,
+        "tokenIds needs to be an array. Use GET for single tokenId."
+      )
     })
 
     it("should throw 503 when network issues", async () => {
       // Save the existing BITDB_URL.
-      const savedUrl2 = process.env.BITDB_URL
+      const savedUrl2 = process.env.SLPDB_URL
 
       // Manipulate the URL to cause a 500 network error.
-      process.env.BITDB_URL = "http://fakeurl/api/"
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.body.tokenIds = [
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
@@ -288,7 +308,7 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
-      process.env.BITDB_URL = savedUrl2
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -303,21 +323,21 @@ describe("#SLP", () => {
       if (process.env.TEST === "unit") {
         nock(mockServerUrl)
           .get(uri => uri.includes("/"))
-          .reply(200, mockData.mockSingleToken)
+          .reply(200, mockData.mockSingleTokenError)
       }
 
       req.body.tokenIds =
         // testnet
         //"650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
         // mainnet
-        ["259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"]
+        ["0b314bc2b2905b8844222871c6b665ae3494117c83b11302824561bb904efb6b"]
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
-      assert.hasAllKeys(result[0], ["id"])
-      assert.include(result[0].id, "not found")
+      assert.hasAllKeys(result[0], ["id", "valid"])
+      assert.strictEqual(result[0].valid, false)
     })
 
     it("should get token information for single token ID", async () => {
@@ -337,14 +357,25 @@ describe("#SLP", () => {
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
-        "id",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "circulatingSupply",
+        "containsBaton",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "id",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
 
@@ -369,20 +400,31 @@ describe("#SLP", () => {
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
-        "id",
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "circulatingSupply",
+        "containsBaton",
+        "mintingBatonStatus",
+        "txnsSinceGenesis",
+        "versionType",
         "timestamp",
         "symbol",
         "name",
         "documentUri",
         "documentHash",
         "decimals",
-        "initialTokenQty"
+        "initialTokenQty",
+        "id",
+        "totalBurned",
+        "totalMinted",
+        "validAddresses"
       ])
     })
   })
 
   describe("balancesForAddress()", () => {
-    let balancesForAddress = slpRoute.testableComponents.balancesForAddress
+    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
 
     it("should throw 400 if address is empty", async () => {
       const result = await balancesForAddress(req, res)
@@ -407,29 +449,26 @@ describe("#SLP", () => {
         "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
 
       const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "Invalid")
     })
 
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing rest URL settings.
-      const saveUrl1 = process.env.REST_URL
-      const saveUrl2 = process.env.TREST_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
-      // manipulate the rest url used by slpjs
-      process.env.REST_URL = "https://fakeurl/"
-      process.env.TREST_URL = "https://fakeurl/"
+      // Manipulate the URL to cause a 500 network error.
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
       const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the functionality of slpjs
-      process.env.REST_URL = saveUrl1
-      process.env.TREST_URL = saveUrl2
+      // Restore the saved URL.
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -444,25 +483,32 @@ describe("#SLP", () => {
     })
 
     it("should get token balance for an address", async () => {
-      let bitboxNetwork
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        // Mock the slpjs library for unit tests.
-        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-        balancesForAddress = slpRouteStub.testableComponents.balancesForAddress
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .times(2)
+          .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
       const result = await balancesForAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
+      // TODO - add decimalCount
       assert.isArray(result)
-      assert.hasAllKeys(result[0], ["tokenId", "balance", "decimalCount"])
+      assert.hasAllKeys(result[0], [
+        "tokenId",
+        "balance",
+        "slpAddress"
+        // "decimalCount"
+      ])
     })
   })
 
   describe("balancesForAddressByTokenID()", () => {
-    let balancesForAddressByTokenID =
+    const balancesForAddressByTokenID =
       slpRoute.testableComponents.balancesForAddressByTokenID
 
     it("should throw 400 if address is empty", async () => {
@@ -511,24 +557,21 @@ describe("#SLP", () => {
     })
 
     it("should throw 5XX error when network issues", async () => {
-      // Save the existing rest URL settings.
-      const saveUrl1 = process.env.REST_URL
-      const saveUrl2 = process.env.TREST_URL
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
 
-      // manipulate the rest url used by slpjs
-      process.env.REST_URL = "https://fakeurl/"
-      process.env.TREST_URL = "https://fakeurl/"
+      // Manipulate the URL to cause a 500 network error.
+      process.env.SLPDB_URL = "http://fakeurl/api/"
 
       req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
       req.params.tokenId =
         "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
 
       const result = await balancesForAddressByTokenID(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      // Restore the functionality of slpjs
-      process.env.REST_URL = saveUrl1
-      process.env.TREST_URL = saveUrl2
+      // Restore the saved URL.
+      process.env.SLPDB_URL = savedUrl2
 
       assert.isAbove(
         res.statusCode,
@@ -544,20 +587,22 @@ describe("#SLP", () => {
 
     it("should get token information", async () => {
       if (process.env.TEST === "unit") {
-        // Mock the slpjs library for unit tests.
-        //pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-        balancesForAddressByTokenID =
-          slpRouteStub.testableComponents.balancesForAddressByTokenID
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .times(2)
+          .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address = "slptest:qz4qnxcxwvmacgye8wlakhz0835x0w3vtvxu67w0ac"
+      req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
       req.params.tokenId =
-        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+        "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
 
       const result = await balancesForAddressByTokenID(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+      // TODO - add decimalCount
+      // assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
+      assert.hasAllKeys(result, ["tokenId", "balance"])
     })
   })
 
@@ -577,7 +622,7 @@ describe("#SLP", () => {
     it("should convert address", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(`${process.env.BITDB_URL}`)
+        nock(`${process.env.SLPDB_URL}`)
           .post(``)
           .reply(200, { result: mockData.mockConvert })
       }
@@ -622,7 +667,7 @@ describe("#SLP", () => {
 
         await convertAddressBulk(req, res)
 
-        assert.equal(true, false, "Unexpected result!")
+        assert.equal(true, false, "Unsupported address format")
       } catch (err) {
         // console.log(`err.message: ${util.inspect(err.message)}`)
 
@@ -689,60 +734,8 @@ describe("#SLP", () => {
       assert.include(result.error, "Array too large")
     })
 
-    it("should error appropriately for mainnet tx on testnet", async () => {
-      // Stub out dependencies for unit tests.
-      if (process.env.TEST === "unit") {
-        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
-          response: {
-            status: 500,
-            data: {
-              result: null,
-              error: {
-                message: "No such mempool"
-              }
-            }
-          }
-        })
-      }
-
-      req.body.txids = [
-        "88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa"
-      ]
-
-      const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "No such mempool")
-    })
-
-    it("should error appropriately for nonsensical txid", async () => {
-      // Stub out dependencies for unit tests.
-      if (process.env.TEST === "unit") {
-        sandbox.stub(slpRoute.testableComponents, "isValidSlpTxid").throws({
-          response: {
-            status: 500,
-            data: {
-              result: null,
-              error: {
-                message: "parameter 1 must be of length 64"
-              }
-            }
-          }
-        })
-      }
-
-      req.body.txids = ["abc123"]
-
-      const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
-
-      assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "parameter 1 must be of length 64")
-    })
-
     it("should validate array with single element", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         sandbox
           .stub(slpRoute.testableComponents, "isValidSlpTxid")
@@ -754,14 +747,14 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
     })
 
     it("should validate array with two elements", async () => {
-      // Stub out dependencies for unit tests.
+      // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         sandbox
           .stub(slpRoute.testableComponents, "isValidSlpTxid")
@@ -774,7 +767,7 @@ describe("#SLP", () => {
       ]
 
       const result = await validateBulk(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], ["txid", "valid"])
@@ -788,7 +781,7 @@ describe("#SLP", () => {
     it("should throw 400 if tokenID is empty", async () => {
       req.params.tokenId = ""
       const result = await tokenStatsSingle(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "tokenId can not be empty")
@@ -810,25 +803,31 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
 
       const result = await tokenStatsSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
+        "blockCreated",
+        "blockLastActiveMint",
+        "blockLastActiveSend",
+        "containsBaton",
+        "initialTokenQty",
+        "mintingBatonStatus",
         "circulatingSupply",
         "decimals",
         "documentHash",
+        "versionType",
+        "timestamp",
         "documentUri",
         "name",
-        "satoshisLockedUp",
         "symbol",
-        "tokenId",
+        "id",
         "totalBurned",
         "totalMinted",
         "txnsSinceGenesis",
-        "validAddresses",
-        "validUtxos"
+        "validAddresses"
       ])
     })
   })
@@ -852,12 +851,12 @@ describe("#SLP", () => {
         nock(`${process.env.SLPDB_URL}`)
           .get(uri => uri.includes("/"))
           .reply(200, {
-            t: [mockData.mockBalance]
+            a: [mockData.mockBalance]
           })
       }
 
       req.params.tokenId =
-        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
 
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
@@ -953,8 +952,8 @@ describe("#SLP", () => {
       }
 
       req.params.tokenId =
-        "495322b37d6b2eae81f045eda612b95870a0c2b6069c58f70cf8ef4e6a9fd43a"
-      req.params.address = "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz"
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
+      req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
 
       const result = await txsTokenIdAddressSingle(req, res)
       // console.log(`result: ${JSON.stringify(result, null, 2)}`)

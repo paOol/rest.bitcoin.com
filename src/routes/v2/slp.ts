@@ -380,6 +380,8 @@ async function lookupToken(tokenId) {
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes = await axios.get(url)
+    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data,null,2)}`)
+    //console.log(`tokenRes.data.t[0]: ${util.inspect(tokenRes.data.t[0],null,2)}`)
 
     let formattedTokens: Array<any> = []
 
@@ -1315,6 +1317,8 @@ async function txsTokenIdAddressSingle(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
+    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
+
     return res.json(tokenRes.data.c)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)

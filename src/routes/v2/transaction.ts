@@ -61,7 +61,8 @@ async function transactionsFromInsight(txid: string) {
 
     return parsed
   } catch (err) {
-    wlogger.error(`Error in transactions.ts/transactionsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }

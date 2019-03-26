@@ -953,12 +953,17 @@ describe("#SLP", () => {
           })
       }
 
+      //req.params.tokenId =
+      //  "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
+      //req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
+
       req.params.tokenId =
-        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
-      req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+      req.params.address = "slptest:qpwa35xq0q0cnmdu0rwzkct369hddzsqpsqdzw6h9h"
+
 
       const result = await txsTokenIdAddressSingle(req, res)
-      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result[0], ["txid", "tokenDetails"])
     })

@@ -1317,6 +1317,8 @@ async function txsTokenIdAddressSingle(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url)
+    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
+
     return res.json(tokenRes.data.c)
   } catch (err) {
     //console.log(`Error object: ${util.inspect(err)}`)

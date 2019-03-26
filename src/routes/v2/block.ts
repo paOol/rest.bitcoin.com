@@ -51,14 +51,14 @@ async function detailsByHashSingle(
     const parsed = response.data
     return res.json(parsed)
   } catch (error) {
-    // Write out error to error log.
-    //logger.error(`Error in block/detailsByHash: `, error)
-    wlogger.error(`Error in block.ts/detailsByHashSingle().`, error)
-
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
     }
+
+    // Write out error to error log.
+    //logger.error(`Error in block/detailsByHash: `, error)
+    wlogger.error(`Error in block.ts/detailsByHashSingle().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })
@@ -242,14 +242,14 @@ async function detailsByHeightBulk(
     res.status(200)
     return res.json(result)
   } catch (error) {
-    // Write out error to error log.
-    //logger.error(`Error in block/detailsByHash: `, error)
-    wlogger.error(`Error in block.ts/detailsByHeightBulk().`, error)
-
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
     }
+
+    // Write out error to error log.
+    //logger.error(`Error in block/detailsByHash: `, error)
+    wlogger.error(`Error in block.ts/detailsByHeightBulk().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })

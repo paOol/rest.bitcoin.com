@@ -90,8 +90,8 @@ async function detailsFromInsight(
 
     return retData
   } catch (err) {
-    logger.debug(`Error in detailsFromInsight().`)
-    wlogger.error(`Error in address.ts/detailsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }
@@ -289,8 +289,8 @@ async function utxoFromInsight(thisAddress: string) {
 
     return retData
   } catch (err) {
-    logger.debug(`Error in address.js/utxoFromInsight()`)
-    wlogger.error(`Error in address.ts/utxoFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }
@@ -643,7 +643,8 @@ async function transactionsFromInsight(
 
     return retData
   } catch (err) {
-    wlogger.error(`Error in address.ts/transactionsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }

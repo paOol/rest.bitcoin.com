@@ -222,8 +222,7 @@ describe("#SLP", () => {
           .reply(200, mockData.mockSingleToken)
       }
 
-      req.params.tokenId =
-        "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
+      req.params.tokenId = tokenIdToTest
 
       const result = await listSingleToken(req, res)
       //console.log(`result: ${util.inspect(result)}`)

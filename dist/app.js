@@ -5,6 +5,7 @@ var express = require("express");
 var route_ratelimit_1 = require("./middleware/route-ratelimit");
 var path = require("path");
 var logger = require("morgan");
+var wlogger = require("./util/winston-logging");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
 var basicAuth = require("express-basic-auth");
@@ -148,20 +149,36 @@ io.on("connection", function (socket) {
         console.log("Socket Disconnected");
     });
 });
-var bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK);
-sock.connect("tcp://" + process.env.ZEROMQ_URL + ":" + process.env.ZEROMQ_PORT);
-sock.subscribe("raw");
-sock.on("message", function (topic, message) {
-    var decoded = topic.toString("ascii");
-    if (decoded === "rawtx") {
-        var txd = bitcoincashZmqDecoder.decodeTransaction(message);
-        io.emit("transactions", JSON.stringify(txd, null, 2));
-    }
-    else if (decoded === "rawblock") {
-        var blck = bitcoincashZmqDecoder.decodeBlock(message);
-        io.emit("blocks", JSON.stringify(blck, null, 2));
-    }
-});
+/**
+ * Setup ZMQ connections if ZMQ URL and port provided
+ */
+if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
+    console.log("Connecting to BCH ZMQ at " + process.env.ZEROMQ_URL + ":" + process.env.ZEROMQ_PORT);
+    var bitcoincashZmqDecoder_1 = new BitcoinCashZMQDecoder(process.env.NETWORK);
+    sock.connect("tcp://" + process.env.ZEROMQ_URL + ":" + process.env.ZEROMQ_PORT);
+    sock.subscribe("raw");
+    sock.on("message", function (topic, message) {
+        try {
+            var decoded = topic.toString("ascii");
+            if (decoded === "rawtx") {
+                var txd = bitcoincashZmqDecoder_1.decodeTransaction(message);
+                io.emit("transactions", JSON.stringify(txd, null, 2));
+            }
+            else if (decoded === "rawblock") {
+                var blck = bitcoincashZmqDecoder_1.decodeBlock(message);
+                io.emit("blocks", JSON.stringify(blck, null, 2));
+            }
+        }
+        catch (error) {
+            var errorMessage = 'Error processing ZMQ message';
+            console.log(errorMessage, error);
+            wlogger.error(errorMessage, error);
+        }
+    });
+}
+else {
+    console.log("ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection.");
+}
 /**
  * Listen on provided port, on all network interfaces.
  */

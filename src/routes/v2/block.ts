@@ -4,6 +4,7 @@ import * as express from "express"
 import * as requestUtils from "./services/requestUtils"
 import * as bitbox from "./services/bitbox"
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 import axios from "axios"
 const routeUtils = require("./route-utils")
 
@@ -17,10 +18,7 @@ const router: express.Router = express.Router()
 router.get("/", root)
 router.get("/detailsByHash/:hash", detailsByHashSingle)
 router.post("/detailsByHash", detailsByHashBulk)
-router.get(
-  "/detailsByHeight/:height",
-  detailsByHeightSingle
-)
+router.get("/detailsByHeight/:height", detailsByHeightSingle)
 router.post("/detailsByHeight", detailsByHeightBulk)
 
 function root(
@@ -53,13 +51,14 @@ async function detailsByHashSingle(
     const parsed = response.data
     return res.json(parsed)
   } catch (error) {
-    // Write out error to error log.
-    //logger.error(`Error in block/detailsByHash: `, error)
-
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
     }
+
+    // Write out error to error log.
+    //logger.error(`Error in block/detailsByHash: `, error)
+    wlogger.error(`Error in block.ts/detailsByHashSingle().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })
@@ -83,7 +82,7 @@ async function detailsByHashBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hashes)) {
+    if (!routeUtils.validateArraySize(req, hashes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -117,13 +116,14 @@ async function detailsByHashBulk(
     res.status(200)
     return res.json(result)
   } catch (error) {
-    // Write out error to error log.
-    //logger.error(`Error in block/detailsByHash: `, error)
-
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
     }
+
+    // Write out error to error log.
+    //logger.error(`Error in block/detailsByHash: `, error)
+    wlogger.error(`Error in block.ts/detailsByHashBulk().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })
@@ -168,6 +168,7 @@ async function detailsByHeightSingle(
   } catch (error) {
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
+    wlogger.error(`Error in block.ts/detailsByHeightSingle().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })
@@ -191,7 +192,7 @@ async function detailsByHeightBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, heights)) {
+    if (!routeUtils.validateArraySize(req, heights)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -201,7 +202,7 @@ async function detailsByHeightBulk(
     logger.debug(`Executing detailsByHeight with these heights: `, heights)
 
     // Validate each element in the address array.
-    for(let i=0; i < heights.length; i++) {
+    for (let i = 0; i < heights.length; i++) {
       const thisHeight = heights[i]
 
       // Reject if id is empty
@@ -220,7 +221,6 @@ async function detailsByHeightBulk(
 
     // Loop through each height and creates an array of requests to call in parallel
     const promises = heights.map(async (height: any) => {
-
       requestConfig.data.id = "getblockhash"
       requestConfig.data.method = "getblockhash"
       requestConfig.data.params = [parseInt(height)]
@@ -229,7 +229,9 @@ async function detailsByHeightBulk(
 
       const hash = response.data.result
 
-      const axiosResult = await axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`)
+      const axiosResult = await axios.get(
+        `${process.env.BITCOINCOM_BASEURL}block/${hash}`
+      )
 
       return axiosResult.data
     })
@@ -239,15 +241,15 @@ async function detailsByHeightBulk(
 
     res.status(200)
     return res.json(result)
-
   } catch (error) {
-    // Write out error to error log.
-    //logger.error(`Error in block/detailsByHash: `, error)
-
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
     }
+
+    // Write out error to error log.
+    //logger.error(`Error in block/detailsByHash: `, error)
+    wlogger.error(`Error in block.ts/detailsByHeightBulk().`, error)
 
     res.status(500)
     return res.json({ error: util.inspect(error) })

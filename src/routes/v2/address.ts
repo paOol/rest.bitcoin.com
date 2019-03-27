@@ -90,8 +90,8 @@ async function detailsFromInsight(
 
     return retData
   } catch (err) {
-    logger.debug(`Error in detailsFromInsight().`)
-    wlogger.error(`Error in address.ts/detailsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }
@@ -117,7 +117,7 @@ async function detailsBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
+    if (!routeUtils.validateArraySize(req, addresses)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -164,15 +164,15 @@ async function detailsBulk(
     res.status(200)
     return res.json(result)
   } catch (err) {
-    //logger.error(`Error in detailsBulk(): `, err)
-    wlogger.error(`Error in address.ts/detailsBulk().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
       return res.json({ error: msg })
     }
+
+    //logger.error(`Error in detailsBulk(): `, err)
+    wlogger.error(`Error in address.ts/detailsBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -203,7 +203,10 @@ async function detailsSingle(
     }
 
     logger.debug(`Executing address/detailsSingle with this address: `, address)
-    wlogger.debug(`Executing address/detailsSingle with this address: `, address)
+    wlogger.debug(
+      `Executing address/detailsSingle with this address: `,
+      address
+    )
 
     // Ensure the input is a valid BCH address.
     try {
@@ -231,8 +234,6 @@ async function detailsSingle(
     res.status(200)
     return res.json(retData)
   } catch (err) {
-    wlogger.error(`Error in address.ts/detailsSingle().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -242,6 +243,7 @@ async function detailsSingle(
 
     // Write out error to error log.
     //logger.error(`Error in address.ts/detailsSingle: `, err)
+    wlogger.error(`Error in address.ts/detailsSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -287,8 +289,8 @@ async function utxoFromInsight(thisAddress: string) {
 
     return retData
   } catch (err) {
-    logger.debug(`Error in address.js/utxoFromInsight()`)
-    wlogger.error(`Error in address.ts/utxoFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }
@@ -309,7 +311,7 @@ async function utxoBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
+    if (!routeUtils.validateArraySize(req, addresses)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -342,7 +344,10 @@ async function utxoBulk(
     }
 
     logger.debug(`Executing address/utxoBulk with these addresses: `, addresses)
-    wlogger.debug(`Executing address/utxoBulk with these addresses: `, addresses)
+    wlogger.debug(
+      `Executing address/utxoBulk with these addresses: `,
+      addresses
+    )
 
     // Loops through each address and creates an array of Promises, querying
     // Insight API in parallel.
@@ -356,8 +361,6 @@ async function utxoBulk(
     res.status(200)
     return res.json(result)
   } catch (err) {
-    wlogger.error(`Error in address.ts/utxoBulk().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -367,6 +370,7 @@ async function utxoBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/utxoBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -423,8 +427,6 @@ async function utxoSingle(
     res.status(200)
     return res.json(retData)
   } catch (err) {
-    wlogger.error(`Error in address.ts/utxoSingle().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -434,6 +436,7 @@ async function utxoSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/utxoSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -459,7 +462,7 @@ async function unconfirmedBulk(
     wlogger.debug(`Executing address/utxo with these addresses: `, addresses)
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
+    if (!routeUtils.validateArraySize(req, addresses)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -514,8 +517,6 @@ async function unconfirmedBulk(
     res.status(200)
     return res.json(finalResult)
   } catch (err) {
-    wlogger.error(`Error in address.ts/unconfirmedBulk().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -525,6 +526,7 @@ async function unconfirmedBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/unconfirmedBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -604,8 +606,6 @@ async function unconfirmedSingle(
     res.status(200)
     return res.json(retData)
   } catch (err) {
-    wlogger.error(`Error in address.ts/unconfirmedSingle().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -615,6 +615,7 @@ async function unconfirmedSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/unconfirmedSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -642,7 +643,8 @@ async function transactionsFromInsight(
 
     return retData
   } catch (err) {
-    wlogger.error(`Error in address.ts/transactionsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }
@@ -667,7 +669,7 @@ async function transactionsBulk(
     wlogger.debug(`Executing address/utxo with these addresses: `, addresses)
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, addresses)) {
+    if (!routeUtils.validateArraySize(req, addresses)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -710,8 +712,6 @@ async function transactionsBulk(
     res.status(200)
     return res.json(result)
   } catch (err) {
-    wlogger.error(`Error in address.ts/transactionsBulk().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -721,6 +721,7 @@ async function transactionsBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/transactionsBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -786,8 +787,6 @@ async function transactionsSingle(
     res.status(200)
     return res.json(retData)
   } catch (err) {
-    wlogger.error(`Error in address.ts/transactionsSingle().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -797,6 +796,7 @@ async function transactionsSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/transactionsSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -836,8 +836,6 @@ async function fromXPubSingle(
       legacyAddress: legacyAddr
     })
   } catch (err) {
-    wlogger.error(`Error in address.ts/fromXPubSingle().`, err)
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -847,6 +845,7 @@ async function fromXPubSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(`Error in address.ts/fromXPubSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

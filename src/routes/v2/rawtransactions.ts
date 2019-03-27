@@ -7,6 +7,7 @@ import { IRequestConfig } from "./interfaces/IRequestConfig"
 import { IResponse } from "./interfaces/IResponse"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
+const wlogger = require("../../util/winston-logging")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
@@ -86,6 +87,10 @@ async function decodeRawTransactionSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeRawTransaction: `, err)
+    wlogger.error(
+      `Error in rawtransactions.ts/decodeRawTransactionSingle().`,
+      err
+    )
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -106,7 +111,7 @@ async function decodeRawTransactionBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hexes)) {
+    if (!routeUtils.validateArraySize(req, hexes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -196,6 +201,10 @@ async function decodeRawTransactionBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/getRawTransaction: `, err)
+    wlogger.error(
+      `Error in rawtransactions.ts/decodeRawTransactionBulk().`,
+      err
+    )
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -241,6 +250,7 @@ async function decodeScriptSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeScript: `, err)
+    wlogger.error(`Error in rawtransactions.ts/decodeScriptSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -264,7 +274,7 @@ async function decodeScriptBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hexes)) {
+    if (!routeUtils.validateArraySize(req, hexes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -272,7 +282,7 @@ async function decodeScriptBulk(
     }
 
     // Validate each hex in the array
-    for(let i = 0; i < hexes.length; i++) {
+    for (let i = 0; i < hexes.length; i++) {
       const hex = hexes[i]
 
       // Throw an error if hex is empty.
@@ -317,6 +327,7 @@ async function decodeScriptBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeScript: `, err)
+    wlogger.error(`Error in rawtransactions.ts/decodeScriptBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -341,6 +352,10 @@ async function getRawTransactionsFromNode(txid: string, verbose: number) {
 
     return response.data.result
   } catch (err) {
+    wlogger.error(
+      `Error in rawtransactions.ts/getRawTransactionsFromNode().`,
+      err
+    )
     throw err
   }
 }
@@ -363,7 +378,7 @@ async function getRawTransactionBulk(
     }
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, txids)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -415,6 +430,7 @@ async function getRawTransactionBulk(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/getRawTransaction: `, err)
+    wlogger.error(`Error in rawtransactions.ts/getRawTransactionBulk().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -451,6 +467,7 @@ async function getRawTransactionSingle(
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/getRawTransaction: `, err)
+    wlogger.error(`Error in rawtransactions.ts/getRawTransactionSingle().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -481,7 +498,7 @@ async function sendRawTransactionBulk(
     } = routeUtils.setEnvVars()
 
     // Enforce array size rate limits
-    if(!routeUtils.validateArraySize(req, hexes)) {
+    if (!routeUtils.validateArraySize(req, hexes)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
@@ -549,6 +566,8 @@ async function sendRawTransactionBulk(
       return res.json({ error: msg })
     }
 
+    wlogger.error(`Error in rawtransactions.ts/sendRawTransactionBulk().`, err)
+
     res.status(500)
     return res.json({ error: util.inspect(err) })
   }
@@ -602,6 +621,11 @@ async function sendRawTransactionSingle(
       res.status(status)
       return res.json({ error: msg })
     }
+
+    wlogger.error(
+      `Error in rawtransactions.ts/sendRawTransactionSingle().`,
+      err
+    )
 
     res.status(500)
     return res.json({ error: util.inspect(err) })

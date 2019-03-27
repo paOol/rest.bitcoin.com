@@ -17,6 +17,7 @@ util.inspect.defaultOptions = { depth: 3 }
 
 // Manipulates and formats the raw data comming from Insight API.
 const processInputs = (tx: any) => {
+  // Add legacy and cashaddr to tx vin
   if (tx.vin) {
     tx.vin.forEach((vin: any) => {
       if (!vin.coinbase) {
@@ -29,6 +30,25 @@ const processInputs = (tx: any) => {
         }
         delete vin.valueSat
         delete vin.doubleSpentTxID
+      }
+    })
+  }
+
+  // Add legacy and cashaddr to tx vout
+  if (tx.vout) {
+    tx.vout.forEach((vout: any) => {
+      // Overwrite value string with value in satoshis
+      //vout.value = parseFloat(vout.value) * 100000000
+
+      if (vout.scriptPubKey) {
+        if (vout.scriptPubKey.addresses) {
+          const cashAddrs = []
+          vout.scriptPubKey.addresses.forEach((addr: any) => {
+            const cashAddr = BITBOX.Address.toCashAddress(addr)
+            cashAddrs.push(cashAddr)
+          })
+          vout.scriptPubKey.cashAddrs = cashAddrs
+        }
       }
     })
   }
@@ -54,6 +74,7 @@ async function transactionsFromInsight(txid: string) {
 
     // Query the Insight server.
     const response = await axios.get(path)
+    //console.log(`Insight output: ${JSON.stringify(response.data, null, 2)}`)
 
     // Parse the data.
     const parsed = response.data
@@ -61,7 +82,8 @@ async function transactionsFromInsight(txid: string) {
 
     return parsed
   } catch (err) {
-    wlogger.error(`Error in transactions.ts/transactionsFromInsight().`, err)
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
     throw err
   }
 }

@@ -35,14 +35,66 @@ const mockSingleToken = {
       tokenDetails: {
         decimals: 8,
         tokenIdHex:
-          "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98",
+          "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a",
+        timestamp: "2018-08-26 07:06",
+        transactionType: "GENESIS",
+        versionType: 1,
+        documentUri: "",
+        documentSha256Hex: null,
+        symbol: "",
+        name: "TESTYCOIN",
+        batonVout: null,
+        containsBaton: false,
+        genesisOrMintQuantity: "9999",
+        sendOutputs: null
+      },
+      tokenStats: {
+        block_created: 1253802,
+        block_last_active_send: 1253802,
+        block_last_active_mint: null,
+        qty_valid_txns_since_genesis: 2,
+        qty_valid_token_utxos: 0,
+        qty_valid_token_addresses: 0,
+        qty_token_minted: "9999",
+        qty_token_burned: "9999",
+        qty_token_circulating_supply: "0",
+        qty_satoshis_locked_up: 0,
+        minting_baton_status: "NEVER_CREATED"
+      }
+    }
+  ]
+}
+
+const mockSingleTokenError = {
+  t: []
+}
+
+const mockSingleAddress = {
+  a: [
+    {
+      _id: "5c93ed62a19119333d1595bc",
+      tokenDetails: {
+        tokenIdHex:
+          "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
+      },
+      address: "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7",
+      satoshis_balance: 546,
+      token_balance: "4616984"
+    }
+  ],
+  t: [
+    {
+      tokenDetails: {
+        decimals: 8,
+        tokenIdHex:
+          "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29",
         timestamp: "2019-02-25 10:05",
         transactionType: "GENESIS",
         versionType: 1,
-        documentUri: "https://acd-coin.hk",
+        documentUri: "https://developer.bitcoin.com",
         documentSha256Hex: "",
-        symbol: "ACD",
-        name: "ACD Coin",
+        symbol: "DEV",
+        name: "DEVCOIN",
         batonVout: 2,
         containsBaton: true,
         genesisOrMintQuantity: "500000000",
@@ -61,25 +113,6 @@ const mockSingleToken = {
         qty_satoshis_locked_up: 92820,
         minting_baton_status: "ALIVE"
       }
-    }
-  ]
-}
-
-const mockSingleTokenError = {
-  t: []
-}
-
-const mockSingleAddress = {
-  a: [
-    {
-      _id: "5c93ed62a19119333d1595bc",
-      tokenDetails: {
-        tokenIdHex:
-          "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
-      },
-      address: "simpleledger:qzr0mnqavpx744wu3eztfhqthgqgm95wsvteu72jue",
-      satoshis_balance: 546,
-      token_balance: "4616984"
     }
   ]
 }

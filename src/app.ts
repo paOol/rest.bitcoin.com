@@ -8,6 +8,7 @@ import { routeRateLimit } from "./middleware/route-ratelimit"
 
 const path = require("path")
 const logger = require("morgan")
+const wlogger = require("./util/winston-logging")
 const cookieParser = require("cookie-parser")
 const bodyParser = require("body-parser")
 const basicAuth = require("express-basic-auth")
@@ -191,10 +192,8 @@ console.log(`rest.bitcoin.com started on port ${port}`)
 /**
  * Create HTTP server.
  */
-
 const server = http.createServer(app)
 const io = require("socket.io").listen(server)
-
 io.on("connection", (socket: Socket) => {
   console.log("Socket Connected")
 
@@ -203,21 +202,37 @@ io.on("connection", (socket: Socket) => {
   })
 })
 
-const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
+/**
+ * Setup ZMQ connections if ZMQ URL and port provided
+ */
 
-sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
-sock.subscribe("raw")
+if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
+  console.log(`Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
+  const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
 
-sock.on("message", (topic: any, message: string) => {
-  const decoded = topic.toString("ascii")
-  if (decoded === "rawtx") {
-    const txd = bitcoincashZmqDecoder.decodeTransaction(message)
-    io.emit("transactions", JSON.stringify(txd, null, 2))
-  } else if (decoded === "rawblock") {
-    const blck = bitcoincashZmqDecoder.decodeBlock(message)
-    io.emit("blocks", JSON.stringify(blck, null, 2))
-  }
-})
+  sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
+  sock.subscribe("raw")
+
+  sock.on("message", (topic: any, message: string) => {
+    try {
+      const decoded = topic.toString("ascii")
+      if (decoded === "rawtx") {
+        const txd = bitcoincashZmqDecoder.decodeTransaction(message)
+        io.emit("transactions", JSON.stringify(txd, null, 2))
+      } else if (decoded === "rawblock") {
+        const blck = bitcoincashZmqDecoder.decodeBlock(message)
+        io.emit("blocks", JSON.stringify(blck, null, 2))
+      }
+    } catch (error) {
+      const errorMessage = 'Error processing ZMQ message'
+      console.log(errorMessage, error)
+      wlogger.error(errorMessage, error)
+    }
+  })
+} else {
+  console.log("ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection.")
+}
+
 /**
  * Listen on provided port, on all network interfaces.
  */

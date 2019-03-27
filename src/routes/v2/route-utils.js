@@ -5,6 +5,7 @@
 "use strict"
 
 const axios = require("axios")
+const wlogger = require("../../util/winston-logging")
 
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
@@ -108,6 +109,10 @@ function decodeError(err) {
     )
       return { msg: err.response.data.error.message, status: 400 }
 
+    // Attempt to extract the Insight error message
+    if (err.response && err.response.data)
+      return { msg: err.response.data, status: err.response.status }
+
     // Attempt to detect a network connection error.
     if (err.message && err.message.indexOf("ENOTFOUND") > -1) {
       return {
@@ -128,6 +133,7 @@ function decodeError(err) {
 
     return { msg: false, status: 500 }
   } catch (err) {
+    wlogger.error(`unhandled error in route-utils.js/decodeError(): `, err)
     return { msg: false, status: 500 }
   }
 }

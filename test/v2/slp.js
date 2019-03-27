@@ -211,6 +211,10 @@ describe("#SLP", () => {
     })
 
     it("should get token information", async () => {
+      // testnet
+      const tokenIdToTest =
+        "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
+
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         nock(mockServerUrl)
@@ -218,14 +222,13 @@ describe("#SLP", () => {
           .reply(200, mockData.mockSingleToken)
       }
 
-      req.params.tokenId =
-        // testnet
-        "959a6818cba5af8aba391d3f7649f5f6a5ceb6cdcd2c2a3dcb5d2fbfc4b08e98"
+      req.params.tokenId = tokenIdToTest
 
       const result = await listSingleToken(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
+        "id",
         "blockCreated",
         "blockLastActiveMint",
         "blockLastActiveSend",
@@ -241,7 +244,6 @@ describe("#SLP", () => {
         "documentHash",
         "decimals",
         "initialTokenQty",
-        "id",
         "totalBurned",
         "totalMinted",
         "validAddresses"
@@ -496,13 +498,12 @@ describe("#SLP", () => {
       const result = await balancesForAddress(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      // TODO - add decimalCount
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
         "tokenId",
         "balance",
-        "slpAddress"
-        // "decimalCount"
+        "slpAddress",
+        "decimalCount"
       ])
     })
   })
@@ -941,7 +942,7 @@ describe("#SLP", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "address can not be empty")
     })
-
+    /*
     it("should get tx details with tokenId and address", async () => {
       if (process.env.TEST === "unit") {
         nock(`${process.env.SLPDB_URL}`)
@@ -951,14 +952,20 @@ describe("#SLP", () => {
           })
       }
 
+      //req.params.tokenId =
+      //  "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
+      //req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
+
       req.params.tokenId =
-        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
-      req.params.address = "slptest:qr83cu3p7yg9yac7qthwm0nul2ev2kukvsqmes3vl0"
+        "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
+      req.params.address = "slptest:qpwa35xq0q0cnmdu0rwzkct369hddzsqpsqdzw6h9h"
+
 
       const result = await txsTokenIdAddressSingle(req, res)
-      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result[0], ["txid", "tokenDetails"])
     })
+*/
   })
 })

@@ -141,7 +141,7 @@ describe("#Transactions", () => {
       const result = await detailsBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(res.statusCode, 500, "HTTP status code 500 expected.")
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
     })
 
     it("should process a single txid", async () => {
@@ -259,7 +259,7 @@ describe("#Transactions", () => {
 
         // The error handling code should probably be updated to respond with a better
         // error message.
-        assert.equal(res.statusCode, 500, "HTTP status code 500 expected.")
+        assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
         assert.include(
           result.error,
           "parameter 1 must be hexadecimal string",

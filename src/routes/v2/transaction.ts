@@ -38,7 +38,7 @@ const processInputs = (tx: any) => {
   if (tx.vout) {
     tx.vout.forEach((vout: any) => {
       // Overwrite value string with value in satoshis
-      vout.value = parseInt(vout.valueSat) * 100000000
+      //vout.value = parseFloat(vout.value) * 100000000
 
       if (vout.scriptPubKey) {
         if (vout.scriptPubKey.addresses) {

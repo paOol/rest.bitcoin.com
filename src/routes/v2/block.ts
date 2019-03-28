@@ -10,7 +10,7 @@ const routeUtils = require("./route-utils")
 
 // Used for processing error messages before sending them to the user.
 const util = require("util")
-util.inspect.defaultOptions = { depth: 1 }
+util.inspect.defaultOptions = { depth: 3 }
 
 const router: express.Router = express.Router()
 //const BitboxHTTP = bitbox.getInstance()
@@ -47,17 +47,20 @@ async function detailsByHashSingle(
     const response = await axios.get(
       `${process.env.BITCOINCOM_BASEURL}block/${hash}`
     )
+    //console.log(`response.data: ${JSON.stringify(response.data,null,2)}`)
 
     const parsed = response.data
     return res.json(parsed)
   } catch (error) {
+    //console.log(`error object: ${util.inspect(error)}`)
+
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(error)
     if (msg) {
       res.status(status)
       return res.json({ error: msg })
     }
-    
+
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
@@ -174,12 +177,13 @@ async function detailsByHeightSingle(
     const response = await BitboxHTTP(requestConfig)
 
     const hash = response.data.result
-    //console.log(`hash: ${hash}`)
+    //console.log(`response.data: ${util.inspect(response.data)}`)
 
     // Call detailsByHashSingle now that the hash has been retrieved.
     req.params.hash = hash
     return detailsByHashSingle(req, res, next)
   } catch (err) {
+
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {

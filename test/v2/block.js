@@ -117,13 +117,12 @@ describe("#Block", () => {
       if (process.env.TEST === "unit") {
         nock(`${process.env.BITCOINCOM_BASEURL}`)
           .get(`/block/${req.params.hash}`)
-          .reply(404, { statusText: "Not Found" })
+          .reply(404, "Not found")
       }
 
       const result = await detailsByHash(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(res.statusCode, 404, "HTTP status code 404 expected.")
       assert.include(result.error, "Not found", "Proper error message")
     })
 
@@ -327,7 +326,8 @@ describe("#Block", () => {
       if (process.env.TEST === "unit") {
         nock(`${process.env.BITCOINCOM_BASEURL}`)
           .get(`/block/${req.body.hashes[0]}`)
-          .reply(404, { error: { message: "Not Found" } })
+          //.reply(404, { error: { message: "Not Found" } })
+          .reply(404, "Not found")
       }
 
       const result = await detailsByHashBulk(req, res)
@@ -383,18 +383,16 @@ describe("#Block", () => {
     it("should throw an error for invalid height", async () => {
       req.params.height = "abc123"
 
-      // Mock the Insight URL for unit tests.
-      if (process.env.TEST === "unit") {
-        nock(`${process.env.BITCOINCOM_BASEURL}`)
-          .get(`/block/${req.params.hash}`)
-          .reply(404, { statusText: "Not Found" })
-      }
-
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
         nock(`${process.env.RPC_BASEURL}`)
           .post(``)
-          .reply(500, { statusText: "Request failed" })
+          .reply(500, {
+            error: {
+              code: -1,
+              message: "JSON value is not an integer as expected"
+            }
+          })
       }
 
       const result = await detailsByHeight(req, res)
@@ -500,6 +498,18 @@ describe("#Block", () => {
     })
 
     it("should throw error for an invalid height", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.RPC_BASEURL}`)
+          .post(``)
+          .reply(500, {
+            error: {
+              code: -1,
+              message: "JSON value is not an integer as expected"
+            }
+          })
+      }
+
       req.body.heights = [`abc123`]
 
       const result = await detailsByHeightBulk(req, res)

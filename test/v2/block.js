@@ -92,7 +92,7 @@ describe("#Block", () => {
       )
     })
 
-    it("should throw 500 when network issues", async () => {
+    it("should throw 50X when network issues", async () => {
       // Save the existing RPC URL.
       const savedUrl = process.env.BITCOINCOM_BASEURL
 
@@ -106,7 +106,7 @@ describe("#Block", () => {
       // Restore the saved URL.
       process.env.BITCOINCOM_BASEURL = savedUrl
 
-      assert.equal(res.statusCode, 500, "HTTP status code 500 expected.")
+      assert.isAbove(res.statusCode, 499, "HTTP status code 50X expected.")
       //assert.include(result.error, "ENOTFOUND", "Error message expected")
     })
 
@@ -124,7 +124,7 @@ describe("#Block", () => {
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.equal(res.statusCode, 404, "HTTP status code 404 expected.")
-      assert.include(result.error, "Not Found", "Proper error message")
+      assert.include(result.error, "Not found", "Proper error message")
     })
 
     it("should GET /detailsByHash/:hash", async () => {
@@ -333,8 +333,8 @@ describe("#Block", () => {
       const result = await detailsByHashBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(res.statusCode, 404, "HTTP status code 400 expected.")
-      assert.include(result.error, "Not Found", "Proper error message")
+      assert.equal(res.statusCode, 404, "HTTP status code 404 expected.")
+      assert.include(result.error, "Not found", "Proper error message")
     })
   })
 
@@ -400,8 +400,12 @@ describe("#Block", () => {
       const result = await detailsByHeight(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(res.statusCode, 500, "HTTP status code 500 expected.")
-      assert.include(result.error, "Request failed", "Proper error message")
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
+      assert.include(
+        result.error,
+        "JSON value is not an integer as expected",
+        "Proper error message"
+      )
     })
 
     it("should GET /detailsByHeight/:height", async () => {
@@ -495,13 +499,13 @@ describe("#Block", () => {
       assert.include(result.error, "Array too large")
     })
 
-    it("should throw a 500 error for an invalid height", async () => {
+    it("should throw error for an invalid height", async () => {
       req.body.heights = [`abc123`]
 
       const result = await detailsByHeightBulk(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(res.statusCode, 500, "HTTP status code 500 expected.")
+      assert.equal(res.statusCode, 400, "HTTP status code 400 expected.")
     })
 
     it("should throw 500 when network issues", async () => {

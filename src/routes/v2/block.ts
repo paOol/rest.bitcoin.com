@@ -51,6 +51,13 @@ async function detailsByHashSingle(
     const parsed = response.data
     return res.json(parsed)
   } catch (error) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(error)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
@@ -116,6 +123,13 @@ async function detailsByHashBulk(
     res.status(200)
     return res.json(result)
   } catch (error) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(error)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })
@@ -165,13 +179,20 @@ async function detailsByHeightSingle(
     // Call detailsByHashSingle now that the hash has been retrieved.
     req.params.hash = hash
     return detailsByHashSingle(req, res, next)
-  } catch (error) {
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
-    wlogger.error(`Error in block.ts/detailsByHeightSingle().`, error)
+    wlogger.error(`Error in block.ts/detailsByHeightSingle().`, err)
 
     res.status(500)
-    return res.json({ error: util.inspect(error) })
+    return res.json({ error: util.inspect(err) })
   }
 }
 
@@ -242,6 +263,13 @@ async function detailsByHeightBulk(
     res.status(200)
     return res.json(result)
   } catch (error) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(error)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
     if (error.response && error.response.status === 404) {
       res.status(404)
       return res.json({ error: "Not Found" })

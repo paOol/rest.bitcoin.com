@@ -352,10 +352,7 @@ async function getRawTransactionsFromNode(txid: string, verbose: number) {
 
     return response.data.result
   } catch (err) {
-    wlogger.error(
-      `Error in rawtransactions.ts/getRawTransactionsFromNode().`,
-      err
-    )
+    wlogger.error(`Error in rawtransactions.ts/getRawTransactionsFromNode().`)
     throw err
   }
 }

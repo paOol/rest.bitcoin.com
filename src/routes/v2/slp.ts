@@ -7,6 +7,7 @@ import { IRequestConfig } from "./interfaces/IRequestConfig"
 const routeUtils = require("./route-utils")
 const logger = require("./logging.js")
 const strftime = require("strftime")
+const wlogger = require("../../util/winston-logging")
 
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
@@ -118,6 +119,7 @@ async function getRawTransactionsFromNode(txids: string[]) {
     const results = await axios.all(txPromises)
     return results
   } catch (err) {
+    wlogger.error(`Error in slp.ts/getRawTransactionsFromNode().`, err)
     throw err
   }
 }
@@ -243,6 +245,8 @@ async function list(
     res.status(200)
     return res.json(formattedTokens)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/list().`, err)
+
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
@@ -271,6 +275,8 @@ async function listSingleToken(
     res.status(200)
     return res.json(t)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/listSingleToken().`, err)
+
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
@@ -349,6 +355,8 @@ async function listBulkToken(
     res.status(200)
     return res.json(formattedTokens)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/listBulkToken().`, err)
+
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
@@ -406,6 +414,7 @@ async function lookupToken(tokenId) {
 
     return t
   } catch (err) {
+    wlogger.error(`Error in slp.ts/lookupToken().`, err)
     //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
@@ -524,7 +533,7 @@ async function balancesForAddress(
       return res.json("No balance for this address")
     }
   } catch (err) {
-    // console.log(`Error object: ${util.inspect(err)}`)
+    wlogger.error(`Error in slp.ts/balancesForAddress().`, err)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -583,7 +592,7 @@ async function balancesForTokenSingle(
     })
     return res.json(resBalances)
   } catch (err) {
-    // console.log(`Error object: ${util.inspect(err)}`)
+    wlogger.error(`Error in slp.ts/balancesForTokenSingle().`, err)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -715,7 +724,7 @@ async function balancesForAddressByTokenID(
     }
     return res.json(resVal)
   } catch (err) {
-    //console.log(`Error object: ${util.inspect(err)}`)
+    wlogger.error(`Error in slp.ts/balancesForAddressByTokenID().`, err)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -763,6 +772,8 @@ async function convertAddressSingle(
     res.status(200)
     return res.json(obj)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/convertAddressSingle().`, err)
+
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
@@ -882,6 +893,8 @@ async function validateBulk(
     res.status(200)
     return res.json(validTxids)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/validateBulk().`, err)
+
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -922,6 +935,8 @@ async function validateSingle(
     res.status(200)
     return res.json(tmp)
   } catch (err) {
+    wlogger.error(`Error in slp.ts/validateSingle().`, err)
+
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -1264,7 +1279,7 @@ async function txDetails(
     res.status(200)
     return res.json(result)
   } catch (err) {
-    //console.log(`Error in tokenTransfer(): `, err)
+    wlogger.error(`Error in slp.ts/txDetails().`, err)
 
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -1329,6 +1344,8 @@ async function tokenStats(
     res.status(200)
     return res.json(formattedTokens[0])
   } catch (err) {
+    wlogger.error(`Error in slp.ts/tokenStats().`, err)
+
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
@@ -1396,7 +1413,7 @@ async function txsTokenIdAddressSingle(
 
     return res.json(tokenRes.data.c)
   } catch (err) {
-    //console.log(`Error object: ${util.inspect(err)}`)
+    wlogger.error(`Error in slp.ts/txsTokenIdAddressSingle().`, err)
 
     // Decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

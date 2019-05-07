@@ -183,7 +183,6 @@ async function detailsByHeightSingle(
     req.params.hash = hash
     return detailsByHashSingle(req, res, next)
   } catch (err) {
-
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -237,15 +236,14 @@ async function detailsByHeightBulk(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Loop through each height and creates an array of requests to call in parallel
     const promises = heights.map(async (height: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "getblockhash"
       requestConfig.data.method = "getblockhash"
       requestConfig.data.params = [parseInt(height)]

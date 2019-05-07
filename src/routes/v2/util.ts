@@ -34,10 +34,7 @@ const requestConfig: IRequestConfig = {
 }
 
 router.get("/", root)
-router.get(
-  "/validateAddress/:address",
-  validateAddressSingle
-)
+router.get("/validateAddress/:address", validateAddressSingle)
 router.post("/validateAddress", validateAddressBulk)
 
 function root(
@@ -114,7 +111,7 @@ async function validateAddressBulk(
     }
 
     // Validate each element in the array.
-    for(let i=0; i < addresses.length; i++) {
+    for (let i = 0; i < addresses.length; i++) {
       const address = addresses[i]
 
       // Ensure the input is a valid BCH address.
@@ -139,15 +136,14 @@ async function validateAddressBulk(
 
     logger.debug(`Executing util/validate with these addresses: `, addresses)
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Loop through each address and creates an array of requests to call in parallel
     const promises = addresses.map(async (address: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
 
       requestConfig.data.id = "validateaddress"
       requestConfig.data.method = "validateaddress"
@@ -164,7 +160,6 @@ async function validateAddressBulk(
 
     res.status(200)
     return res.json(result)
-
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

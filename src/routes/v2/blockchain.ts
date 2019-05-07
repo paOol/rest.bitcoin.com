@@ -440,15 +440,14 @@ async function getMempoolEntryBulk(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Loop through each txid and creates an array of requests to call in parallel
     const promises = txids.map(async (txid: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "getmempoolentry"
       requestConfig.data.method = "getmempoolentry"
       requestConfig.data.params = [txid]
@@ -682,13 +681,6 @@ async function getTxOutProofBulk(
       })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Validate each element in the array.
     for (let i = 0; i < txids.length; i++) {
       const txid = txids[i]
@@ -705,6 +697,12 @@ async function getTxOutProofBulk(
 
     // Loop through each txid and creates an array of requests to call in parallel
     const promises = txids.map(async (txid: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "gettxoutproof"
       requestConfig.data.method = "gettxoutproof"
       requestConfig.data.params = [[txid]]
@@ -877,13 +875,6 @@ async function verifyTxOutProofBulk(
       })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Validate each element in the array.
     for (let i = 0; i < proofs.length; i++) {
       const proof = proofs[i]
@@ -901,6 +892,12 @@ async function verifyTxOutProofBulk(
 
     // Loop through each proof and creates an array of requests to call in parallel
     const promises = proofs.map(async (proof: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "verifytxoutproof"
       requestConfig.data.method = "verifytxoutproof"
       requestConfig.data.params = [proof]

@@ -131,15 +131,14 @@ async function decodeRawTransactionBulk(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Loop through each height and creates an array of requests to call in parallel
     const promises = hexes.map(async (hex: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "decoderawtransaction"
       requestConfig.data.method = "decoderawtransaction"
       requestConfig.data.params = [hex]
@@ -292,15 +291,14 @@ async function decodeScriptBulk(
       }
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
-
     // Loop through each hex and create an array of promises
     const promises = hexes.map(async (hex: any) => {
+      const {
+        BitboxHTTP,
+        username,
+        password,
+        requestConfig
+      } = routeUtils.setEnvVars()
       requestConfig.data.id = "decodescript"
       requestConfig.data.method = "decodescript"
       requestConfig.data.params = [hex]

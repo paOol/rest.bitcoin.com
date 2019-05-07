@@ -108,13 +108,14 @@ Now you need to start REST and pass in the following environment variables
 - ZEROMQ_URL - The IP address of your full BCH node
 - NETWORK - mainnet or testnet depending on which network you're using
 - BITDB_URL - mainnet or testnet BITDB URL
+- SLPDB_URL - mainnet or testnet SLPDB URL
 - RATE_LIMIT_MAX_REQUESTS (optional) - Rate limit per route per minute. Defaults to 60. Set to 0 to disable rate limit.
 - NON_JS_FRAMEWORK (optional) - enables endpoints to create, mint, send, burn and burnAll SLP tokens
 
 Here's how the final command would look
 
 ```
-BITCOINCOM_BASEURL=https://bch-insight.bitpay.com/api/ RPC_BASEURL=http://your.nodes.ip.address:8332/ RPC_PASSWORD=rpcPasssword RPC_USERNAME=rpcUsername ZEROMQ_PORT=28332 ZEROMQ_URL=your.nodes.ip.address BITDB_URL=https://bitdb.bitcoin.com/ NETWORK=mainnet npm run dev
+BITCOINCOM_BASEURL=https://bch-insight.bitpay.com/api/ RPC_BASEURL=http://your.nodes.ip.address:8332/ RPC_PASSWORD=rpcPasssword RPC_USERNAME=rpcUsername ZEROMQ_PORT=28332 ZEROMQ_URL=your.nodes.ip.address BITDB_URL=https://bitdb.bitcoin.com/ SLPDB_URL=https://slpdb.bitcoin.com/ NETWORK=mainnet npm run dev
 ```
 
 Starting in the regtest mode (partly working since the bitcoincom_baseurl does not work with local nodes):

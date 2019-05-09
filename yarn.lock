@@ -9118,6 +9118,17 @@ slpjs@0.15.5:
     bitcore-lib-cash "^0.19.0"
     lodash "^4.17.11"
 
+slpjs@0.16.3:
+  version "0.16.3"
+  resolved "https://registry.yarnpkg.com/slpjs/-/slpjs-0.16.3.tgz#f4737d0022b0b26c76f0deaa4f6b9f8e452dcce6"
+  dependencies:
+    "@types/lodash" "^4.14.120"
+    axios "^0.18.0"
+    bchaddrjs-slp "git://github.com/simpleledger/bchaddrjs.git#master"
+    bignumber.js "^8.1.1"
+    bitcore-lib-cash "^0.19.0"
+    lodash "^4.17.11"
+
 smart-buffer@4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/smart-buffer/-/smart-buffer-4.0.2.tgz#5207858c3815cc69110703c6b94e46c15634395d"

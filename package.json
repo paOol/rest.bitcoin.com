@@ -21,7 +21,7 @@
     "coverage:report": "export NETWORK=testnet && npm run build && nyc --reporter=html mocha --require babel-core/register test/v2/"
   },
   "engines": {
-    "node": ">=10.15.1"
+    "node": ">=10.15.3"
   },
   "dependencies": {
     "axios": "^0.18.0",

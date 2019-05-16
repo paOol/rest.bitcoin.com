@@ -1,23 +1,20 @@
-"use strict"
-
-import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-import { IResponse } from "./interfaces/IResponse"
-const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
+import axios from "axios";
+import * as express from "express";
+import { IRequestConfig } from "./interfaces/IRequestConfig";
+import { IResponse } from "./interfaces/IResponse";
+const router: any = express.Router();
+const routeUtils: any = require("./route-utils");
+const wlogger: any = require("../../util/winston-logging");
 
 // Used to convert error messages to strings, to safely pass to users.
-const util = require("util")
-util.inspect.defaultOptions = { depth: 1 }
+const util: any = require("util");
+util.inspect.defaultOptions = { depth: 1 };
 
 const BitboxHTTP = axios.create({
   baseURL: process.env.RPC_BASEURL
-})
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
+});
+const username = process.env.RPC_USERNAME;
+const password = process.env.RPC_PASSWORD;
 
 const requestConfig: IRequestConfig = {
   method: "post",
@@ -28,24 +25,24 @@ const requestConfig: IRequestConfig = {
   data: {
     jsonrpc: "1.0"
   }
-}
+};
 
-router.get("/", root)
-router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
-router.post("/decodeRawTransaction", decodeRawTransactionBulk)
-router.get("/decodeScript/:hex", decodeScriptSingle)
-router.post("/decodeScript", decodeScriptBulk)
-router.post("/getRawTransaction", getRawTransactionBulk)
-router.get("/getRawTransaction/:txid", getRawTransactionSingle)
-router.post("/sendRawTransaction", sendRawTransactionBulk)
-router.get("/sendRawTransaction/:hex", sendRawTransactionSingle)
+router.get("/", root);
+router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle);
+router.post("/decodeRawTransaction", decodeRawTransactionBulk);
+router.get("/decodeScript/:hex", decodeScriptSingle);
+router.post("/decodeScript", decodeScriptBulk);
+router.post("/getRawTransaction", getRawTransactionBulk);
+router.get("/getRawTransaction/:txid", getRawTransactionSingle);
+router.post("/sendRawTransaction", sendRawTransactionBulk);
+router.get("/sendRawTransaction/:hex", sendRawTransactionSingle);
 
 function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
-  return res.json({ status: "rawtransactions" })
+): express.Response {
+  return res.json({ status: "rawtransactions" });
 }
 
 // Decode transaction hex into a JSON object.
@@ -54,14 +51,14 @@ async function decodeRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    const hex = req.params.hex
+    const hex: string = req.params.hex;
 
     // Throw an error if hex is empty.
     if (!hex || hex === "") {
-      res.status(400)
-      return res.json({ error: "hex can not be empty" })
+      res.status(400);
+      return res.json({ error: "hex can not be empty" });
     }
 
     const {
@@ -69,20 +66,20 @@ async function decodeRawTransactionSingle(
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
-    requestConfig.data.id = "decoderawtransaction"
-    requestConfig.data.method = "decoderawtransaction"
-    requestConfig.data.params = [hex]
+    requestConfig.data.id = "decoderawtransaction";
+    requestConfig.data.method = "decoderawtransaction";
+    requestConfig.data.params = [hex];
 
-    const response = await BitboxHTTP(requestConfig)
-    return res.json(response.data.result)
+    const response: any = await BitboxHTTP(requestConfig);
+    return res.json(response.data.result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
@@ -90,10 +87,10 @@ async function decodeRawTransactionSingle(
     wlogger.error(
       `Error in rawtransactions.ts/decodeRawTransactionSingle().`,
       err
-    )
+    );
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -101,33 +98,33 @@ async function decodeRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    let hexes = req.body.hexes
+    let hexes: string[] = req.body.hexes;
 
     if (!Array.isArray(hexes)) {
-      res.status(400)
-      return res.json({ error: "hexes must be an array" })
+      res.status(400);
+      return res.json({ error: "hexes must be an array" });
     }
 
     // Enforce array size rate limits
     if (!routeUtils.validateArraySize(req, hexes)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
-      })
+      });
     }
 
-    const results = []
+    const results = [];
 
     // Validate each element in the address array.
-    for (let i = 0; i < hexes.length; i++) {
-      const thisHex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const thisHex: string = hexes[i];
 
       // Reject if id is empty
       if (!thisHex || thisHex === "") {
-        res.status(400)
-        return res.json({ error: "Encountered empty hex" })
+        res.status(400);
+        return res.json({ error: "Encountered empty hex" });
       }
     }
 
@@ -138,22 +135,22 @@ async function decodeRawTransactionBulk(
         username,
         password,
         requestConfig
-      } = routeUtils.setEnvVars()
-      requestConfig.data.id = "decoderawtransaction"
-      requestConfig.data.method = "decoderawtransaction"
-      requestConfig.data.params = [hex]
+      } = routeUtils.setEnvVars();
+      requestConfig.data.id = "decoderawtransaction";
+      requestConfig.data.method = "decoderawtransaction";
+      requestConfig.data.params = [hex];
 
-      return await BitboxHTTP(requestConfig)
-    })
+      return await BitboxHTTP(requestConfig);
+    });
 
     // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: any[] = await axios.all(promises);
 
     // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
+    const result: any = axiosResult.map(x => x.data.result);
 
-    res.status(200)
-    return res.json(result)
+    res.status(200);
+    return res.json(result);
 
     /*
     // Loop through each hex and creates an array of requests to call in parallel
@@ -192,10 +189,10 @@ async function decodeRawTransactionBulk(
 */
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
@@ -203,10 +200,10 @@ async function decodeRawTransactionBulk(
     wlogger.error(
       `Error in rawtransactions.ts/decodeRawTransactionBulk().`,
       err
-    )
+    );
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -216,14 +213,14 @@ async function decodeScriptSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    const hex = req.params.hex
+    const hex: string = req.params.hex;
 
     // Throw an error if hex is empty.
     if (!hex || hex === "") {
-      res.status(400)
-      return res.json({ error: "hex can not be empty" })
+      res.status(400);
+      return res.json({ error: "hex can not be empty" });
     }
 
     const {
@@ -231,28 +228,28 @@ async function decodeScriptSingle(
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
-    requestConfig.data.id = "decodescript"
-    requestConfig.data.method = "decodescript"
-    requestConfig.data.params = [hex]
+    requestConfig.data.id = "decodescript";
+    requestConfig.data.method = "decodescript";
+    requestConfig.data.params = [hex];
 
-    const response = await BitboxHTTP(requestConfig)
-    return res.json(response.data.result)
+    const response: any = await BitboxHTTP(requestConfig);
+    return res.json(response.data.result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeScript: `, err)
-    wlogger.error(`Error in rawtransactions.ts/decodeScriptSingle().`, err)
+    wlogger.error(`Error in rawtransactions.ts/decodeScriptSingle().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -262,96 +259,99 @@ async function decodeScriptBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    const hexes = req.body.hexes
+    const hexes: string[] = req.body.hexes;
 
     // Validation
     if (!Array.isArray(hexes)) {
-      res.status(400)
-      return res.json({ error: "hexes must be an array" })
+      res.status(400);
+      return res.json({ error: "hexes must be an array" });
     }
 
     // Enforce array size rate limits
     if (!routeUtils.validateArraySize(req, hexes)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
-      })
+      });
     }
 
     // Validate each hex in the array
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex: string = hexes[i];
 
       // Throw an error if hex is empty.
       if (!hex || hex === "") {
-        res.status(400)
-        return res.json({ error: "Encountered empty hex" })
+        res.status(400);
+        return res.json({ error: "Encountered empty hex" });
       }
     }
 
     // Loop through each hex and create an array of promises
-    const promises = hexes.map(async (hex: any) => {
+    const promises: any[] = hexes.map(async (hex: any) => {
       const {
         BitboxHTTP,
         username,
         password,
         requestConfig
-      } = routeUtils.setEnvVars()
-      requestConfig.data.id = "decodescript"
-      requestConfig.data.method = "decodescript"
-      requestConfig.data.params = [hex]
+      } = routeUtils.setEnvVars();
+      requestConfig.data.id = "decodescript";
+      requestConfig.data.method = "decodescript";
+      requestConfig.data.params = [hex];
 
-      const response = await BitboxHTTP(requestConfig)
-      return response
-    })
+      const response: any = await BitboxHTTP(requestConfig);
+      return response;
+    });
 
     // Wait for all parallel promises to return.
-    const resolved: Array<any> = await Promise.all(promises)
+    const resolved: any[] = await Promise.all(promises);
 
     // Retrieve the data from each resolved promise.
-    const result = resolved.map(x => x.data.result)
+    const result: any[] = resolved.map(x => x.data.result);
 
-    res.status(200)
-    return res.json(result)
+    res.status(200);
+    return res.json(result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/decodeScript: `, err)
-    wlogger.error(`Error in rawtransactions.ts/decodeScriptBulk().`, err)
+    wlogger.error(`Error in rawtransactions.ts/decodeScriptBulk().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
 // Retrieve raw transactions details from the full node.
-async function getRawTransactionsFromNode(txid: string, verbose: number) {
+async function getRawTransactionsFromNode(
+  txid: string,
+  verbose: number
+): Promise<any> {
   try {
     const {
       BitboxHTTP,
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
-    requestConfig.data.id = "getrawtransaction"
-    requestConfig.data.method = "getrawtransaction"
-    requestConfig.data.params = [txid, verbose]
+    requestConfig.data.id = "getrawtransaction";
+    requestConfig.data.method = "getrawtransaction";
+    requestConfig.data.params = [txid, verbose];
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: any = await BitboxHTTP(requestConfig);
 
-    return response.data.result
+    return response.data.result;
   } catch (err) {
-    wlogger.error(`Error in rawtransactions.ts/getRawTransactionsFromNode().`)
-    throw err
+    wlogger.error(`Error in rawtransactions.ts/getRawTransactionsFromNode().`);
+    throw err;
   }
 }
 
@@ -361,23 +361,23 @@ async function getRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    let verbose = 0
-    if (req.body.verbose) verbose = 1
+    let verbose: number = 0;
+    if (req.body.verbose) verbose = 1;
 
-    let txids = req.body.txids
+    let txids: string[] = req.body.txids;
     if (!Array.isArray(txids)) {
-      res.status(400)
-      return res.json({ error: "txids must be an array" })
+      res.status(400);
+      return res.json({ error: "txids must be an array" });
     }
 
     // Enforce array size rate limits
     if (!routeUtils.validateArraySize(req, txids)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
-      })
+      });
     }
 
     // stub response object
@@ -386,49 +386,49 @@ async function getRawTransactionBulk(
       json: {
         error: ""
       }
-    }
+    };
 
     // Validate each txid in the array.
-    for (let i = 0; i < txids.length; i++) {
-      const txid = txids[i]
+    for (let i: number = 0; i < txids.length; i++) {
+      const txid: string = txids[i];
 
       if (!txid || txid === "") {
-        res.status(400)
-        return res.json({ error: `Encountered empty TXID` })
+        res.status(400);
+        return res.json({ error: `Encountered empty TXID` });
       }
 
       if (txid.length !== 64) {
-        res.status(400)
+        res.status(400);
         return res.json({
           error: `parameter 1 must be of length 64 (not ${txid.length})`
-        })
+        });
       }
     }
 
     // Loop through each txid and create an array of promises
-    const promises = txids.map(async (txid: any) => {
-      return getRawTransactionsFromNode(txid, verbose)
-    })
+    const promises: Promise<any>[] = txids.map(async (txid: any) => {
+      return getRawTransactionsFromNode(txid, verbose);
+    });
 
     // Wait for all parallel promises to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: any[] = await axios.all(promises);
 
-    res.status(200)
-    return res.json(axiosResult)
+    res.status(200);
+    return res.json(axiosResult);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/getRawTransaction: `, err)
-    wlogger.error(`Error in rawtransactions.ts/getRawTransactionBulk().`, err)
+    wlogger.error(`Error in rawtransactions.ts/getRawTransactionBulk().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -438,34 +438,37 @@ async function getRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    let verbose = 0
-    if (req.query.verbose === "true") verbose = 1
+    let verbose: number = 0;
+    if (req.query.verbose === "true") verbose = 1;
 
-    const txid = req.params.txid
+    const txid: string = req.params.txid;
     if (!txid || txid === "") {
-      res.status(400)
-      return res.json({ error: "txid can not be empty" })
+      res.status(400);
+      return res.json({ error: "txid can not be empty" });
     }
 
-    const data = await getRawTransactionsFromNode(txid, verbose)
+    const data: Promise<any> = await getRawTransactionsFromNode(txid, verbose);
 
-    return res.json(data)
+    return res.json(data);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     // Write out error to error log.
     //logger.error(`Error in rawtransactions/getRawTransaction: `, err)
-    wlogger.error(`Error in rawtransactions.ts/getRawTransactionSingle().`, err)
+    wlogger.error(
+      `Error in rawtransactions.ts/getRawTransactionSingle().`,
+      err
+    );
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -474,15 +477,15 @@ async function sendRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
     // Validation
-    const hexes = req.body.hexes
+    const hexes: string[] = req.body.hexes;
 
     // Reject if input is not an array
     if (!Array.isArray(hexes)) {
-      res.status(400)
-      return res.json({ error: "hex must be an array" })
+      res.status(400);
+      return res.json({ error: "hex must be an array" });
     }
 
     const {
@@ -490,25 +493,25 @@ async function sendRawTransactionBulk(
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
     // Enforce array size rate limits
     if (!routeUtils.validateArraySize(req, hexes)) {
-      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      res.status(429); // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
-      })
+      });
     }
 
     // Validate each element
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex = hexes[i];
 
       if (hex === "") {
-        res.status(400)
+        res.status(400);
         return res.json({
           error: `Encountered empty hex`
-        })
+        });
       }
     }
 
@@ -538,33 +541,33 @@ async function sendRawTransactionBulk(
           */
 
     // Sending them serially.
-    const result = []
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    const result: any[] = [];
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex: string = hexes[i];
 
-      requestConfig.data.id = "sendrawtransaction"
-      requestConfig.data.method = "sendrawtransaction"
-      requestConfig.data.params = [hex]
+      requestConfig.data.id = "sendrawtransaction";
+      requestConfig.data.method = "sendrawtransaction";
+      requestConfig.data.params = [hex];
 
-      const rpcResult = await BitboxHTTP(requestConfig)
+      const rpcResult: any = await BitboxHTTP(requestConfig);
 
-      result.push(rpcResult.data.result)
+      result.push(rpcResult.data.result);
     }
 
-    res.status(200)
-    return res.json(result)
+    res.status(200);
+    return res.json(result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
-    wlogger.error(`Error in rawtransactions.ts/sendRawTransactionBulk().`, err)
+    wlogger.error(`Error in rawtransactions.ts/sendRawTransactionBulk().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -573,22 +576,22 @@ async function sendRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
-    const hex = req.params.hex // URL parameter
+    const hex: string = req.params.hex; // URL parameter
 
     // Reject if input is not an array or a string
     if (typeof hex !== "string") {
-      res.status(400)
-      return res.json({ error: "hex must be a string" })
+      res.status(400);
+      return res.json({ error: "hex must be a string" });
     }
 
     // Validation
     if (hex === "") {
-      res.status(400)
+      res.status(400);
       return res.json({
         error: `Encountered empty hex`
-      })
+      });
     }
 
     const {
@@ -596,34 +599,34 @@ async function sendRawTransactionSingle(
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
     // RPC call
-    requestConfig.data.id = "sendrawtransaction"
-    requestConfig.data.method = "sendrawtransaction"
-    requestConfig.data.params = [hex]
+    requestConfig.data.id = "sendrawtransaction";
+    requestConfig.data.method = "sendrawtransaction";
+    requestConfig.data.params = [hex];
 
-    const rpcResult = await BitboxHTTP(requestConfig)
+    const rpcResult: any = await BitboxHTTP(requestConfig);
 
-    const result = rpcResult.data.result
+    const result: any = rpcResult.data.result;
 
-    res.status(200)
-    return res.json(result)
+    res.status(200);
+    return res.json(result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
     wlogger.error(
       `Error in rawtransactions.ts/sendRawTransactionSingle().`,
       err
-    )
+    );
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -641,4 +644,4 @@ module.exports = {
     sendRawTransactionBulk,
     sendRawTransactionSingle
   }
-}
+};

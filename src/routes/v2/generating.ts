@@ -1,7 +1,8 @@
-"use strict"
+// imports
+import * as express from "express";
 
-const express = require("express")
-const router = express.Router()
+// consts
+const router: any = express.Router();
 //const axios = require("axios");
 
 //const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default;
@@ -14,8 +15,8 @@ const router = express.Router()
 //const password = process.env.RPC_PASSWORD;
 
 router.get("/", (req, res, next) => {
-  res.json({ status: "generating" })
-})
+  res.json({ status: "generating" });
+});
 //
 // router.post('/generateToAddress/:nblocks/:address', (req, res, next) => {
 //   let maxtries = 1000000;
@@ -48,4 +49,4 @@ router.get("/", (req, res, next) => {
 //   });
 // });
 
-module.exports = router
+module.exports = router;

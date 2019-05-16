@@ -1,22 +1,19 @@
-"use strict"
-
-import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
+import axios from "axios";
+import * as express from "express";
+import { IRequestConfig } from "./interfaces/IRequestConfig";
+const router: any = express.Router();
+const routeUtils: any = require("./route-utils");
+const wlogger: any = require("../../util/winston-logging");
 
 // Used to convert error messages to strings, to safely pass to users.
-const util = require("util")
-util.inspect.defaultOptions = { depth: 1 }
+const util = require("util");
+util.inspect.defaultOptions = { depth: 1 };
 
-const BitboxHTTP = axios.create({
+const BitboxHTTP: any = axios.create({
   baseURL: process.env.RPC_BASEURL
-})
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
+});
+const username: string = process.env.RPC_USERNAME;
+const password: string = process.env.RPC_PASSWORD;
 
 const requestConfig: IRequestConfig = {
   method: "post",
@@ -27,18 +24,18 @@ const requestConfig: IRequestConfig = {
   data: {
     jsonrpc: "1.0"
   }
-}
+};
 
-router.get("/", root)
-router.get("/getMiningInfo", getMiningInfo)
-router.get("/getNetworkHashps", getNetworkHashPS)
+router.get("/", root);
+router.get("/getMiningInfo", getMiningInfo);
+router.get("/getNetworkHashps", getNetworkHashPS);
 
 function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
-  return res.json({ status: "mining" })
+): express.Response {
+  return res.json({ status: "mining" });
 }
 
 //
@@ -70,34 +67,34 @@ async function getMiningInfo(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<any> {
   try {
     const {
       BitboxHTTP,
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
-    requestConfig.data.id = "getmininginfo"
-    requestConfig.data.method = "getmininginfo"
-    requestConfig.data.params = []
+    requestConfig.data.id = "getmininginfo";
+    requestConfig.data.method = "getmininginfo";
+    requestConfig.data.params = [];
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: any = await BitboxHTTP(requestConfig);
 
-    return res.json(response.data.result)
+    return res.json(response.data.result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
-    wlogger.error(`Error in mining.ts/getMiningInfo().`, err)
+    wlogger.error(`Error in mining.ts/getMiningInfo().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -107,37 +104,37 @@ async function getNetworkHashPS(
   next: express.NextFunction
 ) {
   try {
-    let nblocks = 120 // Default
-    let height = -1 // Default
-    if (req.query.nblocks) nblocks = parseInt(req.query.nblocks)
-    if (req.query.height) height = parseInt(req.query.height)
+    let nblocks: number = 120; // Default
+    let height: number = -1; // Default
+    if (req.query.nblocks) nblocks = parseInt(req.query.nblocks);
+    if (req.query.height) height = parseInt(req.query.height);
 
     const {
       BitboxHTTP,
       username,
       password,
       requestConfig
-    } = routeUtils.setEnvVars()
+    } = routeUtils.setEnvVars();
 
-    requestConfig.data.id = "getnetworkhashps"
-    requestConfig.data.method = "getnetworkhashps"
-    requestConfig.data.params = [nblocks, height]
+    requestConfig.data.id = "getnetworkhashps";
+    requestConfig.data.method = "getnetworkhashps";
+    requestConfig.data.params = [nblocks, height];
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: any = await BitboxHTTP(requestConfig);
 
-    return res.json(response.data.result)
+    return res.json(response.data.result);
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
+    const { msg, status } = routeUtils.decodeError(err);
     if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
+      res.status(status);
+      return res.json({ error: msg });
     }
 
-    wlogger.error(`Error in mining.ts/getNetworkHashPS().`, err)
+    wlogger.error(`Error in mining.ts/getNetworkHashPS().`, err);
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
   }
 }
 
@@ -179,4 +176,4 @@ module.exports = {
     getMiningInfo,
     getNetworkHashPS
   }
-}
+};

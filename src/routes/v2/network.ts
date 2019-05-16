@@ -1,7 +1,8 @@
-"use strict"
+// imports
+import * as express from "express";
 
-import * as express from "express"
-const router = express.Router()
+// consts
+const router = express.Router();
 
 router.get(
   "/",
@@ -9,10 +10,10 @@ router.get(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
-  ) => {
-    res.json({ status: "network" })
+  ): Promise<any> => {
+    res.json({ status: "network" });
   }
-)
+);
 
 // router.post('/addNode/:node/:command', (req, res, next) => {
 //   BITBOX.Network.addNode(req.params.node, req.params.command)
@@ -172,4 +173,4 @@ router.get(
 //   });
 // });
 
-module.exports = router
+module.exports = router;

@@ -1,26 +1,24 @@
-"use strict"
+// imports
+import * as express from "express";
 
-import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-const logger = require("./logging.js")
-const routeUtils = require("./route-utils")
-const wlogger = require("../../util/winston-logging")
+// ocnsts
+const router = express.Router();
+const routeUtils = require("./route-utils");
+const wlogger = require("../../util/winston-logging");
 
 // Used for processing error messages before sending them to the user.
-const util = require("util")
-util.inspect.defaultOptions = { depth: 1 }
+const util = require("util");
+util.inspect.defaultOptions = { depth: 1 };
 
-router.get("/", root)
-router.get("/getInfo", getInfo)
+router.get("/", root);
+router.get("/getInfo", getInfo);
 
 function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
-  return res.json({ status: "control" })
+  return res.json({ status: "control" });
 }
 
 // Execute the RPC getinfo call.
@@ -29,26 +27,31 @@ async function getInfo(
   res: express.Response,
   next: express.NextFunction
 ) {
-  const {BitboxHTTP, username, password, requestConfig} = routeUtils.setEnvVars()
+  const {
+    BitboxHTTP,
+    username,
+    password,
+    requestConfig
+  } = routeUtils.setEnvVars();
 
-  requestConfig.data.id = "getinfo"
-  requestConfig.data.method = "getinfo"
-  requestConfig.data.params = []
+  requestConfig.data.id = "getinfo";
+  requestConfig.data.method = "getinfo";
+  requestConfig.data.params = [];
 
   try {
-    const response = await BitboxHTTP(requestConfig)
+    const response = await BitboxHTTP(requestConfig);
 
-    return res.json(response.data.result)
+    return res.json(response.data.result);
   } catch (error) {
-    wlogger.error(`Error in control.ts/getInfo().`, error)
+    wlogger.error(`Error in control.ts/getInfo().`, error);
 
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
 
-    res.status(500)
+    res.status(500);
     if (error.response && error.response.data && error.response.data.error)
-      return res.json({ error: error.response.data.error })
-    return res.json({ error: util.inspect(error) })
+      return res.json({ error: error.response.data.error });
+    return res.json({ error: util.inspect(error) });
   }
 }
 
@@ -95,4 +98,4 @@ module.exports = {
     root,
     getInfo
   }
-}
+};

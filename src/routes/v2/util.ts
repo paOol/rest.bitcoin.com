@@ -1,37 +1,19 @@
-"use strict"
-
+// imports
+import axios, { AxiosResponse } from "axios"
+import { BITBOX } from "bitbox-sdk"
 import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
+import { ValidateAddressInterface } from "./interfaces/RESTInterfaces"
+import logger = require("./logging.js")
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
+// consts
+const router: any = express.Router()
+const bitbox = new BITBOX()
 
 // Used to convert error messages to strings, to safely pass to users.
-const util = require("util")
+const util: any = require("util")
 util.inspect.defaultOptions = { depth: 1 }
-
-const BitboxHTTP = axios.create({
-  baseURL: process.env.RPC_BASEURL
-})
-
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
-
-const requestConfig: IRequestConfig = {
-  method: "post",
-  auth: {
-    username: username,
-    password: password
-  },
-  data: {
-    jsonrpc: "1.0"
-  }
-}
 
 router.get("/", root)
 router.get("/validateAddress/:address", validateAddressSingle)
@@ -41,7 +23,7 @@ function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): express.Response {
   return res.json({ status: "util" })
 }
 
@@ -49,28 +31,24 @@ async function validateAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const address = req.params.address
+    const address: string = req.params.address
     if (!address || address === "") {
       res.status(400)
       return res.json({ error: "address can not be empty" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "validateaddress"
     requestConfig.data.method = "validateaddress"
     requestConfig.data.params = [address]
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: any = await BitboxHTTP(requestConfig)
+    const validateAddress: ValidateAddressInterface = response.data.result
 
-    return res.json(response.data.result)
+    return res.json(validateAddress)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -90,9 +68,9 @@ async function validateAddressBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let addresses = req.body.addresses
+    let addresses: string[] = req.body.addresses
 
     // Reject if addresses is not an array.
     if (!Array.isArray(addresses)) {
@@ -111,12 +89,12 @@ async function validateAddressBulk(
     }
 
     // Validate each element in the array.
-    for (let i = 0; i < addresses.length; i++) {
-      const address = addresses[i]
+    for (let i: number = 0; i < addresses.length; i++) {
+      const address: string = addresses[i]
 
       // Ensure the input is a valid BCH address.
       try {
-        var legacyAddr = BITBOX.Address.toLegacyAddress(address)
+        bitbox.Address.toLegacyAddress(address)
       } catch (err) {
         res.status(400)
         return res.json({
@@ -125,7 +103,7 @@ async function validateAddressBulk(
       }
 
       // Prevent a common user error. Ensure they are using the correct network address.
-      const networkIsValid = routeUtils.validateNetwork(address)
+      const networkIsValid: boolean = routeUtils.validateNetwork(address)
       if (!networkIsValid) {
         res.status(400)
         return res.json({
@@ -137,26 +115,25 @@ async function validateAddressBulk(
     logger.debug(`Executing util/validate with these addresses: `, addresses)
 
     // Loop through each address and creates an array of requests to call in parallel
-    const promises = addresses.map(async (address: any) => {
-      const {
-        BitboxHTTP,
-        username,
-        password,
-        requestConfig
-      } = routeUtils.setEnvVars()
+    const promises: Promise<ValidateAddressInterface>[] = addresses.map(
+      async (address: string): Promise<ValidateAddressInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
-      requestConfig.data.id = "validateaddress"
-      requestConfig.data.method = "validateaddress"
-      requestConfig.data.params = [address]
+        requestConfig.data.id = "validateaddress"
+        requestConfig.data.method = "validateaddress"
+        requestConfig.data.params = [address]
 
-      return await BitboxHTTP(requestConfig)
-    })
+        return await BitboxHTTP(requestConfig)
+      }
+    )
 
     // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: any[] = await axios.all(promises)
 
     // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
+    const result: ValidateAddressInterface[] = axiosResult.map(
+      (x: AxiosResponse) => x.data.result
+    )
 
     res.status(200)
     return res.json(result)

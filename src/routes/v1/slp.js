@@ -8,8 +8,8 @@ const bitdbToken = process.env.BITDB_TOKEN
 const bitboxproxy = require("slpjs").bitbox
 const utils = require("slpjs").utils
 
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
+const BITBOX = require("bitbox-sdk").BITBOX
+const bitbox = new BITBOX()
 
 const config = {
   slpRateLimit1: undefined,
@@ -118,7 +118,7 @@ router.get(
       const balances = await bitboxproxy.getAllTokenBalances(slpAddr)
       balances.slpAddress = slpAddr
       balances.cashAddress = utils.toCashAddress(slpAddr)
-      balances.legacyAddress = BITBOX.Address.toLegacyAddress(
+      balances.legacyAddress = bitbox.Address.toLegacyAddress(
         balances.cashAddress
       )
       return res.json(balances)
@@ -172,7 +172,7 @@ router.get(
       obj.balance = balances[req.params.tokenId]
       obj.slpAddress = slpAddr
       obj.cashAddress = utils.toCashAddress(slpAddr)
-      obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+      obj.legacyAddress = bitbox.Address.toLegacyAddress(obj.cashAddress)
       return res.json(obj)
     } catch (err) {
       res.status(500).send(err.response.data.error)
@@ -189,7 +189,7 @@ router.get(
       const obj = {}
       obj.slpAddress = slpAddr
       obj.cashAddress = utils.toCashAddress(slpAddr)
-      obj.legacyAddress = BITBOX.Address.toLegacyAddress(obj.cashAddress)
+      obj.legacyAddress = bitbox.Address.toLegacyAddress(obj.cashAddress)
       return res.json(obj)
     } catch (err) {
       res.status(500).send(err.response.data.error)

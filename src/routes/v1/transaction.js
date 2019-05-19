@@ -5,8 +5,8 @@ const router = express.Router()
 const axios = require("axios")
 const RateLimit = require("express-rate-limit")
 
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
+const BITBOX = require("bitbox-sdk").BITBOX
+const bitbox = new BITBOX()
 
 const config = {
   transactionRateLimit1: undefined,
@@ -18,8 +18,8 @@ const processInputs = tx => {
     tx.vin.forEach(vin => {
       if (!vin.coinbase) {
         const address = vin.addr
-        vin.legacyAddress = BITBOX.Address.toLegacyAddress(address)
-        vin.cashAddress = BITBOX.Address.toCashAddress(address)
+        vin.legacyAddress = bitbox.Address.toLegacyAddress(address)
+        vin.cashAddress = bitbox.Address.toCashAddress(address)
         vin.value = vin.valueSat
         delete vin.addr
         delete vin.valueSat

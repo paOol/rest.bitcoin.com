@@ -1,9 +1,9 @@
-import { IRequestConfig } from "../interfaces/IRequestConfig"
+import { IRequestConfig } from "../interfaces/IRequestConfig";
 
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
+const username = process.env.RPC_USERNAME;
+const password = process.env.RPC_PASSWORD;
 
-type RPCMethod = "getblockhash"
+type RPCMethod = "getblockhash";
 
 export const getRequestConfig = (
   method: RPCMethod,
@@ -21,5 +21,5 @@ export const getRequestConfig = (
       method,
       params
     }
-  }
-}
+  };
+};

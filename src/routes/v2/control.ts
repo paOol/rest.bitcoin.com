@@ -1,25 +1,25 @@
 // imports
-import { AxiosResponse } from "axios";
-import * as express from "express";
-import { InfoInterface } from "./interfaces/RESTInterfaces";
-import routeUtils = require("./route-utils");
-import wlogger = require("../../util/winston-logging");
+import { AxiosResponse } from "axios"
+import * as express from "express"
+import { InfoInterface } from "./interfaces/RESTInterfaces"
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
-const router: express.Router = express.Router();
+const router: express.Router = express.Router()
 // Used for processing error messages before sending them to the user.
-const util = require("util");
-util.inspect.defaultOptions = { depth: 1 };
+const util = require("util")
+util.inspect.defaultOptions = { depth: 1 }
 
-router.get("/", root);
-router.get("/getInfo", getInfo);
+router.get("/", root)
+router.get("/getInfo", getInfo)
 
 function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ) {
-  return res.json({ status: "control" });
+  return res.json({ status: "control" })
 }
 
 // Execute the RPC getinfo call.
@@ -28,27 +28,27 @@ async function getInfo(
   res: express.Response,
   next: express.NextFunction
 ): Promise<express.Response> {
-  const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
+  const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
-  requestConfig.data.id = "getinfo";
-  requestConfig.data.method = "getinfo";
-  requestConfig.data.params = [];
+  requestConfig.data.id = "getinfo"
+  requestConfig.data.method = "getinfo"
+  requestConfig.data.params = []
 
   try {
-    const response: AxiosResponse = await BitboxHTTP(requestConfig);
-    const info: InfoInterface = response.data.result;
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const info: InfoInterface = response.data.result
 
-    return res.json(info);
+    return res.json(info)
   } catch (error) {
-    wlogger.error(`Error in control.ts/getInfo().`, error);
+    wlogger.error(`Error in control.ts/getInfo().`, error)
 
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
 
-    res.status(500);
+    res.status(500)
     if (error.response && error.response.data && error.response.data.error)
-      return res.json({ error: error.response.data.error });
-    return res.json({ error: util.inspect(error) });
+      return res.json({ error: error.response.data.error })
+    return res.json({ error: util.inspect(error) })
   }
 }
 
@@ -95,4 +95,4 @@ module.exports = {
     root,
     getInfo
   }
-};
+}

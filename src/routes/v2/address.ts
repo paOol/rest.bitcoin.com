@@ -506,7 +506,7 @@ async function unconfirmedSingle(
     }
 
     // Query the Insight API.
-    const retData: any = await utxoFromInsight(address);
+    const retData: AddressUTXOsInterface = await utxoFromInsight(address);
     //console.log(`retData: ${JSON.stringify(retData,null,2)}`)
 
     // Loop through each returned UTXO.
@@ -591,22 +591,25 @@ async function unconfirmedBulk(
     }
 
     // Collect an array of promises.
-    const promises: Promise<any>[] = addresses.map(address =>
-      utxoFromInsight(address)
+    const promises: Promise<AddressUTXOsInterface>[] = addresses.map(
+      (address: string): Promise<AddressUTXOsInterface> =>
+        utxoFromInsight(address)
     );
 
     // Wait for all parallel Insight requests to return.
-    let result: any[] = await axios.all(promises);
+    let result: AddressUTXOsInterface[] = await axios.all(promises);
 
     // Loop through each result
-    const finalResult = result.map(
-      (elem: any): any => {
+    const finalResult: AddressUTXOsInterface[] = result.map(
+      (elem: AddressUTXOsInterface): AddressUTXOsInterface => {
         //console.log(`elem: ${util.inspect(elem)}`)
 
         // Filter out confirmed transactions.
-        const unconfirmedUtxos: any = elem.utxos.filter((utxo: any) => {
-          return utxo.confirmations === 0;
-        });
+        const unconfirmedUtxos: UTXOsInterface[] = elem.utxos.filter(
+          (utxo: UTXOsInterface): boolean => {
+            return utxo.confirmations === 0;
+          }
+        );
 
         elem.utxos = unconfirmedUtxos;
 

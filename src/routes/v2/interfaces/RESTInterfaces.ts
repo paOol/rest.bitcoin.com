@@ -17,3 +17,22 @@ export interface AddressDetailsInterface {
   currentPage: number;
   pagesTotal: number;
 }
+
+export interface AddressUTXOsInterface {
+  utxos: UTXOsInterface[];
+  legacyAddress: string;
+  cashAddress: string;
+  slpAddress: string;
+  scriptPubKey: string;
+}
+
+export interface UTXOsInterface {
+  txid: string;
+  vout: number;
+  amount: number;
+  satoshis: number;
+  height: number;
+  confirmations: number;
+  address?: string;
+  scriptPubKey?: string;
+}

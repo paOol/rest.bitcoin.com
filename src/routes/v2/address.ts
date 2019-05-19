@@ -4,7 +4,11 @@ import { BITBOX } from "bitbox-sdk";
 import * as express from "express";
 import { Utils } from "slpjs";
 import * as util from "util";
-import { AddressDetailsInterface } from "./interfaces/RESTInterfaces";
+import {
+  AddressDetailsInterface,
+  AddressUTXOsInterface,
+  UTXOsInterface
+} from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
 import routeUtils = require("./route-utils");
 import wlogger = require("../../util/winston-logging");
@@ -90,9 +94,86 @@ async function detailsFromInsight(
   }
 }
 
+// GET handler for single address details
+async function detailsSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const address: string = req.params.address;
+    const currentPage: number = req.query.page
+      ? parseInt(req.query.page, 10)
+      : 0;
+
+    if (!address || address === "") {
+      res.status(400);
+      return res.json({ error: "address can not be empty" });
+    }
+
+    // Reject if address is an array.
+    if (Array.isArray(address)) {
+      res.status(400);
+      return res.json({
+        error: "address can not be an array. Use POST for bulk upload."
+      });
+    }
+
+    logger.debug(
+      `Executing address/detailsSingle with this address: `,
+      address
+    );
+    wlogger.debug(
+      `Executing address/detailsSingle with this address: `,
+      address
+    );
+
+    // Ensure the input is a valid BCH address.
+    try {
+      bitbox.Address.toLegacyAddress(address);
+    } catch (err) {
+      res.status(400);
+      return res.json({
+        error: `Invalid BCH address. Double check your address is valid: ${address}`
+      });
+    }
+
+    // Prevent a common user error. Ensure they are using the correct network address.
+    const networkIsValid: boolean = routeUtils.validateNetwork(address);
+    if (!networkIsValid) {
+      res.status(400);
+      return res.json({
+        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+      });
+    }
+
+    // Query the Insight API.
+    let retData: AddressDetailsInterface = await detailsFromInsight(
+      address,
+      currentPage
+    );
+
+    // Return the retrieved address information.
+    res.status(200);
+    return res.json(retData);
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err);
+    if (msg) {
+      res.status(status);
+      return res.json({ error: msg });
+    }
+
+    // Write out error to error log.
+    //logger.error(`Error in address.ts/detailsSingle: `, err)
+    wlogger.error(`Error in address.ts/detailsSingle().`, err);
+
+    res.status(500);
+    return res.json({ error: util.inspect(err) });
+  }
+}
+
 // POST handler for bulk queries on address details
-// curl -d '{"addresses": ["bchtest:qzjtnzcvzxx7s0na88yrg3zl28wwvfp97538sgrrmr", "bchtest:qp6hgvevf4gzz6l7pgcte3gaaud9km0l459fa23dul"]}' -H "Content-Type: application/json" http://localhost:3000/v2/address/details
-// curl -d '{"addresses": ["bchtest:qzjtnzcvzxx7s0na88yrg3zl28wwvfp97538sgrrmr", "bchtest:qp6hgvevf4gzz6l7pgcte3gaaud9km0l459fa23dul"], "from": 1, "to": 5}' -H "Content-Type: application/json" http://localhost:3000/v2/address/details
 async function detailsBulk(
   req: express.Request,
   res: express.Response,
@@ -178,87 +259,10 @@ async function detailsBulk(
   }
 }
 
-// GET handler for single address details
-async function detailsSingle(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): Promise<express.Response> {
-  try {
-    const address: string = req.params.address;
-    const currentPage: number = req.query.page
-      ? parseInt(req.query.page, 10)
-      : 0;
-
-    if (!address || address === "") {
-      res.status(400);
-      return res.json({ error: "address can not be empty" });
-    }
-
-    // Reject if address is an array.
-    if (Array.isArray(address)) {
-      res.status(400);
-      return res.json({
-        error: "address can not be an array. Use POST for bulk upload."
-      });
-    }
-
-    logger.debug(
-      `Executing address/detailsSingle with this address: `,
-      address
-    );
-    wlogger.debug(
-      `Executing address/detailsSingle with this address: `,
-      address
-    );
-
-    // Ensure the input is a valid BCH address.
-    try {
-      bitbox.Address.toLegacyAddress(address);
-    } catch (err) {
-      res.status(400);
-      return res.json({
-        error: `Invalid BCH address. Double check your address is valid: ${address}`
-      });
-    }
-
-    // Prevent a common user error. Ensure they are using the correct network address.
-    const networkIsValid: boolean = routeUtils.validateNetwork(address);
-    if (!networkIsValid) {
-      res.status(400);
-      return res.json({
-        error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
-      });
-    }
-
-    // Query the Insight API.
-    let retData: AddressDetailsInterface = await detailsFromInsight(
-      address,
-      currentPage
-    );
-
-    // Return the retrieved address information.
-    res.status(200);
-    return res.json(retData);
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err);
-    if (msg) {
-      res.status(status);
-      return res.json({ error: msg });
-    }
-
-    // Write out error to error log.
-    //logger.error(`Error in address.ts/detailsSingle: `, err)
-    wlogger.error(`Error in address.ts/detailsSingle().`, err);
-
-    res.status(500);
-    return res.json({ error: util.inspect(err) });
-  }
-}
-
 // Retrieve UTXO data from the Insight API
-async function utxoFromInsight(thisAddress: string): Promise<any> {
+async function utxoFromInsight(
+  thisAddress: string
+): Promise<AddressUTXOsInterface> {
   try {
     let addr: string;
     if (
@@ -275,15 +279,11 @@ async function utxoFromInsight(thisAddress: string): Promise<any> {
     const response: AxiosResponse = await axios.get(path);
 
     // Append different address formats to the return data.
-    const retData: {
-      utxos: any[];
-      legacyAddress: string;
-      cashAddress: string;
-      scriptPubKey: string;
-    } = {
+    const retData: AddressUTXOsInterface = {
       utxos: [],
       legacyAddress: "",
       cashAddress: "",
+      slpAddress: "",
       scriptPubKey: ""
     };
     if (response.data.length && response.data[0].scriptPubKey) {
@@ -292,11 +292,14 @@ async function utxoFromInsight(thisAddress: string): Promise<any> {
     }
     retData.legacyAddress = bitbox.Address.toLegacyAddress(thisAddress);
     retData.cashAddress = bitbox.Address.toCashAddress(thisAddress);
-    retData.utxos = response.data.map((utxo: any) => {
-      delete utxo.address;
-      delete utxo.scriptPubKey;
-      return utxo;
-    });
+    retData.slpAddress = Utils.toSlpAddress(retData.cashAddress);
+    retData.utxos = response.data.map(
+      (utxo: UTXOsInterface): UTXOsInterface => {
+        delete utxo.address;
+        delete utxo.scriptPubKey;
+        return utxo;
+      }
+    );
     //console.log(`utxoFromInsight retData: ${util.inspect(retData)}`)
 
     return retData;
@@ -312,7 +315,7 @@ async function utxoBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let addresses: string[] = req.body.addresses;
 
@@ -365,8 +368,8 @@ async function utxoBulk(
 
     // Loops through each address and creates an array of Promises, querying
     // Insight API in parallel.
-    let addressPromises: Promise<any>[] = addresses.map(
-      async (address: string): Promise<any> => {
+    let addressPromises: Promise<AddressUTXOsInterface>[] = addresses.map(
+      async (address: string): Promise<AddressUTXOsInterface> => {
         return utxoFromInsight(address);
       }
     );
@@ -398,7 +401,7 @@ async function utxoSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const address: string = req.params.address;
     if (!address || address === "") {
@@ -437,7 +440,7 @@ async function utxoSingle(
     }
 
     // Query the Insight API.
-    const retData: Promise<any> = await utxoFromInsight(address);
+    const retData: AddressUTXOsInterface = await utxoFromInsight(address);
 
     // Return the array of retrieved address information.
     res.status(200);

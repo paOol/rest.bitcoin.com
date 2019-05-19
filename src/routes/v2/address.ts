@@ -31,7 +31,11 @@ router.post("/transactions", transactionsBulk);
 router.get("/fromXPub/:xpub", fromXPubSingle);
 
 // Root API endpoint. Simply acknowledges that it exists.
-function root(res: express.Response): express.Response {
+function root(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): express.Response {
   return res.json({ status: "address" });
 }
 

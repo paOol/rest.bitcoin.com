@@ -1,15 +1,15 @@
-"use strict"
-
+// imports
+import axios, { AxiosPromise, AxiosResponse } from "axios"
 import * as express from "express"
-import * as requestUtils from "./services/requestUtils"
-import * as bitbox from "./services/bitbox"
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
-import axios from "axios"
-const routeUtils = require("./route-utils")
+import { BlockInterface } from "./interfaces/RESTInterfaces"
+
+// consts
+const logger: any = require("./logging.js")
+const wlogger: any = require("../../util/winston-logging")
+const routeUtils: any = require("./route-utils")
 
 // Used for processing error messages before sending them to the user.
-const util = require("util")
+const util: any = require("util")
 util.inspect.defaultOptions = { depth: 3 }
 
 const router: express.Router = express.Router()
@@ -25,7 +25,7 @@ function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): express.Response {
   return res.json({ status: "block" })
 }
 
@@ -34,9 +34,9 @@ async function detailsByHashSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hash = req.params.hash
+    const hash: string = req.params.hash
 
     // Reject if hash is empty
     if (!hash || hash === "") {
@@ -44,12 +44,12 @@ async function detailsByHashSingle(
       return res.json({ error: "hash must not be empty" })
     }
 
-    const response = await axios.get(
+    const response: AxiosResponse = await axios.get(
       `${process.env.BITCOINCOM_BASEURL}block/${hash}`
     )
     //console.log(`response.data: ${JSON.stringify(response.data,null,2)}`)
 
-    const parsed = response.data
+    const parsed: BlockInterface = response.data
     return res.json(parsed)
   } catch (error) {
     //console.log(`error object: ${util.inspect(error)}`)
@@ -79,9 +79,9 @@ async function detailsByHashBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hashes = req.body.hashes
+    const hashes: string[] = req.body.hashes
 
     // Reject if hashes is not an array.
     if (!Array.isArray(hashes)) {
@@ -100,8 +100,8 @@ async function detailsByHashBulk(
     }
 
     // Validate each hash in the array.
-    for (let i = 0; i < hashes.length; i++) {
-      const thisHash = hashes[i]
+    for (let i: number = 0; i < hashes.length; i++) {
+      const thisHash: string = hashes[i]
 
       if (thisHash.length !== 64) {
         res.status(400)
@@ -112,15 +112,21 @@ async function detailsByHashBulk(
     }
 
     // Loop through each hash and creates an array of promises
-    const axiosPromises = hashes.map(async (hash: any) => {
-      return axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`)
-    })
+    const axiosPromises: AxiosPromise<BlockInterface>[] = hashes.map(
+      async (hash: string): Promise<any> => {
+        return axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`)
+      }
+    )
 
     // Wait for all parallel promises to return.
-    const axiosResult: Array<any> = await axios.all(axiosPromises)
+    const axiosResult: AxiosResponse<BlockInterface>[] = await axios.all(
+      axiosPromises
+    )
 
     // Extract the data component from the axios response.
-    const result = axiosResult.map(x => x.data)
+    const result: BlockInterface[] = axiosResult.map(
+      (x: AxiosResponse) => x.data
+    )
     //console.log(`result: ${util.inspect(result)}`)
 
     res.status(200)
@@ -153,9 +159,9 @@ async function detailsByHeightSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const height = req.params.height
+    const height: string = req.params.height
 
     // Reject if id is empty
     if (!height || height === "") {
@@ -163,20 +169,15 @@ async function detailsByHeightSingle(
       return res.json({ error: "height must not be empty" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "getblockhash"
     requestConfig.data.method = "getblockhash"
     requestConfig.data.params = [parseInt(height)]
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
 
-    const hash = response.data.result
+    const hash: string = response.data.result
     //console.log(`response.data: ${util.inspect(response.data)}`)
 
     // Call detailsByHashSingle now that the hash has been retrieved.
@@ -203,9 +204,9 @@ async function detailsByHeightBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let heights = req.body.heights
+    let heights: string[] = req.body.heights
 
     // Reject if heights is not an array.
     if (!Array.isArray(heights)) {
@@ -226,8 +227,8 @@ async function detailsByHeightBulk(
     logger.debug(`Executing detailsByHeight with these heights: `, heights)
 
     // Validate each element in the address array.
-    for (let i = 0; i < heights.length; i++) {
-      const thisHeight = heights[i]
+    for (let i: number = 0; i < heights.length; i++) {
+      const thisHeight: string = heights[i]
 
       // Reject if id is empty
       if (!thisHeight || thisHeight === "") {
@@ -237,30 +238,27 @@ async function detailsByHeightBulk(
     }
 
     // Loop through each height and creates an array of requests to call in parallel
-    const promises = heights.map(async (height: any) => {
-      const {
-        BitboxHTTP,
-        username,
-        password,
-        requestConfig
-      } = routeUtils.setEnvVars()
-      requestConfig.data.id = "getblockhash"
-      requestConfig.data.method = "getblockhash"
-      requestConfig.data.params = [parseInt(height)]
+    const promises: Promise<BlockInterface>[] = heights.map(
+      async (height: string): Promise<BlockInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
+        requestConfig.data.id = "getblockhash"
+        requestConfig.data.method = "getblockhash"
+        requestConfig.data.params = [parseInt(height)]
 
-      const response = await BitboxHTTP(requestConfig)
+        const response: AxiosResponse = await BitboxHTTP(requestConfig)
 
-      const hash = response.data.result
+        const hash: string = response.data.result
 
-      const axiosResult = await axios.get(
-        `${process.env.BITCOINCOM_BASEURL}block/${hash}`
-      )
+        const axiosResult: AxiosResponse = await axios.get(
+          `${process.env.BITCOINCOM_BASEURL}block/${hash}`
+        )
 
-      return axiosResult.data
-    })
+        return axiosResult.data
+      }
+    )
 
     // Wait for all parallel Insight requests to return.
-    let result: Array<any> = await axios.all(promises)
+    let result: BlockInterface[] = await axios.all(promises)
 
     res.status(200)
     return res.json(result)

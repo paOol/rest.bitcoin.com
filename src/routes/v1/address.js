@@ -5,8 +5,8 @@ const router = express.Router()
 const axios = require("axios")
 const RateLimit = require("express-rate-limit")
 
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
+const BITBOX = require("bitbox-sdk").BITBOX
+const bitbox = new BITBOX()
 
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
@@ -59,7 +59,7 @@ router.get(
       addresses = addresses.map(address => {
         const path = `${
           process.env.BITCOINCOM_BASEURL
-        }addr/${BITBOX.Address.toLegacyAddress(address)}`
+        }addr/${bitbox.Address.toLegacyAddress(address)}`
         return axios.get(path) // Returns a promise.
       })
 
@@ -67,10 +67,10 @@ router.get(
         axios.spread((...args) => {
           for (let i = 0; i < args.length; i++) {
             const parsed = args[i].data
-            parsed.legacyAddress = BITBOX.Address.toLegacyAddress(
+            parsed.legacyAddress = bitbox.Address.toLegacyAddress(
               parsed.addrStr
             )
-            parsed.cashAddress = BITBOX.Address.toCashAddress(parsed.addrStr)
+            parsed.cashAddress = bitbox.Address.toCashAddress(parsed.addrStr)
             delete parsed.addrStr
             result.push(parsed)
           }
@@ -80,7 +80,7 @@ router.get(
     } catch (error) {
       let path = `${
         process.env.BITCOINCOM_BASEURL
-      }addr/${BITBOX.Address.toLegacyAddress(req.params.address)}`
+      }addr/${bitbox.Address.toLegacyAddress(req.params.address)}`
       if (req.query.from && req.query.to)
         path = `${path}?from=${req.query.from}&to=${req.query.to}`
 
@@ -89,10 +89,10 @@ router.get(
         .then(response => {
           const parsed = response.data
           delete parsed.addrStr
-          parsed.legacyAddress = BITBOX.Address.toLegacyAddress(
+          parsed.legacyAddress = bitbox.Address.toLegacyAddress(
             req.params.address
           )
-          parsed.cashAddress = BITBOX.Address.toCashAddress(req.params.address)
+          parsed.cashAddress = bitbox.Address.toCashAddress(req.params.address)
           res.json(parsed)
         })
         .catch(error => {
@@ -115,7 +115,7 @@ router.get(
       }
 
       addresses = addresses.map(address =>
-        BITBOX.Address.toLegacyAddress(address)
+        bitbox.Address.toLegacyAddress(address)
       )
       const final = []
       addresses.forEach(address => {
@@ -126,8 +126,8 @@ router.get(
         .then(response => {
           const parsed = response.data
           parsed.forEach(data => {
-            data.legacyAddress = BITBOX.Address.toLegacyAddress(data.address)
-            data.cashAddress = BITBOX.Address.toCashAddress(data.address)
+            data.legacyAddress = bitbox.Address.toLegacyAddress(data.address)
+            data.cashAddress = bitbox.Address.toCashAddress(data.address)
             delete data.address
             addresses.forEach((address, index) => {
               if (addresses[index] === data.legacyAddress)
@@ -145,16 +145,16 @@ router.get(
         .get(
           `${
             process.env.BITCOINCOM_BASEURL
-          }addr/${BITBOX.Address.toLegacyAddress(req.params.address)}/utxo`
+          }addr/${bitbox.Address.toLegacyAddress(req.params.address)}/utxo`
         )
         .then(response => {
           const parsed = response.data
           parsed.forEach(data => {
             delete data.address
-            data.legacyAddress = BITBOX.Address.toLegacyAddress(
+            data.legacyAddress = bitbox.Address.toLegacyAddress(
               req.params.address
             )
-            data.cashAddress = BITBOX.Address.toCashAddress(req.params.address)
+            data.cashAddress = bitbox.Address.toCashAddress(req.params.address)
           })
           res.json(parsed)
         })
@@ -178,7 +178,7 @@ router.get(
         })
       }
       addresses = addresses.map(address =>
-        BITBOX.Address.toLegacyAddress(address)
+        bitbox.Address.toLegacyAddress(address)
       )
       const final = []
       addresses.forEach(address => {
@@ -189,8 +189,8 @@ router.get(
         .then(response => {
           const parsed = response.data
           parsed.forEach(data => {
-            data.legacyAddress = BITBOX.Address.toLegacyAddress(data.address)
-            data.cashAddress = BITBOX.Address.toCashAddress(data.address)
+            data.legacyAddress = bitbox.Address.toLegacyAddress(data.address)
+            data.cashAddress = bitbox.Address.toCashAddress(data.address)
             delete data.address
             if (data.confirmations === 0) {
               addresses.forEach((address, index) => {
@@ -209,14 +209,14 @@ router.get(
         .get(
           `${
             process.env.BITCOINCOM_BASEURL
-          }addr/${BITBOX.Address.toLegacyAddress(req.params.address)}/utxo`
+          }addr/${bitbox.Address.toLegacyAddress(req.params.address)}/utxo`
         )
         .then(response => {
           const parsed = response.data
           const unconfirmed = []
           parsed.forEach(data => {
-            data.legacyAddress = BITBOX.Address.toLegacyAddress(data.address)
-            data.cashAddress = BITBOX.Address.toCashAddress(data.address)
+            data.legacyAddress = bitbox.Address.toLegacyAddress(data.address)
+            data.cashAddress = bitbox.Address.toCashAddress(data.address)
             delete data.address
             if (data.confirmations === 0) unconfirmed.push(data)
           })
@@ -241,7 +241,7 @@ router.get(
         })
       }
       addresses = addresses.map(address =>
-        BITBOX.Address.toLegacyAddress(address)
+        bitbox.Address.toLegacyAddress(address)
       )
       const final = []
       addresses.forEach(address => {
@@ -260,7 +260,7 @@ router.get(
         .get(
           `${
             process.env.BITCOINCOM_BASEURL
-          }txs/?address=${BITBOX.Address.toLegacyAddress(req.params.address)}`
+          }txs/?address=${bitbox.Address.toLegacyAddress(req.params.address)}`
         )
         .then(response => {
           res.json(response.data)
@@ -284,7 +284,7 @@ router.get(
         })
       }
       addresses = addresses.map(address =>
-        BITBOX.Address.toLegacyAddress(address)
+        bitbox.Address.toLegacyAddress(address)
       )
       const final = []
       addresses.forEach(address => {
@@ -303,7 +303,7 @@ router.get(
         .get(
           `${
             process.env.BITCOINCOM_BASEURL
-          }txs/?address=${BITBOX.Address.toLegacyAddress(req.params.address)}`
+          }txs/?address=${bitbox.Address.toLegacyAddress(req.params.address)}`
         )
         .then(response => {
           res.json(response.data)

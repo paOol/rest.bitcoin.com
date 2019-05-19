@@ -1,7 +1,8 @@
-"use strict"
+// imports
+import * as express from "express"
 
-const express = require("express")
-const router = express.Router()
+// consts
+const router: any = express.Router()
 //const axios = require("axios");
 
 //const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default;

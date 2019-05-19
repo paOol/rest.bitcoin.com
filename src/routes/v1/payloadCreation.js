@@ -11,8 +11,8 @@ const BitboxHTTP = axios.create({
 const username = process.env.RPC_USERNAME
 const password = process.env.RPC_PASSWORD
 
-const BITBOXCli = require("bitbox-sdk/lib/bitbox-sdk").default
-const BITBOX = new BITBOXCli()
+const BITBOX = require("bitbox-sdk").BITBOX
+const bitbox = new BITBOX()
 
 const config = {
   payloadCreationRateLimit1: undefined,
@@ -343,7 +343,7 @@ router.post(
   config.payloadCreationRateLimit14,
   async (req, res, next) => {
     const params = [
-      BITBOX.Address.toCashAddress(req.params.toAddress),
+      bitbox.Address.toCashAddress(req.params.toAddress),
       parseInt(req.params.propertyId),
       "100"
     ]
@@ -366,7 +366,7 @@ router.post(
   config.payloadCreationRateLimit15,
   async (req, res, next) => {
     const params = [
-      BITBOX.Address.toCashAddress(req.params.toAddress),
+      bitbox.Address.toCashAddress(req.params.toAddress),
       parseInt(req.params.propertyId),
       "100"
     ]

@@ -1,33 +1,15 @@
-"use strict"
-
+// imports
+import { AxiosResponse } from "axios"
 import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
+import { MiningInfoInterface } from "./interfaces/RESTInterfaces"
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
+// consts
+const router: any = express.Router()
 // Used to convert error messages to strings, to safely pass to users.
 const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
-
-const BitboxHTTP = axios.create({
-  baseURL: process.env.RPC_BASEURL
-})
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
-
-const requestConfig: IRequestConfig = {
-  method: "post",
-  auth: {
-    username: username,
-    password: password
-  },
-  data: {
-    jsonrpc: "1.0"
-  }
-}
 
 router.get("/", root)
 router.get("/getMiningInfo", getMiningInfo)
@@ -37,7 +19,7 @@ function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): express.Response {
   return res.json({ status: "mining" })
 }
 
@@ -70,22 +52,18 @@ async function getMiningInfo(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "getmininginfo"
     requestConfig.data.method = "getmininginfo"
     requestConfig.data.params = []
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const miningInfoInterface: MiningInfoInterface = response.data.result
 
-    return res.json(response.data.result)
+    return res.json(miningInfoInterface)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -105,27 +83,23 @@ async function getNetworkHashPS(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let nblocks = 120 // Default
-    let height = -1 // Default
+    let nblocks: number = 120 // Default
+    let height: number = -1 // Default
     if (req.query.nblocks) nblocks = parseInt(req.query.nblocks)
     if (req.query.height) height = parseInt(req.query.height)
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "getnetworkhashps"
     requestConfig.data.method = "getnetworkhashps"
     requestConfig.data.params = [nblocks, height]
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const networkHashPS: number = response.data.result
 
-    return res.json(response.data.result)
+    return res.json(networkHashPS)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)

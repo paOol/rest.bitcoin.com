@@ -1,50 +1,35 @@
-"use strict"
-
+// imports
+import axios, { AxiosResponse } from "axios"
 import * as express from "express"
-const router = express.Router()
-import axios from "axios"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
-import { IResponse } from "./interfaces/IResponse"
-const routeUtils = require("./route-utils")
-const logger = require("./logging.js")
-const wlogger = require("../../util/winston-logging")
+import * as util from "util"
+import {
+  DecodedScriptInterface,
+  RawTransactionInterface
+} from "./interfaces/RESTInterfaces"
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
+
+// consts
+const router: any = express.Router()
 
 // Used to convert error messages to strings, to safely pass to users.
-const util = require("util")
 util.inspect.defaultOptions = { depth: 1 }
-
-const BitboxHTTP = axios.create({
-  baseURL: process.env.RPC_BASEURL
-})
-const username = process.env.RPC_USERNAME
-const password = process.env.RPC_PASSWORD
-
-const requestConfig: IRequestConfig = {
-  method: "post",
-  auth: {
-    username: username,
-    password: password
-  },
-  data: {
-    jsonrpc: "1.0"
-  }
-}
 
 router.get("/", root)
 router.get("/decodeRawTransaction/:hex", decodeRawTransactionSingle)
 router.post("/decodeRawTransaction", decodeRawTransactionBulk)
 router.get("/decodeScript/:hex", decodeScriptSingle)
 router.post("/decodeScript", decodeScriptBulk)
-router.post("/getRawTransaction", getRawTransactionBulk)
 router.get("/getRawTransaction/:txid", getRawTransactionSingle)
-router.post("/sendRawTransaction", sendRawTransactionBulk)
+router.post("/getRawTransaction", getRawTransactionBulk)
 router.get("/sendRawTransaction/:hex", sendRawTransactionSingle)
+router.post("/sendRawTransaction", sendRawTransactionBulk)
 
 function root(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): express.Response {
   return res.json({ status: "rawtransactions" })
 }
 
@@ -54,9 +39,9 @@ async function decodeRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hex = req.params.hex
+    const hex: string = req.params.hex
 
     // Throw an error if hex is empty.
     if (!hex || hex === "") {
@@ -64,19 +49,15 @@ async function decodeRawTransactionSingle(
       return res.json({ error: "hex can not be empty" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "decoderawtransaction"
     requestConfig.data.method = "decoderawtransaction"
     requestConfig.data.params = [hex]
 
-    const response = await BitboxHTTP(requestConfig)
-    return res.json(response.data.result)
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const rawTransaction: RawTransactionInterface = response.data.result
+    return res.json(rawTransaction)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -101,9 +82,9 @@ async function decodeRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let hexes = req.body.hexes
+    let hexes: string[] = req.body.hexes
 
     if (!Array.isArray(hexes)) {
       res.status(400)
@@ -118,11 +99,9 @@ async function decodeRawTransactionBulk(
       })
     }
 
-    const results = []
-
     // Validate each element in the address array.
-    for (let i = 0; i < hexes.length; i++) {
-      const thisHex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const thisHex: string = hexes[i]
 
       // Reject if id is empty
       if (!thisHex || thisHex === "") {
@@ -132,25 +111,24 @@ async function decodeRawTransactionBulk(
     }
 
     // Loop through each height and creates an array of requests to call in parallel
-    const promises = hexes.map(async (hex: any) => {
-      const {
-        BitboxHTTP,
-        username,
-        password,
-        requestConfig
-      } = routeUtils.setEnvVars()
-      requestConfig.data.id = "decoderawtransaction"
-      requestConfig.data.method = "decoderawtransaction"
-      requestConfig.data.params = [hex]
+    const promises: Promise<RawTransactionInterface>[] = hexes.map(
+      async (hex: string): Promise<RawTransactionInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
+        requestConfig.data.id = "decoderawtransaction"
+        requestConfig.data.method = "decoderawtransaction"
+        requestConfig.data.params = [hex]
 
-      return await BitboxHTTP(requestConfig)
-    })
+        return await BitboxHTTP(requestConfig)
+      }
+    )
 
     // Wait for all parallel Insight requests to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: any[] = await axios.all(promises)
 
     // Retrieve the data part of the result.
-    const result = axiosResult.map(x => x.data.result)
+    const result: RawTransactionInterface[] = axiosResult.map(
+      (x: AxiosResponse): RawTransactionInterface => x.data.result
+    )
 
     res.status(200)
     return res.json(result)
@@ -216,9 +194,9 @@ async function decodeScriptSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hex = req.params.hex
+    const hex: string = req.params.hex
 
     // Throw an error if hex is empty.
     if (!hex || hex === "") {
@@ -226,19 +204,16 @@ async function decodeScriptSingle(
       return res.json({ error: "hex can not be empty" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "decodescript"
     requestConfig.data.method = "decodescript"
     requestConfig.data.params = [hex]
 
-    const response = await BitboxHTTP(requestConfig)
-    return res.json(response.data.result)
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const decodedScriptInterface: DecodedScriptInterface = response.data.result
+
+    return res.json(decodedScriptInterface)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -262,9 +237,9 @@ async function decodeScriptBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hexes = req.body.hexes
+    const hexes: string[] = req.body.hexes
 
     // Validation
     if (!Array.isArray(hexes)) {
@@ -281,8 +256,8 @@ async function decodeScriptBulk(
     }
 
     // Validate each hex in the array
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex: string = hexes[i]
 
       // Throw an error if hex is empty.
       if (!hex || hex === "") {
@@ -292,26 +267,24 @@ async function decodeScriptBulk(
     }
 
     // Loop through each hex and create an array of promises
-    const promises = hexes.map(async (hex: any) => {
-      const {
-        BitboxHTTP,
-        username,
-        password,
-        requestConfig
-      } = routeUtils.setEnvVars()
-      requestConfig.data.id = "decodescript"
-      requestConfig.data.method = "decodescript"
-      requestConfig.data.params = [hex]
+    const promises: Promise<DecodedScriptInterface>[] = hexes.map(
+      async (hex: string): Promise<DecodedScriptInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
+        requestConfig.data.id = "decodescript"
+        requestConfig.data.method = "decodescript"
+        requestConfig.data.params = [hex]
 
-      const response = await BitboxHTTP(requestConfig)
-      return response
-    })
+        return await BitboxHTTP(requestConfig)
+      }
+    )
 
     // Wait for all parallel promises to return.
-    const resolved: Array<any> = await Promise.all(promises)
+    const resolved: any[] = await Promise.all(promises)
 
     // Retrieve the data from each resolved promise.
-    const result = resolved.map(x => x.data.result)
+    const result: DecodedScriptInterface[] = resolved.map(
+      (x: AxiosResponse): DecodedScriptInterface => x.data.result
+    )
 
     res.status(200)
     return res.json(result)
@@ -333,20 +306,18 @@ async function decodeScriptBulk(
 }
 
 // Retrieve raw transactions details from the full node.
-async function getRawTransactionsFromNode(txid: string, verbose: number) {
+async function getRawTransactionsFromNode(
+  txid: string,
+  verbose: number
+): Promise<RawTransactionInterface> {
   try {
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "getrawtransaction"
     requestConfig.data.method = "getrawtransaction"
     requestConfig.data.params = [txid, verbose]
 
-    const response = await BitboxHTTP(requestConfig)
+    const response: any = await BitboxHTTP(requestConfig)
 
     return response.data.result
   } catch (err) {
@@ -361,12 +332,12 @@ async function getRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let verbose = 0
+    let verbose: number = 0
     if (req.body.verbose) verbose = 1
 
-    let txids = req.body.txids
+    let txids: string[] = req.body.txids
     if (!Array.isArray(txids)) {
       res.status(400)
       return res.json({ error: "txids must be an array" })
@@ -380,17 +351,9 @@ async function getRawTransactionBulk(
       })
     }
 
-    // stub response object
-    let returnResponse: IResponse = {
-      status: 100,
-      json: {
-        error: ""
-      }
-    }
-
     // Validate each txid in the array.
-    for (let i = 0; i < txids.length; i++) {
-      const txid = txids[i]
+    for (let i: number = 0; i < txids.length; i++) {
+      const txid: string = txids[i]
 
       if (!txid || txid === "") {
         res.status(400)
@@ -406,12 +369,14 @@ async function getRawTransactionBulk(
     }
 
     // Loop through each txid and create an array of promises
-    const promises = txids.map(async (txid: any) => {
-      return getRawTransactionsFromNode(txid, verbose)
-    })
+    const promises: Promise<RawTransactionInterface>[] = txids.map(
+      async (txid: string): Promise<RawTransactionInterface> => {
+        return getRawTransactionsFromNode(txid, verbose)
+      }
+    )
 
     // Wait for all parallel promises to return.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: any[] = await axios.all(promises)
 
     res.status(200)
     return res.json(axiosResult)
@@ -438,18 +403,21 @@ async function getRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    let verbose = 0
+    let verbose: number = 0
     if (req.query.verbose === "true") verbose = 1
 
-    const txid = req.params.txid
+    const txid: string = req.params.txid
     if (!txid || txid === "") {
       res.status(400)
       return res.json({ error: "txid can not be empty" })
     }
 
-    const data = await getRawTransactionsFromNode(txid, verbose)
+    const data: RawTransactionInterface = await getRawTransactionsFromNode(
+      txid,
+      verbose
+    )
 
     return res.json(data)
   } catch (err) {
@@ -474,10 +442,10 @@ async function sendRawTransactionBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
     // Validation
-    const hexes = req.body.hexes
+    const hexes: string[] = req.body.hexes
 
     // Reject if input is not an array
     if (!Array.isArray(hexes)) {
@@ -485,12 +453,7 @@ async function sendRawTransactionBulk(
       return res.json({ error: "hex must be an array" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     // Enforce array size rate limits
     if (!routeUtils.validateArraySize(req, hexes)) {
@@ -501,8 +464,8 @@ async function sendRawTransactionBulk(
     }
 
     // Validate each element
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex: string = hexes[i]
 
       if (hex === "") {
         res.status(400)
@@ -538,15 +501,15 @@ async function sendRawTransactionBulk(
           */
 
     // Sending them serially.
-    const result = []
-    for (let i = 0; i < hexes.length; i++) {
-      const hex = hexes[i]
+    const result: any[] = []
+    for (let i: number = 0; i < hexes.length; i++) {
+      const hex: string = hexes[i]
 
       requestConfig.data.id = "sendrawtransaction"
       requestConfig.data.method = "sendrawtransaction"
       requestConfig.data.params = [hex]
 
-      const rpcResult = await BitboxHTTP(requestConfig)
+      const rpcResult: AxiosResponse = await BitboxHTTP(requestConfig)
 
       result.push(rpcResult.data.result)
     }
@@ -573,9 +536,9 @@ async function sendRawTransactionSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
-    const hex = req.params.hex // URL parameter
+    const hex: string = req.params.hex // URL parameter
 
     // Reject if input is not an array or a string
     if (typeof hex !== "string") {
@@ -591,21 +554,16 @@ async function sendRawTransactionSingle(
       })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     // RPC call
     requestConfig.data.id = "sendrawtransaction"
     requestConfig.data.method = "sendrawtransaction"
     requestConfig.data.params = [hex]
 
-    const rpcResult = await BitboxHTTP(requestConfig)
+    const rpcResult: AxiosResponse = await BitboxHTTP(requestConfig)
 
-    const result = rpcResult.data.result
+    const result: any = rpcResult.data.result
 
     res.status(200)
     return res.json(result)

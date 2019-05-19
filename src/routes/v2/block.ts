@@ -1,6 +1,7 @@
 // imports
 import axios, { AxiosPromise, AxiosResponse } from "axios";
 import * as express from "express";
+import { BlockInterface } from "./interfaces/RESTInterfaces";
 
 // consts
 const logger: any = require("./logging.js");
@@ -33,7 +34,7 @@ async function detailsByHashSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const hash: string = req.params.hash;
 
@@ -48,7 +49,7 @@ async function detailsByHashSingle(
     );
     //console.log(`response.data: ${JSON.stringify(response.data,null,2)}`)
 
-    const parsed: any = response.data;
+    const parsed: BlockInterface = response.data;
     return res.json(parsed);
   } catch (error) {
     //console.log(`error object: ${util.inspect(error)}`)
@@ -78,7 +79,7 @@ async function detailsByHashBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const hashes: string[] = req.body.hashes;
 
@@ -111,15 +112,21 @@ async function detailsByHashBulk(
     }
 
     // Loop through each hash and creates an array of promises
-    const axiosPromises: AxiosPromise<any>[] = hashes.map(async (hash: any) => {
-      return axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`);
-    });
+    const axiosPromises: AxiosPromise<BlockInterface>[] = hashes.map(
+      async (hash: string): Promise<any> => {
+        return axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`);
+      }
+    );
 
     // Wait for all parallel promises to return.
-    const axiosResult: AxiosResponse<any>[] = await axios.all(axiosPromises);
+    const axiosResult: AxiosResponse<BlockInterface>[] = await axios.all(
+      axiosPromises
+    );
 
     // Extract the data component from the axios response.
-    const result: any = axiosResult.map(x => x.data);
+    const result: BlockInterface[] = axiosResult.map(
+      (x: AxiosResponse) => x.data
+    );
     //console.log(`result: ${util.inspect(result)}`)
 
     res.status(200);
@@ -152,7 +159,7 @@ async function detailsByHeightSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const height: string = req.params.height;
 
@@ -202,7 +209,7 @@ async function detailsByHeightBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let heights: string[] = req.body.heights;
 

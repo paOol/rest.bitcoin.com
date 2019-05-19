@@ -95,3 +95,26 @@ export interface VoutInterface {
   spentIndex: null;
   spentHeight: null;
 }
+
+export interface BlockInterface {
+  hash: string;
+  size: number;
+  height: number;
+  version: number;
+  merkleroot: string;
+  tx: string[];
+  time: number;
+  nonce: number;
+  bits: string;
+  difficulty: number;
+  chainwork: string;
+  confirmations: number;
+  previousblockhash: string;
+  nextblockhash: string;
+  reward: number;
+  isMainChain: true;
+  poolInfo: {
+    poolName: string;
+    url: string;
+  };
+}

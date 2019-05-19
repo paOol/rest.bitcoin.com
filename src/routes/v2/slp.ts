@@ -1,36 +1,22 @@
 // imports
 import axios, { AxiosResponse } from "axios"
 import * as express from "express"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
+import * as util from "util"
+import logger = require("./logging.js")
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
 const router: any = express.Router()
-const routeUtils: any = require("./route-utils")
-const logger: any = require("./logging.js")
-const wlogger: any = require("../../util/winston-logging")
-
-// Used to convert error messages to strings, to safely pass to users.
-const util: any = require("util")
-util.inspect.defaultOptions = { depth: 5 }
-
 const SLPSDK: any = require("slp-sdk")
 const SLP: any = new SLPSDK()
-
-// Instantiate SLPJS.
 const slp: any = require("slpjs")
-const slpjs: any = new slp.Slp(SLP)
 const utils: any = slp.Utils
-
-// SLP tx db (LevelDB for caching)
 const level: any = require("level")
 const slpTxDb: any = level("./slp-tx-db")
 
-// Setup JSON RPC
-const BitboxHTTP: any = axios.create({
-  baseURL: process.env.RPC_BASEURL
-})
-const username: string = process.env.RPC_USERNAME
-const password: string = process.env.RPC_PASSWORD
+// Used to convert error messages to strings, to safely pass to users.
+util.inspect.defaultOptions = { depth: 5 }
 
 // Setup REST and TREST URLs used by slpjs
 // Dev note: this allows for unit tests to mock the URL.
@@ -81,40 +67,37 @@ if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
 // TODO: Add unit tests for this function.
 async function getRawTransactionsFromNode(txids: string[]): Promise<any> {
   try {
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
-    const txPromises: Promise<any>[] = txids.map(async txid => {
-      // Check slpTxDb
-      try {
-        if (slpTxDb.isOpen()) {
-          const rawTx = await slpTxDb.get(txid)
-          return rawTx
+    const txPromises: Promise<any>[] = txids.map(
+      async (txid: string): Promise<any> => {
+        // Check slpTxDb
+        try {
+          if (slpTxDb.isOpen()) {
+            const rawTx = await slpTxDb.get(txid)
+            return rawTx
+          }
+        } catch (err) {}
+
+        requestConfig.data.id = "getrawtransaction"
+        requestConfig.data.method = "getrawtransaction"
+        requestConfig.data.params = [txid, 0]
+
+        const response: any = await BitboxHTTP(requestConfig)
+        const result: AxiosResponse = response.data.result
+
+        // Insert to slpTxDb
+        try {
+          if (slpTxDb.isOpen()) {
+            await slpTxDb.put(txid, result)
+          }
+        } catch (err) {
+          // console.log("Error inserting to slpTxDb", err)
         }
-      } catch (err) {}
 
-      requestConfig.data.id = "getrawtransaction"
-      requestConfig.data.method = "getrawtransaction"
-      requestConfig.data.params = [txid, 0]
-
-      const response: any = await BitboxHTTP(requestConfig)
-      const result: any = response.data.result
-
-      // Insert to slpTxDb
-      try {
-        if (slpTxDb.isOpen()) {
-          await slpTxDb.put(txid, result)
-        }
-      } catch (err) {
-        // console.log("Error inserting to slpTxDb", err)
+        return result
       }
-
-      return result
-    })
+    )
 
     const results: any[] = await axios.all(txPromises)
     return results
@@ -149,20 +132,6 @@ const slpValidator: any = createValidator(
   process.env.NETWORK,
   getRawTransactionsFromNode
 )
-
-// Instantiate the bitboxproxy class in SLPJS.
-const bitboxproxy: any = new slp.BitboxNetwork(SLP, slpValidator)
-
-const requestConfig: IRequestConfig = {
-  method: "post",
-  auth: {
-    username: username,
-    password: password
-  },
-  data: {
-    jsonrpc: "1.0"
-  }
-}
 
 function formatTokenOutput(token: any): any {
   token.tokenDetails.id = token.tokenDetails.tokenIdHex
@@ -274,7 +243,7 @@ async function listSingleToken(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let tokenId: string = req.params.tokenId
 
@@ -304,7 +273,7 @@ async function listBulkToken(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let tokenIds: string[] = req.body.tokenIds
 
@@ -463,7 +432,7 @@ async function balancesForAddress(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     // Validate the input data.
     let address: string = req.params.address
@@ -611,7 +580,7 @@ async function balancesForTokenSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     // Validate the input data.
     let tokenId: string = req.params.tokenId
@@ -679,7 +648,7 @@ async function balancesForAddressByTokenID(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
     // Validate input data.
     let address: string = req.params.address
@@ -819,7 +788,7 @@ async function convertAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let address: string = req.params.address
 
@@ -865,7 +834,7 @@ async function convertAddressBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let addresses: string[] = req.body.addresses
 
   // Reject if hashes is not an array.
@@ -921,7 +890,7 @@ async function validateBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const txids: string[] = req.body.txids
 
@@ -991,7 +960,7 @@ async function validateSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const txid: string = req.params.txid
 
@@ -1047,7 +1016,7 @@ async function createTokenType1(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let fundingAddress: string = req.params.fundingAddress
   if (!fundingAddress || fundingAddress === "") {
     res.status(400)
@@ -1136,7 +1105,7 @@ async function mintTokenType1(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let fundingAddress: string = req.params.fundingAddress
   if (!fundingAddress || fundingAddress === "") {
     res.status(400)
@@ -1197,7 +1166,7 @@ async function sendTokenType1(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let fundingAddress: string = req.params.fundingAddress
   if (!fundingAddress || fundingAddress === "") {
     res.status(400)
@@ -1250,7 +1219,7 @@ async function burnTokenType1(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let fundingAddress: string = req.params.fundingAddress
   if (!fundingAddress || fundingAddress === "") {
     res.status(400)
@@ -1297,7 +1266,7 @@ async function burnAllTokenType1(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let fundingAddress: string = req.params.fundingAddress
   if (!fundingAddress || fundingAddress === "") {
     res.status(400)
@@ -1337,7 +1306,7 @@ async function txDetails(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     // Validate input parameter
     const txid: string = req.params.txid
@@ -1390,7 +1359,7 @@ async function tokenStats(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   let tokenId: string = req.params.tokenId
   if (!tokenId || tokenId === "") {
     res.status(400)
@@ -1460,7 +1429,7 @@ async function txsTokenIdAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     // Validate the input data.
     let tokenId: string = req.params.tokenId

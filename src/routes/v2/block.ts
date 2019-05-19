@@ -169,18 +169,13 @@ async function detailsByHeightSingle(
       return res.json({ error: "height must not be empty" });
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars();
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
 
     requestConfig.data.id = "getblockhash";
     requestConfig.data.method = "getblockhash";
     requestConfig.data.params = [parseInt(height)];
 
-    const response: any = await BitboxHTTP(requestConfig);
+    const response: AxiosResponse = await BitboxHTTP(requestConfig);
 
     const hash: string = response.data.result;
     //console.log(`response.data: ${util.inspect(response.data)}`)
@@ -243,19 +238,14 @@ async function detailsByHeightBulk(
     }
 
     // Loop through each height and creates an array of requests to call in parallel
-    const promises: Promise<any>[] = heights.map(
-      async (height: string): Promise<any> => {
-        const {
-          BitboxHTTP,
-          username,
-          password,
-          requestConfig
-        } = routeUtils.setEnvVars();
+    const promises: Promise<BlockInterface>[] = heights.map(
+      async (height: string): Promise<BlockInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
         requestConfig.data.id = "getblockhash";
         requestConfig.data.method = "getblockhash";
         requestConfig.data.params = [parseInt(height)];
 
-        const response: any = await BitboxHTTP(requestConfig);
+        const response: AxiosResponse = await BitboxHTTP(requestConfig);
 
         const hash: string = response.data.result;
 
@@ -268,7 +258,7 @@ async function detailsByHeightBulk(
     );
 
     // Wait for all parallel Insight requests to return.
-    let result: AxiosResponse<any>[] = await axios.all(promises);
+    let result: BlockInterface[] = await axios.all(promises);
 
     res.status(200);
     return res.json(result);

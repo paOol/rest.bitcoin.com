@@ -13,6 +13,7 @@ import {
   MempoolEntryInterface,
   MempoolInfoInterface,
   RawMempoolInterface,
+  TXOutInterface,
   VerboseBlockHeaderInterface
 } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
@@ -502,7 +503,7 @@ async function getRawMempool(
   try {
     const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
 
-    let verbose = false;
+    let verbose: boolean = false;
     if (req.query.verbose && req.query.verbose === "true") verbose = true;
 
     requestConfig.data.id = "getrawmempool";
@@ -510,7 +511,8 @@ async function getRawMempool(
     requestConfig.data.params = [verbose];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
-    const rawMempoolInterface: RawMempoolInterface = response.data.result;
+    const rawMempoolInterface: RawMempoolInterface | string[] =
+      response.data.result;
 
     return res.json(rawMempoolInterface);
   } catch (err) {
@@ -538,20 +540,20 @@ async function getTxOut(
 ): Promise<express.Response> {
   try {
     // Validate input parameter
-    const txid = req.params.txid;
+    const txid: string = req.params.txid;
     if (!txid || txid === "") {
       res.status(400);
       return res.json({ error: "txid can not be empty" });
     }
 
-    let n = req.params.n;
+    let n: string = req.params.n;
     if (n === undefined || n === "") {
       res.status(400);
       return res.json({ error: "n can not be empty" });
     }
-    n = parseInt(n);
+    let number: number = parseInt(n);
 
-    let include_mempool = false;
+    let include_mempool: boolean = false;
     if (req.query.include_mempool && req.query.include_mempool === "true")
       include_mempool = true;
 
@@ -559,11 +561,12 @@ async function getTxOut(
 
     requestConfig.data.id = "gettxout";
     requestConfig.data.method = "gettxout";
-    requestConfig.data.params = [txid, n, include_mempool];
+    requestConfig.data.params = [txid, number, include_mempool];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const txOutInterface: TXOutInterface = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(txOutInterface);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -589,7 +592,7 @@ async function getTxOutProofSingle(
 ): Promise<express.Response> {
   try {
     // Validate input parameter
-    const txid = req.params.txid;
+    const txid: string = req.params.txid;
     if (!txid || txid === "") {
       res.status(400);
       return res.json({ error: "txid can not be empty" });
@@ -602,8 +605,9 @@ async function getTxOutProofSingle(
     requestConfig.data.params = [[txid]];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const txOutProofSingle: string = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(txOutProofSingle);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -628,7 +632,7 @@ async function getTxOutProofBulk(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    let txids = req.body.txids;
+    let txids: string[] = req.body.txids;
 
     // Reject if txids is not an array.
     if (!Array.isArray(txids)) {
@@ -664,20 +668,25 @@ async function getTxOutProofBulk(
     );
 
     // Loop through each txid and creates an array of requests to call in parallel
-    const promises = txids.map(async (txid: any) => {
-      const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
-      requestConfig.data.id = "gettxoutproof";
-      requestConfig.data.method = "gettxoutproof";
-      requestConfig.data.params = [[txid]];
+    const promises: Promise<string>[] = txids.map(
+      async (txid: string): Promise<string> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
+        requestConfig.data.id = "gettxoutproof";
+        requestConfig.data.method = "gettxoutproof";
+        requestConfig.data.params = [[txid]];
 
-      return await BitboxHTTP(requestConfig);
-    });
+        return await BitboxHTTP(requestConfig);
+      }
+    );
 
     // Wait for all parallel promisses to resolve.
-    const axiosResult: Array<any> = await axios.all(promises);
+    const axiosResult: any[] = await axios.all(promises);
 
     // Extract the data component from the axios response.
-    const result = axiosResult.map(x => x.data.result);
+    const result: string[] = axiosResult.map(
+      // TODO: properly type this return value
+      (x: AxiosResponse): any => x.data.result
+    );
 
     res.status(200);
     return res.json(result);
@@ -777,7 +786,7 @@ async function verifyTxOutProofSingle(
 ): Promise<express.Response> {
   try {
     // Validate input parameter
-    const proof = req.params.proof;
+    const proof: string = req.params.proof;
     if (!proof || proof === "") {
       res.status(400);
       return res.json({ error: "proof can not be empty" });
@@ -790,8 +799,9 @@ async function verifyTxOutProofSingle(
     requestConfig.data.params = [req.params.proof];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const verifyTxOutProofSingle: string = response.data.result[0];
 
-    return res.json(response.data.result);
+    return res.json(verifyTxOutProofSingle);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -815,7 +825,7 @@ async function verifyTxOutProofBulk(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    let proofs = req.body.proofs;
+    let proofs: string[] = req.body.proofs;
 
     // Reject if proofs is not an array.
     if (!Array.isArray(proofs)) {
@@ -849,20 +859,25 @@ async function verifyTxOutProofBulk(
     );
 
     // Loop through each proof and creates an array of requests to call in parallel
-    const promises = proofs.map(async (proof: any) => {
-      const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
-      requestConfig.data.id = "verifytxoutproof";
-      requestConfig.data.method = "verifytxoutproof";
-      requestConfig.data.params = [proof];
+    const promises: Promise<string>[] = proofs.map(
+      async (proof: string): Promise<string> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
+        requestConfig.data.id = "verifytxoutproof";
+        requestConfig.data.method = "verifytxoutproof";
+        requestConfig.data.params = [proof];
 
-      return await BitboxHTTP(requestConfig);
-    });
+        return await BitboxHTTP(requestConfig);
+      }
+    );
 
     // Wait for all parallel promisses to resolve.
-    const axiosResult: Array<any> = await axios.all(promises);
+    const axiosResult: any[] = await axios.all(promises);
 
     // Extract the data component from the axios response.
-    const result = axiosResult.map(x => x.data.result[0]);
+    const result: string[] = axiosResult.map(
+      // TODO: properly type this return value
+      (x: AxiosResponse): any => x.data.result
+    );
 
     res.status(200);
     return res.json(result);

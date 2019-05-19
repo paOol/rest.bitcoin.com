@@ -7,6 +7,12 @@
 import axios, { AxiosResponse } from "axios";
 import * as express from "express";
 import * as util from "util";
+import {
+  BlockchainInfoInterface,
+  ChainTipsInterface,
+  MempoolEntry,
+  VerboseBlockHeaderInterface
+} from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
 import routeUtils = require("./route-utils");
 import wlogger = require("../../util/winston-logging");
@@ -92,8 +98,9 @@ async function getBlockchainInfo(
     requestConfig.data.params = [];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const blockchainInfo: BlockchainInfoInterface = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(blockchainInfo);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -123,8 +130,9 @@ async function getBlockCount(
     requestConfig.data.method = "getblockcount";
     requestConfig.data.params = [];
 
-    const response: any = await BitboxHTTP(requestConfig);
-    return res.json(response.data.result);
+    const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const blockCount: number = response.data.result;
+    return res.json(blockCount);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -165,8 +173,10 @@ async function getBlockHeaderSingle(
     requestConfig.data.params = [hash, verbose];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const blockHeader: VerboseBlockHeaderInterface | string =
+      response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(blockHeader);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -215,7 +225,7 @@ async function getBlockHeaderBulk(
 
     // Validate each hash in the array.
     for (let i: number = 0; i < hashes.length; i++) {
-      const hash = hashes[i];
+      const hash: string = hashes[i];
 
       if (hash.length !== 64) {
         res.status(400);
@@ -226,18 +236,26 @@ async function getBlockHeaderBulk(
     const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
 
     // Loop through each hash and creates an array of requests to call in parallel
-    const promises: Promise<any>[] = hashes.map(async (hash: any) => {
-      requestConfig.data.id = "getblockheader";
-      requestConfig.data.method = "getblockheader";
-      requestConfig.data.params = [hash, verbose];
+    const promises: Promise<
+      VerboseBlockHeaderInterface | string
+    >[] = hashes.map(
+      async (hash: string): Promise<VerboseBlockHeaderInterface | string> => {
+        requestConfig.data.id = "getblockheader";
+        requestConfig.data.method = "getblockheader";
+        requestConfig.data.params = [hash, verbose];
 
-      return await BitboxHTTP(requestConfig);
-    });
+        return await BitboxHTTP(requestConfig);
+      }
+    );
 
-    const axiosResult: Array<any> = await axios.all(promises);
+    // TODO: properly type these axios.all calls
+    const axiosResult: any[] = await axios.all(promises);
 
     // Extract the data component from the axios response.
-    const result: any = axiosResult.map((x: any): any => x.data.result);
+    const result: VerboseBlockHeaderInterface[] | string[] = axiosResult.map(
+      // TODO: properly type this return value
+      (x: AxiosResponse): any => x.data.result
+    );
 
     res.status(200);
     return res.json(result);
@@ -271,7 +289,8 @@ async function getChainTips(
     requestConfig.data.params = [];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
-    return res.json(response.data.result);
+    const chainTips: ChainTipsInterface = response.data.result;
+    return res.json(chainTips);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -303,8 +322,9 @@ async function getDifficulty(
     requestConfig.data.params = [];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const difficulty: number = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(difficulty);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -343,8 +363,9 @@ async function getMempoolEntrySingle(
     requestConfig.data.params = [txid];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const mempoolEntry: MempoolEntry = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(mempoolEntry);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -391,8 +412,8 @@ async function getMempoolEntryBulk(
     );
 
     // Validate each element in the array
-    for (let i = 0; i < txids.length; i++) {
-      const txid = txids[i];
+    for (let i: number = 0; i < txids.length; i++) {
+      const txid: string = txids[i];
 
       if (txid.length !== 64) {
         res.status(400);
@@ -401,19 +422,24 @@ async function getMempoolEntryBulk(
     }
 
     // Loop through each txid and creates an array of requests to call in parallel
-    const promises = txids.map(async (txid: any) => {
-      const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
-      requestConfig.data.id = "getmempoolentry";
-      requestConfig.data.method = "getmempoolentry";
-      requestConfig.data.params = [txid];
+    const promises: Promise<MempoolEntry>[] = txids.map(
+      async (txid: string): Promise<MempoolEntry> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
+        requestConfig.data.id = "getmempoolentry";
+        requestConfig.data.method = "getmempoolentry";
+        requestConfig.data.params = [txid];
 
-      return await BitboxHTTP(requestConfig);
-    });
+        return await BitboxHTTP(requestConfig);
+      }
+    );
 
-    const axiosResult: Array<any> = await axios.all(promises);
+    const axiosResult: any[] = await axios.all(promises);
 
     // Extract the data component from the axios response.
-    const result = axiosResult.map(x => x.data.result);
+    const result: MempoolEntry[] = axiosResult.map(
+      // TODO: properly type this return value
+      (x: AxiosResponse): any => x.data.result
+    );
 
     res.status(200);
     return res.json(result);
@@ -617,8 +643,8 @@ async function getTxOutProofBulk(
     }
 
     // Validate each element in the array.
-    for (let i = 0; i < txids.length; i++) {
-      const txid = txids[i];
+    for (let i: number = 0; i < txids.length; i++) {
+      const txid: string = txids[i];
 
       if (txid.length !== 64) {
         res.status(400);
@@ -804,8 +830,8 @@ async function verifyTxOutProofBulk(
     }
 
     // Validate each element in the array.
-    for (let i = 0; i < proofs.length; i++) {
-      const proof = proofs[i];
+    for (let i: number = 0; i < proofs.length; i++) {
+      const proof: string = proofs[i];
 
       if (!proof || proof === "") {
         res.status(400);

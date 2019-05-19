@@ -118,3 +118,67 @@ export interface BlockInterface {
     url: string;
   };
 }
+
+export interface BlockchainInfoInterface {
+  chain: string;
+  blocks: number;
+  headers: number;
+  bestblockhash: string;
+  difficulty: number;
+  mediantime: number;
+  verificationprogress: number;
+  chainwork: string;
+  size_on_disk: number;
+  pruned: boolean;
+  softforks: SoftForkInterface[];
+  warnings: string;
+}
+
+export interface SoftForkInterface {
+  id: string;
+  version: number;
+  reject: {
+    status: boolean;
+  };
+}
+
+export interface VerboseBlockHeaderInterface {
+  hash: string;
+  confirmations: number;
+  height: number;
+  version: number;
+  versionHex: string;
+  merkleroot: string;
+  time: number;
+  mediantime: number;
+  nonce: number;
+  bits: string;
+  difficulty: number;
+  chainwork: string;
+  previousblockhash: string;
+  nextblockhash: string;
+}
+
+export interface ChainTipsInterface {
+  height: number;
+  hash: string;
+  branchlen: number;
+  status: string;
+}
+
+export interface MempoolEntry {
+  size: number;
+  fee: number;
+  modifiedfee: number;
+  time: number;
+  height: number;
+  startingpriority: number;
+  currentpriority: number;
+  descendantcount: number;
+  descendantsize: number;
+  descendantfees: number;
+  ancestorcount: number;
+  ancestorsize: number;
+  ancestorfees: number;
+  depends: string[];
+}

@@ -1,35 +1,35 @@
-"use strict";
+"use strict"
 
-const express = require("express");
-const router = express.Router();
-const axios = require("axios");
-const RateLimit = require("express-rate-limit");
+const express = require("express")
+const router = express.Router()
+const axios = require("axios")
+const RateLimit = require("express-rate-limit")
 
-const BITBOX = require("bitbox-sdk").BITBOX;
-const bitbox = new BITBOX();
+const BITBOX = require("bitbox-sdk").BITBOX
+const bitbox = new BITBOX()
 
 const config = {
   transactionRateLimit1: undefined,
   transactionRateLimit2: undefined
-};
+}
 
 const processInputs = tx => {
   if (tx.vin) {
     tx.vin.forEach(vin => {
       if (!vin.coinbase) {
-        const address = vin.addr;
-        vin.legacyAddress = bitbox.Address.toLegacyAddress(address);
-        vin.cashAddress = bitbox.Address.toCashAddress(address);
-        vin.value = vin.valueSat;
-        delete vin.addr;
-        delete vin.valueSat;
-        delete vin.doubleSpentTxID;
+        const address = vin.addr
+        vin.legacyAddress = bitbox.Address.toLegacyAddress(address)
+        vin.cashAddress = bitbox.Address.toCashAddress(address)
+        vin.value = vin.valueSat
+        delete vin.addr
+        delete vin.valueSat
+        delete vin.doubleSpentTxID
       }
-    });
+    })
   }
-};
+}
 
-let i = 1;
+let i = 1
 while (i < 6) {
   config[`transactionRateLimit${i}`] = new RateLimit({
     windowMs: 60000, // 1 hour window
@@ -40,54 +40,54 @@ while (i < 6) {
         json: function() {
           res.status(500).json({
             error: "Too many requests. Limits are 60 requests per minute."
-          });
+          })
         }
-      });
+      })
     }
-  });
-  i++;
+  })
+  i++
 }
 
 router.get("/", config.transactionRateLimit1, (req, res, next) => {
-  res.json({ status: "transaction" });
-});
+  res.json({ status: "transaction" })
+})
 
 router.get("/details/:txid", config.transactionRateLimit1, (req, res, next) => {
   try {
-    let txs = JSON.parse(req.params.txid);
+    let txs = JSON.parse(req.params.txid)
     if (txs.length > 20) {
       res.json({
         error: "Array too large. Max 20 txids"
-      });
+      })
     }
 
-    const result = [];
-    txs = txs.map(tx => axios.get(`${process.env.BITCOINCOM_BASEURL}tx/${tx}`));
+    const result = []
+    txs = txs.map(tx => axios.get(`${process.env.BITCOINCOM_BASEURL}tx/${tx}`))
     axios.all(txs).then(
       axios.spread((...args) => {
         for (let i = 0; i < args.length; i++) {
-          const parsed = args[i].data;
-          result.push(parsed);
+          const parsed = args[i].data
+          result.push(parsed)
         }
         result.forEach(tx => {
-          processInputs(tx);
-        });
-        res.json(result);
+          processInputs(tx)
+        })
+        res.json(result)
       })
-    );
+    )
   } catch (error) {
     axios
       .get(`${process.env.BITCOINCOM_BASEURL}tx/${req.params.txid}`)
       .then(response => {
-        const parsed = response.data;
-        if (parsed) processInputs(parsed);
+        const parsed = response.data
+        if (parsed) processInputs(parsed)
 
-        res.json(parsed);
+        res.json(parsed)
       })
       .catch(error => {
-        res.send(error.response.data.error.message);
-      });
+        res.send(error.response.data.error.message)
+      })
   }
-});
+})
 
-module.exports = router;
+module.exports = router

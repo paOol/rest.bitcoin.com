@@ -166,7 +166,7 @@ export interface ChainTipsInterface {
   status: string;
 }
 
-export interface MempoolEntry {
+export interface MempoolEntryInterface {
   size: number;
   fee: number;
   modifiedfee: number;
@@ -181,4 +181,31 @@ export interface MempoolEntry {
   ancestorsize: number;
   ancestorfees: number;
   depends: string[];
+}
+
+export interface MempoolInfoInterface {
+  size: number;
+  bytes: number;
+  usage: number;
+  maxmempool: number;
+  mempoolminfee: number;
+}
+
+export interface RawMempoolInterface {
+  txid: {
+    size: number;
+    fee: number;
+    modifiedfee: number;
+    time: number;
+    height: number;
+    startingpriority: number;
+    currentpriority: number;
+    descendantcount: number;
+    descendantsize: number;
+    descendantfees: number;
+    ancestorcount: number;
+    ancestorsize: number;
+    ancestorfees: number;
+    depends: string[];
+  };
 }

@@ -10,7 +10,9 @@ import * as util from "util";
 import {
   BlockchainInfoInterface,
   ChainTipsInterface,
-  MempoolEntry,
+  MempoolEntryInterface,
+  MempoolInfoInterface,
+  RawMempoolInterface,
   VerboseBlockHeaderInterface
 } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
@@ -363,7 +365,7 @@ async function getMempoolEntrySingle(
     requestConfig.data.params = [txid];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
-    const mempoolEntry: MempoolEntry = response.data.result;
+    const mempoolEntry: MempoolEntryInterface = response.data.result;
 
     return res.json(mempoolEntry);
   } catch (err) {
@@ -422,8 +424,8 @@ async function getMempoolEntryBulk(
     }
 
     // Loop through each txid and creates an array of requests to call in parallel
-    const promises: Promise<MempoolEntry>[] = txids.map(
-      async (txid: string): Promise<MempoolEntry> => {
+    const promises: Promise<MempoolEntryInterface>[] = txids.map(
+      async (txid: string): Promise<MempoolEntryInterface> => {
         const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
         requestConfig.data.id = "getmempoolentry";
         requestConfig.data.method = "getmempoolentry";
@@ -436,7 +438,7 @@ async function getMempoolEntryBulk(
     const axiosResult: any[] = await axios.all(promises);
 
     // Extract the data component from the axios response.
-    const result: MempoolEntry[] = axiosResult.map(
+    const result: MempoolEntryInterface[] = axiosResult.map(
       // TODO: properly type this return value
       (x: AxiosResponse): any => x.data.result
     );
@@ -473,7 +475,8 @@ async function getMempoolInfo(
     requestConfig.data.params = [];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
-    return res.json(response.data.result);
+    const mempoolinfo: MempoolInfoInterface = response.data.result;
+    return res.json(mempoolinfo);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);
@@ -507,8 +510,9 @@ async function getRawMempool(
     requestConfig.data.params = [verbose];
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const rawMempoolInterface: RawMempoolInterface = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(rawMempoolInterface);
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err);

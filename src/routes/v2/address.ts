@@ -2,16 +2,16 @@
 import axios, { AxiosResponse } from "axios";
 import { BITBOX } from "bitbox-sdk";
 import * as express from "express";
+import * as util from "util";
+import logger = require("./logging.js");
+import routeUtils = require("./route-utils");
+import wlogger = require("../../util/winston-logging");
 
 // consts
-const logger = require("./logging.js");
-const routeUtils = require("./route-utils");
-const wlogger = require("../../util/winston-logging");
 const router: express.Router = express.Router();
 const bitbox: BITBOX = new BITBOX();
 
 // Used for processing error messages before sending them to the user.
-const util: any = require("util");
 util.inspect.defaultOptions = { depth: 1 };
 
 // Use the default (and max) page size of 1000

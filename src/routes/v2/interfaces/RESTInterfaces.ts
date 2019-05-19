@@ -297,3 +297,9 @@ export interface DecodedScriptInterface {
   type: string
   p2sh: string
 }
+
+export interface ValidateAddressInterface {
+  isvalid: boolean
+  address: string
+  scriptPubKey: string
+}

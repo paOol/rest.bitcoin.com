@@ -1,37 +1,19 @@
 // imports
-import axios from "axios"
+import axios, { AxiosResponse } from "axios"
 import { BITBOX } from "bitbox-sdk"
 import * as express from "express"
-import { IRequestConfig } from "./interfaces/IRequestConfig"
+import { ValidateAddressInterface } from "./interfaces/RESTInterfaces"
+import logger = require("./logging.js")
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
 const router: any = express.Router()
-const routeUtils: any = require("./route-utils")
-const logger: any = require("./logging.js")
-const wlogger: any = require("../../util/winston-logging")
 const bitbox = new BITBOX()
 
 // Used to convert error messages to strings, to safely pass to users.
 const util: any = require("util")
 util.inspect.defaultOptions = { depth: 1 }
-
-const BitboxHTTP: any = axios.create({
-  baseURL: process.env.RPC_BASEURL
-})
-
-const username: string = process.env.RPC_USERNAME
-const password: string = process.env.RPC_PASSWORD
-
-const requestConfig: IRequestConfig = {
-  method: "post",
-  auth: {
-    username: username,
-    password: password
-  },
-  data: {
-    jsonrpc: "1.0"
-  }
-}
 
 router.get("/", root)
 router.get("/validateAddress/:address", validateAddressSingle)
@@ -49,7 +31,7 @@ async function validateAddressSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const address: string = req.params.address
     if (!address || address === "") {
@@ -57,20 +39,16 @@ async function validateAddressSingle(
       return res.json({ error: "address can not be empty" })
     }
 
-    const {
-      BitboxHTTP,
-      username,
-      password,
-      requestConfig
-    } = routeUtils.setEnvVars()
+    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
     requestConfig.data.id = "validateaddress"
     requestConfig.data.method = "validateaddress"
     requestConfig.data.params = [address]
 
     const response: any = await BitboxHTTP(requestConfig)
+    const validateAddress: ValidateAddressInterface = response.data.result
 
-    return res.json(response.data.result)
+    return res.json(validateAddress)
   } catch (err) {
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
@@ -90,7 +68,7 @@ async function validateAddressBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let addresses: string[] = req.body.addresses
 
@@ -137,14 +115,9 @@ async function validateAddressBulk(
     logger.debug(`Executing util/validate with these addresses: `, addresses)
 
     // Loop through each address and creates an array of requests to call in parallel
-    const promises: Promise<any>[] = addresses.map(
-      async (address: any): Promise<any> => {
-        const {
-          BitboxHTTP,
-          username,
-          password,
-          requestConfig
-        } = routeUtils.setEnvVars()
+    const promises: Promise<ValidateAddressInterface>[] = addresses.map(
+      async (address: string): Promise<ValidateAddressInterface> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
 
         requestConfig.data.id = "validateaddress"
         requestConfig.data.method = "validateaddress"
@@ -158,7 +131,9 @@ async function validateAddressBulk(
     const axiosResult: any[] = await axios.all(promises)
 
     // Retrieve the data part of the result.
-    const result: any[] = axiosResult.map(x => x.data.result)
+    const result: ValidateAddressInterface[] = axiosResult.map(
+      (x: AxiosResponse) => x.data.result
+    )
 
     res.status(200)
     return res.json(result)

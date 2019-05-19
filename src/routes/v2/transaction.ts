@@ -2,27 +2,27 @@
 import axios, { AxiosResponse } from "axios"
 import { BITBOX } from "bitbox-sdk"
 import * as express from "express"
+import * as util from "util"
+import { TransactionInterface } from "./interfaces/RESTInterfaces"
+import logger = require("./logging.js")
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
 const router: any = express.Router()
-const routeUtils: any = require("./route-utils")
-const logger: any = require("./logging.js")
-const wlogger: any = require("../../util/winston-logging")
 const bitbox: BITBOX = new BITBOX()
 
-// Used to convert error messages to strings, to safely pass to users.
-const util: any = require("util")
 util.inspect.defaultOptions = { depth: 3 }
 
 // Manipulates and formats the raw data comming from Insight API.
-const processInputs = (tx: any): any => {
+const processInputs = (tx: TransactionInterface): any => {
   // Add legacy and cashaddr to tx vin
   if (tx.vin) {
     tx.vin.forEach(
       (vin: any): any => {
         if (!vin.coinbase) {
           vin.value = vin.valueSat
-          const address = vin.addr
+          const address: string = vin.addr
           if (address) {
             vin.legacyAddress = bitbox.Address.toLegacyAddress(address)
             vin.cashAddress = bitbox.Address.toCashAddress(address)
@@ -44,7 +44,7 @@ const processInputs = (tx: any): any => {
 
         if (vout.scriptPubKey) {
           if (vout.scriptPubKey.addresses) {
-            const cashAddrs = []
+            const cashAddrs: string[] = []
             vout.scriptPubKey.addresses.forEach((addr: any) => {
               const cashAddr = bitbox.Address.toCashAddress(addr)
               cashAddrs.push(cashAddr)
@@ -95,7 +95,7 @@ async function detailsBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const txids: string[] = req.body.txids
 
@@ -147,7 +147,7 @@ async function detailsSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const txid: string = req.params.txid
     if (!txid || txid === "") {

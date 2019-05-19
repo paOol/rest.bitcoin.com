@@ -264,6 +264,12 @@ export interface RawTransactionInterface {
   blocktime: number
 }
 
+export interface TransactionInterface extends RawTransactionInterface {
+  blockheight: number
+  isCoinBase: boolean
+  valueOut: number
+}
+
 export interface RawTransactionVinInterface {
   txid: string
   vout: number

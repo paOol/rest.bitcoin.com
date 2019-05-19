@@ -7,6 +7,7 @@ import * as util from "util";
 import {
   AddressDetailsInterface,
   AddressUTXOsInterface,
+  TransactionsInterface,
   UTXOsInterface
 } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
@@ -641,7 +642,7 @@ async function unconfirmedBulk(
 async function transactionsFromInsight(
   thisAddress: string,
   currentPage: number = 0
-): Promise<any> {
+): Promise<TransactionsInterface> {
   try {
     const path: string = `${
       process.env.BITCOINCOM_BASEURL
@@ -651,7 +652,7 @@ async function transactionsFromInsight(
     const response: AxiosResponse = await axios.get(path);
 
     // Append different address formats to the return data.
-    const retData: any = response.data;
+    const retData: TransactionsInterface = response.data;
     retData.legacyAddress = bitbox.Address.toLegacyAddress(thisAddress);
     retData.cashAddress = bitbox.Address.toCashAddress(thisAddress);
     retData.currentPage = currentPage;
@@ -716,14 +717,14 @@ async function transactionsBulk(
     }
 
     // Loop through each address and collect an array of promises.
-    let addressPromises: Promise<any>[] = addresses.map(
-      async (address: any, index: number) => {
+    let addressPromises: Promise<TransactionsInterface>[] = addresses.map(
+      async (address: string): Promise<TransactionsInterface> => {
         return transactionsFromInsight(address, currentPage);
       }
     );
 
     // Wait for all parallel Insight requests to return.
-    let result: any[] = await axios.all(addressPromises);
+    let result: TransactionsInterface[] = await axios.all(addressPromises);
 
     // Return the array of retrieved address information.
     res.status(200);
@@ -799,11 +800,10 @@ async function transactionsSingle(
     }
 
     // Query the Insight API.
-    const retData: Promise<any> = await transactionsFromInsight(
+    const retData: TransactionsInterface = await transactionsFromInsight(
       address,
       currentPage
     );
-    //console.log(`retData: ${JSON.stringify(retData,null,2)}`)
 
     // Return the array of retrieved address information.
     res.status(200);

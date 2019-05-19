@@ -571,6 +571,7 @@ describe("#AddressRouter", () => {
         "utxos",
         "legacyAddress",
         "cashAddress",
+        "slpAddress",
         "scriptPubKey"
       ]);
 

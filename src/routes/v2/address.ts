@@ -2,7 +2,9 @@
 import axios, { AxiosResponse } from "axios";
 import { BITBOX } from "bitbox-sdk";
 import * as express from "express";
+import { Utils } from "slpjs";
 import * as util from "util";
+import { AddressDetailsInterface } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js");
 import routeUtils = require("./route-utils");
 import wlogger = require("../../util/winston-logging");
@@ -44,7 +46,7 @@ function root(
 async function detailsFromInsight(
   thisAddress: string,
   currentPage: number = 0
-): Promise<any> {
+): Promise<AddressDetailsInterface> {
   try {
     let addr: string;
     if (
@@ -65,7 +67,7 @@ async function detailsFromInsight(
 
     // Query the Insight server.
     const axiosResponse: AxiosResponse = await axios.get(path);
-    const retData: any = axiosResponse.data;
+    const retData: AddressDetailsInterface = axiosResponse.data;
 
     // Calculate pagesTotal from response
     const pagesTotal: number = Math.ceil(retData.txApperances / PAGE_SIZE);
@@ -73,6 +75,7 @@ async function detailsFromInsight(
     // Append different address formats to the return data.
     retData.legacyAddress = bitbox.Address.toLegacyAddress(retData.addrStr);
     retData.cashAddress = bitbox.Address.toCashAddress(retData.addrStr);
+    retData.slpAddress = Utils.toSlpAddress(retData.cashAddress);
     delete retData.addrStr;
 
     // Append pagination information to the return data.
@@ -94,7 +97,7 @@ async function detailsBulk(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     let addresses: string[] = req.body.addresses;
     const currentPage: number = req.body.page ? parseInt(req.body.page, 10) : 0;
@@ -147,14 +150,14 @@ async function detailsBulk(
 
     // Loops through each address and creates an array of Promises, querying
     // Insight API in parallel.
-    let addressPromises: Promise<any>[] = addresses.map(
-      async (address: any, index: number) => {
+    let addressPromises: Promise<AddressDetailsInterface>[] = addresses.map(
+      async (address: any): Promise<AddressDetailsInterface> => {
         return detailsFromInsight(address, currentPage);
       }
     );
 
     // Wait for all parallel Insight requests to return.
-    let result: Array<any> = await axios.all(addressPromises);
+    let result: AddressDetailsInterface[] = await axios.all(addressPromises);
 
     // Return the array of retrieved address information.
     res.status(200);
@@ -180,7 +183,7 @@ async function detailsSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-): Promise<any> {
+): Promise<express.Response> {
   try {
     const address: string = req.params.address;
     const currentPage: number = req.query.page
@@ -229,7 +232,10 @@ async function detailsSingle(
     }
 
     // Query the Insight API.
-    let retData: Promise<any> = await detailsFromInsight(address, currentPage);
+    let retData: AddressDetailsInterface = await detailsFromInsight(
+      address,
+      currentPage
+    );
 
     // Return the retrieved address information.
     res.status(200);

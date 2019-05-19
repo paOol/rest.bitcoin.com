@@ -796,7 +796,7 @@ async function verifyTxOutProofSingle(
     requestConfig.data.params = [req.params.proof]
 
     const response: AxiosResponse = await BitboxHTTP(requestConfig)
-    const verifyTxOutProofSingle: string = response.data.result[0]
+    const verifyTxOutProofSingle: string = response.data.result
 
     return res.json(verifyTxOutProofSingle)
   } catch (err) {
@@ -868,13 +868,10 @@ async function verifyTxOutProofBulk(
     )
 
     // Wait for all parallel promisses to resolve.
-    const axiosResult: any[] = await axios.all(promises)
+    const axiosResult: Array<any> = await axios.all(promises)
 
     // Extract the data component from the axios response.
-    const result: string[] = axiosResult.map(
-      // TODO: properly type this return value
-      (x: AxiosResponse): any => x.data.result
-    )
+    const result = axiosResult.map(x => x.data.result[0])
 
     res.status(200)
     return res.json(result)

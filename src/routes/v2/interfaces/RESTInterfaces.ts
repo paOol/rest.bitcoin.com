@@ -257,6 +257,11 @@ export interface RawTransactionInterface {
   locktime: number
   vin: RawTransactionVinInterface[]
   vout: RawTransactionVoutInterface[]
+  hex: string
+  blockhash: string
+  confirmations: number
+  time: number
+  blocktime: number
 }
 
 export interface RawTransactionVinInterface {

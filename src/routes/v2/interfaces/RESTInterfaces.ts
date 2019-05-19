@@ -303,3 +303,26 @@ export interface ValidateAddressInterface {
   address: string
   scriptPubKey: string
 }
+
+export interface TokenInterface {
+  decimals: number
+  timestamp: string
+  timestamp_unix: number
+  versionType: number
+  documentUri: string
+  symbol: string
+  name: string
+  containsBaton: boolean
+  id: string
+  documentHash: null | string
+  initialTokenQty: number
+  blockCreated: number
+  blockLastActiveSend: number
+  blockLastActiveMint: null | number
+  txnsSinceGenesis: number
+  validAddresses: number
+  totalMinted: number
+  totalBurned: number
+  circulatingSupply: number
+  mintingBatonStatus: string
+}

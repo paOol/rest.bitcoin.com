@@ -2,6 +2,7 @@
 import axios, { AxiosResponse } from "axios"
 import * as express from "express"
 import * as util from "util"
+import { TokenInterface } from "./interfaces/RESTInterfaces"
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -133,7 +134,7 @@ const slpValidator: any = createValidator(
   getRawTransactionsFromNode
 )
 
-function formatTokenOutput(token: any): any {
+function formatTokenOutput(token: any): TokenInterface {
   token.tokenDetails.id = token.tokenDetails.tokenIdHex
   delete token.tokenDetails.tokenIdHex
   token.tokenDetails.documentHash = token.tokenDetails.documentSha256Hex
@@ -180,7 +181,7 @@ async function list(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
+): Promise<express.Response> {
   try {
     const query: {
       v: number
@@ -215,7 +216,7 @@ async function list(
     // Get data from SLPDB.
     const tokenRes: AxiosResponse = await axios.get(url)
 
-    let formattedTokens: any[] = []
+    let formattedTokens: TokenInterface[] = []
 
     if (tokenRes.data.t.length) {
       tokenRes.data.t.forEach((token: any) => {

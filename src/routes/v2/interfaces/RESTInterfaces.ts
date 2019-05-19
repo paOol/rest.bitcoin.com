@@ -223,3 +223,28 @@ export interface TXOutInterface {
   };
   coinbase: boolean;
 }
+
+export interface InfoInterface {
+  version: number;
+  protocolversion: number;
+  blocks: number;
+  timeoffset: number;
+  connections: number;
+  proxy: string;
+  difficulty: number;
+  testnet: boolean;
+  relayfee: number;
+  errors: string;
+}
+
+export interface MiningInfoInterface {
+  blocks: number;
+  currentblocksize: number;
+  currentblocktx: number;
+  difficulty: number;
+  blockprioritypercentage: number;
+  networkhashps: number;
+  pooledtx: number;
+  chain: string;
+  warnings: string;
+}

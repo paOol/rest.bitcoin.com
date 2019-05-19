@@ -1,11 +1,12 @@
 // imports
+import { AxiosResponse } from "axios";
 import * as express from "express";
+import { InfoInterface } from "./interfaces/RESTInterfaces";
+import routeUtils = require("./route-utils");
+import wlogger = require("../../util/winston-logging");
 
-// ocnsts
-const router = express.Router();
-const routeUtils = require("./route-utils");
-const wlogger = require("../../util/winston-logging");
-
+// consts
+const router: express.Router = express.Router();
 // Used for processing error messages before sending them to the user.
 const util = require("util");
 util.inspect.defaultOptions = { depth: 1 };
@@ -26,22 +27,18 @@ async function getInfo(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
-) {
-  const {
-    BitboxHTTP,
-    username,
-    password,
-    requestConfig
-  } = routeUtils.setEnvVars();
+): Promise<express.Response> {
+  const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars();
 
   requestConfig.data.id = "getinfo";
   requestConfig.data.method = "getinfo";
   requestConfig.data.params = [];
 
   try {
-    const response = await BitboxHTTP(requestConfig);
+    const response: AxiosResponse = await BitboxHTTP(requestConfig);
+    const info: InfoInterface = response.data.result;
 
-    return res.json(response.data.result);
+    return res.json(info);
   } catch (error) {
     wlogger.error(`Error in control.ts/getInfo().`, error);
 

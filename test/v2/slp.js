@@ -866,7 +866,7 @@ describe("#SLP", () => {
     })
   })
 
-  describe("txDetails()", () => {
+  describe("#txDetails()", () => {
     let txDetails = slpRoute.testableComponents.txDetails
 
     it("should throw 400 if txid is empty", async () => {
@@ -910,10 +910,10 @@ describe("#SLP", () => {
       }
 
       req.params.txid =
-        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+        "a2bb1cb8570737cbf3559dce5d5d4b3ff4c2a6a63df1092d59826b226ae772d7"
 
       const result = await txDetails(req, res)
-      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
     })

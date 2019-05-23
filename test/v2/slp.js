@@ -910,7 +910,7 @@ describe("#SLP", () => {
       }
 
       req.params.txid =
-        "a2bb1cb8570737cbf3559dce5d5d4b3ff4c2a6a63df1092d59826b226ae772d7"
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
 
       const result = await txDetails(req, res)
       // console.log(`result: ${JSON.stringify(result, null, 2)}`)

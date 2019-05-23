@@ -11,7 +11,7 @@ import wlogger = require("../../util/winston-logging")
 const router: any = express.Router()
 const SLPSDK: any = require("slp-sdk")
 const SLP: any = new SLPSDK()
-const slp: any = require("slpjs")
+const slp: any = SLP.slpjs
 const utils: any = slp.Utils
 const level: any = require("level")
 const slpTxDb: any = level("./slp-tx-db")
@@ -396,8 +396,6 @@ async function lookupToken(tokenId: string): Promise<any> {
     const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes: AxiosResponse = await axios.get(url)
-    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data,null,2)}`)
-    //console.log(`tokenRes.data.t[0]: ${util.inspect(tokenRes.data.t[0],null,2)}`)
 
     let formattedTokens: any[] = []
 
@@ -423,7 +421,6 @@ async function lookupToken(tokenId: string): Promise<any> {
     return t
   } catch (err) {
     wlogger.error(`Error in slp.ts/lookupToken().`, err)
-    //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
 }
@@ -928,8 +925,6 @@ async function validateBulk(
         }
         return tmp
       } catch (err) {
-        //console.log(`err obj: ${util.inspect(err)}`)
-        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
         throw err
       }
     })
@@ -1336,6 +1331,7 @@ async function txDetails(
     res.status(200)
     return res.json(result)
   } catch (err) {
+    console.log(err)
     wlogger.error(`Error in slp.ts/txDetails().`, err)
 
     // Attempt to decode the error message.
@@ -1482,7 +1478,6 @@ async function txsTokenIdAddressSingle(
 
     // Get data from SLPDB.
     const tokenRes: AxiosResponse = await axios.get(url)
-    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
 
     return res.json(tokenRes.data.c)
   } catch (err) {

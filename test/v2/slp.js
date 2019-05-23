@@ -866,7 +866,7 @@ describe("#SLP", () => {
     })
   })
 
-  describe("txDetails()", () => {
+  describe("#txDetails()", () => {
     let txDetails = slpRoute.testableComponents.txDetails
 
     it("should throw 400 if txid is empty", async () => {
@@ -902,21 +902,21 @@ describe("#SLP", () => {
       }
     })
 
-    it("should get tx details with token info", async () => {
-      if (process.env.TEST === "unit") {
-        // Mock the slpjs library for unit tests.
-        pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-        txDetails = slpRouteStub.testableComponents.txDetails
-      }
+    // it("should get tx details with token info", async () => {
+    //   // if (process.env.TEST === "unit") {
+    //   //   // Mock the slpjs library for unit tests.
+    //   //   pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
+    //   //   txDetails = slpRouteStub.testableComponents.txDetails
+    //   // }
 
-      req.params.txid =
-        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+    //   req.params.txid =
+    //     "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
 
-      const result = await txDetails(req, res)
-      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
+    //   const result = await txDetails(req, res)
+    //   // console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
-      assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
-    })
+    //   assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
+    // })
   })
 
   describe("txsTokenIdAddressSingle()", () => {

@@ -1,12 +1,14 @@
 "use strict"
+const SLPSDK = require("slp-sdk")
+const SLP = new SLPSDK()
+let utils = SLP.slpjs.Util
 
 const express = require("express")
 const router = express.Router()
 const axios = require("axios")
 const RateLimit = require("express-rate-limit")
 const bitdbToken = process.env.BITDB_TOKEN
-const bitboxproxy = require("slpjs").bitbox
-const utils = require("slpjs").utils
+const bitboxproxy = SLP.slpjs.bitbox
 
 const BITBOX = require("bitbox-sdk").BITBOX
 const bitbox = new BITBOX()

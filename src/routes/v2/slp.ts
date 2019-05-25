@@ -978,9 +978,13 @@ async function validateSingle(
     let tmp: {
       txid: string
       valid: boolean
+      invalidReason?: string
     } = {
       txid: txid,
       valid: isValid ? true : false
+    }
+    if (!isValid) {
+      tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
     }
 
     res.status(200)

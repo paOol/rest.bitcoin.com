@@ -326,3 +326,10 @@ export interface TokenInterface {
   circulatingSupply: number
   mintingBatonStatus: string
 }
+
+export interface BurnTotalInterface {
+  transactionId: string
+  inputTotal: number
+  outputTotal: number
+  burnTotal: number
+}

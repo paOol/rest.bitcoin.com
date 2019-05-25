@@ -148,5 +148,10 @@
     "key": "/slp/txDetails/{txid}",
     "name": "txid",
     "value": "8ab4ac5dea3f9024e3954ee5b61452955d659a34561f79ef62ac44e133d0980e"
+  },
+  {
+    "key": "/slp/burnTotal/{transactionId}",
+    "name": "transactionId",
+    "value": "c7078a6c7400518a513a0bde1f4158cf740d08d3b5bfb19aa7b6657e2f4160de"
   }
 ]

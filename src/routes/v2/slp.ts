@@ -916,9 +916,13 @@ async function validateBulk(
         let tmp: {
           txid: string
           valid: boolean
+          invalidReason?: string
         } = {
           txid: txid,
           valid: isValid ? true : false
+        }
+        if (!isValid) {
+          tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
         }
         return tmp
       } catch (err) {

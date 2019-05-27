@@ -2,7 +2,7 @@
 import axios, { AxiosResponse } from "axios"
 import * as express from "express"
 import * as util from "util"
-import { TokenInterface } from "./interfaces/RESTInterfaces"
+import { BurnTotalInterface, TokenInterface } from "./interfaces/RESTInterfaces"
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -11,7 +11,7 @@ import wlogger = require("../../util/winston-logging")
 const router: any = express.Router()
 const SLPSDK: any = require("slp-sdk")
 const SLP: any = new SLPSDK()
-const slp: any = require("slpjs")
+const slp: any = SLP.slpjs
 const utils: any = slp.Utils
 const level: any = require("level")
 const slpTxDb: any = level("./slp-tx-db")
@@ -39,6 +39,7 @@ router.get("/validateTxid/:txid", validateSingle)
 router.get("/txDetails/:txid", txDetails)
 router.get("/tokenStats/:tokenId", tokenStats)
 router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
+router.get("/burnTotal/:transactionId", burnTotalSingle)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -56,10 +57,6 @@ if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
     "/burnTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId/:amount",
     burnTokenType1
-  )
-  router.get(
-    "/burnAllTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId",
-    burnAllTokenType1
   )
 }
 
@@ -396,8 +393,6 @@ async function lookupToken(tokenId: string): Promise<any> {
     const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
     const tokenRes: AxiosResponse = await axios.get(url)
-    //console.log(`tokenRes.data: ${util.inspect(tokenRes.data,null,2)}`)
-    //console.log(`tokenRes.data.t[0]: ${util.inspect(tokenRes.data.t[0],null,2)}`)
 
     let formattedTokens: any[] = []
 
@@ -423,7 +418,6 @@ async function lookupToken(tokenId: string): Promise<any> {
     return t
   } catch (err) {
     wlogger.error(`Error in slp.ts/lookupToken().`, err)
-    //console.log(`Error in slp.ts/lookupToken()`)
     throw err
   }
 }
@@ -922,14 +916,16 @@ async function validateBulk(
         let tmp: {
           txid: string
           valid: boolean
+          invalidReason?: string
         } = {
           txid: txid,
           valid: isValid ? true : false
         }
+        if (!isValid) {
+          tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
+        }
         return tmp
       } catch (err) {
-        //console.log(`err obj: ${util.inspect(err)}`)
-        //console.log(`err.response.data: ${util.inspect(err.response.data)}`)
         throw err
       }
     })
@@ -982,9 +978,13 @@ async function validateSingle(
     let tmp: {
       txid: string
       valid: boolean
+      invalidReason?: string
     } = {
       txid: txid,
       valid: isValid ? true : false
+    }
+    if (!isValid) {
+      tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
     }
 
     res.status(200)
@@ -1008,6 +1008,80 @@ async function validateSingle(
 async function isValidSlpTxid(txid: string): Promise<boolean> {
   const isValid: Promise<boolean> = await slpValidator.isValidSlpTxid(txid)
   return isValid
+}
+
+async function burnTotalSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    let txid: string = req.params.transactionId
+    console.log(txid)
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        aggregate: any
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["g"],
+        aggregate: [
+          {
+            $match: {
+              "graphTxn.txid": txid
+            }
+          },
+          {
+            $project: {
+              "graphTxn.txid": 1,
+              inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
+              outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
+            }
+          }
+        ],
+        limit: 1000
+      }
+    }
+
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let burnTotal: BurnTotalInterface = {
+      transactionId: txid,
+      inputTotal: 0,
+      outputTotal: 0,
+      burnTotal: 0
+    }
+
+    if (tokenRes.data.g.length) {
+      let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
+      let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
+      burnTotal.inputTotal = inputTotal
+      burnTotal.outputTotal = outputTotal
+      burnTotal.burnTotal = inputTotal - outputTotal
+    }
+
+    res.status(200)
+    return res.json(burnTotal)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/burnTotalSingle().`, err)
+
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /burnTotal: ${err.message}` })
+  }
 }
 
 // Below are functions which are enabled for teams not using our javascript SDKs which still need to create txs
@@ -1263,46 +1337,6 @@ async function burnTokenType1(
   return res.json(burn)
 }
 
-async function burnAllTokenType1(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): Promise<express.Response> {
-  let fundingAddress: string = req.params.fundingAddress
-  if (!fundingAddress || fundingAddress === "") {
-    res.status(400)
-    return res.json({ error: "fundingAddress can not be empty" })
-  }
-
-  let fundingWif: string = req.params.fundingWif
-  if (!fundingWif || fundingWif === "") {
-    res.status(400)
-    return res.json({ error: "fundingWif can not be empty" })
-  }
-
-  let bchChangeReceiverAddress: string = req.params.bchChangeReceiverAddress
-  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
-    res.status(400)
-    return res.json({ error: "bchChangeReceiverAddress can not be empty" })
-  }
-
-  let tokenId: string = req.params.tokenId
-  if (!tokenId || tokenId === "") {
-    res.status(400)
-    return res.json({ error: "tokenId can not be empty" })
-  }
-
-  let burnAll: Promise<any> = await SLP.TokenType1.burnAll({
-    fundingAddress: fundingAddress,
-    fundingWif: fundingWif,
-    tokenId: tokenId,
-    bchChangeReceiverAddress: bchChangeReceiverAddress
-  })
-
-  res.status(200)
-  return res.json(burnAll)
-}
-
 async function txDetails(
   req: express.Request,
   res: express.Response,
@@ -1336,6 +1370,7 @@ async function txDetails(
     res.status(200)
     return res.json(result)
   } catch (err) {
+    console.log(err)
     wlogger.error(`Error in slp.ts/txDetails().`, err)
 
     // Attempt to decode the error message.
@@ -1482,7 +1517,6 @@ async function txsTokenIdAddressSingle(
 
     // Get data from SLPDB.
     const tokenRes: AxiosResponse = await axios.get(url)
-    //console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
 
     return res.json(tokenRes.data.c)
   } catch (err) {
@@ -1519,7 +1553,6 @@ module.exports = {
     mintTokenType1,
     sendTokenType1,
     burnTokenType1,
-    burnAllTokenType1,
     txDetails,
     tokenStats,
     balancesForTokenSingle,

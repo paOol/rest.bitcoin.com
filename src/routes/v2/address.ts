@@ -2,7 +2,6 @@
 import axios, { AxiosResponse } from "axios"
 import { BITBOX } from "bitbox-sdk"
 import * as express from "express"
-import { Utils } from "slpjs"
 import * as util from "util"
 import {
   AddressDetailsInterface,
@@ -17,6 +16,9 @@ import wlogger = require("../../util/winston-logging")
 // consts
 const router: express.Router = express.Router()
 const bitbox: BITBOX = new BITBOX()
+const SLPSDK: any = require("slp-sdk")
+const SLP: any = new SLPSDK()
+let Utils = SLP.slpjs.Utils
 
 // Used for processing error messages before sending them to the user.
 util.inspect.defaultOptions = { depth: 1 }

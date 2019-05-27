@@ -1115,7 +1115,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "trest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.3.8",
+		"version": "3.8.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -3012,6 +3012,33 @@
 						"description": "The slp address",
 						"required": true,
 						"example": "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/burnTotal/{transactionId}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Total burn count for slp transactions",
+				"description": "total input, ouput and burn counts by transaction Id.",
+				"operationId": "burnTotalSingle",
+				"parameters": [
+					{
+						"name": "transactionId",
+						"in": "path",
+						"description": "The SLP transactionId",
+						"required": true,
+						"example": "2c90f44dbb0a3257ded2c30d46d387490aee61eecd168534c8b645ffe21cbc50",
 						"schema": {
 							"type": "string"
 						}

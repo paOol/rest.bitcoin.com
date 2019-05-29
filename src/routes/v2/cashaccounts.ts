@@ -61,7 +61,7 @@ async function lookup(
       return res.status(500).json({ error: 'Not a valid CashAccount' });
     }
 
-    let lookup: object = await cashAccounts.trustedLookup(handle);
+    let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle);
     if (lookup === undefined) {
       return res.status(500).json({
         error: 'No account could be found with the requested parameters.'

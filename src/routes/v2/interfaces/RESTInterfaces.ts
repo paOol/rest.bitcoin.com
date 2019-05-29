@@ -346,3 +346,8 @@ export interface CashAccountInterface {
     payment: string[]
   }
 }
+
+export interface CashAccountRegistration {
+  txid: string,
+  hex: string
+}

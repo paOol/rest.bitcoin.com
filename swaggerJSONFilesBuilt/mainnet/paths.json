@@ -1900,6 +1900,33 @@
 					}
 				}
 			}
+		},
+		"/slp/burnTotal/{transactionId}": {
+			"get": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Total burn count for slp transactions",
+				"description": "total input, ouput and burn counts by transaction Id.",
+				"operationId": "burnTotalSingle",
+				"parameters": [
+					{
+						"name": "transactionId",
+						"in": "path",
+						"description": "The SLP transactionId",
+						"required": true,
+						"example": "c7078a6c7400518a513a0bde1f4158cf740d08d3b5bfb19aa7b6657e2f4160de",
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
 		}
 	}
 }

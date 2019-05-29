@@ -1,11 +1,11 @@
 // imports
-import axios, { AxiosResponse } from "axios";
-import * as express from "express";
-import * as util from "util";
-import { TokenInterface } from "./interfaces/RESTInterfaces";
-import logger = require("./logging.js");
-import routeUtils = require("./route-utils");
-import wlogger = require("../../util/winston-logging");
+import axios, { AxiosResponse } from "axios"
+import * as express from "express"
+import * as util from "util"
+import { BurnTotalInterface, TokenInterface } from "./interfaces/RESTInterfaces"
+import logger = require("./logging.js")
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
 const router: any = express.Router();
@@ -24,22 +24,23 @@ util.inspect.defaultOptions = { depth: 5 };
 if (!process.env.REST_URL)
   process.env.REST_URL = `https://rest.bitcoin.com/v2/`;
 if (!process.env.TREST_URL)
-  process.env.TREST_URL = `https://trest.bitcoin.com/v2/`;
+  process.env.TREST_URL = `https://trest.bitcoin.com/v2/`
 
-router.get("/", root);
-router.get("/list", list);
-router.get("/list/:tokenId", listSingleToken);
-router.post("/list", listBulkToken);
-router.get("/balancesForAddress/:address", balancesForAddress);
-router.get("/balancesForToken/:tokenId", balancesForTokenSingle);
-router.get("/balance/:address/:tokenId", balancesForAddressByTokenID);
-router.get("/convert/:address", convertAddressSingle);
-router.post("/convert", convertAddressBulk);
-router.post("/validateTxid", validateBulk);
-router.get("/validateTxid/:txid", validateSingle);
-router.get("/txDetails/:txid", txDetails);
-router.get("/tokenStats/:tokenId", tokenStats);
-router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle);
+router.get("/", root)
+router.get("/list", list)
+router.get("/list/:tokenId", listSingleToken)
+router.post("/list", listBulkToken)
+router.get("/balancesForAddress/:address", balancesForAddress)
+router.get("/balancesForToken/:tokenId", balancesForTokenSingle)
+router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
+router.get("/convert/:address", convertAddressSingle)
+router.post("/convert", convertAddressBulk)
+router.post("/validateTxid", validateBulk)
+router.get("/validateTxid/:txid", validateSingle)
+router.get("/txDetails/:txid", txDetails)
+router.get("/tokenStats/:tokenId", tokenStats)
+router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
+router.get("/burnTotal/:transactionId", burnTotalSingle)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -57,11 +58,7 @@ if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
     "/burnTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId/:amount",
     burnTokenType1
-  );
-  router.get(
-    "/burnAllTokenType1/:fundingAddress/:fundingWif/:bchChangeReceiverAddress/:tokenId",
-    burnAllTokenType1
-  );
+  )
 }
 
 // Retrieve raw transactions details from the full node.
@@ -923,13 +920,17 @@ async function validateBulk(
         > = await module.exports.testableComponents.isValidSlpTxid(txid);
 
         let tmp: {
-          txid: string;
-          valid: boolean;
+          txid: string
+          valid: boolean
+          invalidReason?: string
         } = {
           txid: txid,
           valid: isValid ? true : false
-        };
-        return tmp;
+        }
+        if (!isValid) {
+          tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
+        }
+        return tmp
       } catch (err) {
         throw err;
       }
@@ -981,12 +982,16 @@ async function validateSingle(
     > = await module.exports.testableComponents.isValidSlpTxid(txid);
 
     let tmp: {
-      txid: string;
-      valid: boolean;
+      txid: string
+      valid: boolean
+      invalidReason?: string
     } = {
       txid: txid,
       valid: isValid ? true : false
-    };
+    }
+    if (!isValid) {
+      tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
+    }
 
     res.status(200);
     return res.json(tmp);
@@ -1009,6 +1014,80 @@ async function validateSingle(
 async function isValidSlpTxid(txid: string): Promise<boolean> {
   const isValid: Promise<boolean> = await slpValidator.isValidSlpTxid(txid);
   return isValid;
+}
+
+async function burnTotalSingle(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    let txid: string = req.params.transactionId
+    console.log(txid)
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        aggregate: any
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["g"],
+        aggregate: [
+          {
+            $match: {
+              "graphTxn.txid": txid
+            }
+          },
+          {
+            $project: {
+              "graphTxn.txid": 1,
+              inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
+              outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
+            }
+          }
+        ],
+        limit: 1000
+      }
+    }
+
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let burnTotal: BurnTotalInterface = {
+      transactionId: txid,
+      inputTotal: 0,
+      outputTotal: 0,
+      burnTotal: 0
+    }
+
+    if (tokenRes.data.g.length) {
+      let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
+      let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
+      burnTotal.inputTotal = inputTotal
+      burnTotal.outputTotal = outputTotal
+      burnTotal.burnTotal = inputTotal - outputTotal
+    }
+
+    res.status(200)
+    return res.json(burnTotal)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/burnTotalSingle().`, err)
+
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /burnTotal: ${err.message}` })
+  }
 }
 
 // Below are functions which are enabled for teams not using our javascript SDKs which still need to create txs
@@ -1264,46 +1343,6 @@ async function burnTokenType1(
   return res.json(burn);
 }
 
-async function burnAllTokenType1(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): Promise<express.Response> {
-  let fundingAddress: string = req.params.fundingAddress;
-  if (!fundingAddress || fundingAddress === "") {
-    res.status(400);
-    return res.json({ error: "fundingAddress can not be empty" });
-  }
-
-  let fundingWif: string = req.params.fundingWif;
-  if (!fundingWif || fundingWif === "") {
-    res.status(400);
-    return res.json({ error: "fundingWif can not be empty" });
-  }
-
-  let bchChangeReceiverAddress: string = req.params.bchChangeReceiverAddress;
-  if (!bchChangeReceiverAddress || bchChangeReceiverAddress === "") {
-    res.status(400);
-    return res.json({ error: "bchChangeReceiverAddress can not be empty" });
-  }
-
-  let tokenId: string = req.params.tokenId;
-  if (!tokenId || tokenId === "") {
-    res.status(400);
-    return res.json({ error: "tokenId can not be empty" });
-  }
-
-  let burnAll: Promise<any> = await SLP.TokenType1.burnAll({
-    fundingAddress: fundingAddress,
-    fundingWif: fundingWif,
-    tokenId: tokenId,
-    bchChangeReceiverAddress: bchChangeReceiverAddress
-  });
-
-  res.status(200);
-  return res.json(burnAll);
-}
-
 async function txDetails(
   req: express.Request,
   res: express.Response,
@@ -1537,7 +1576,6 @@ module.exports = {
     mintTokenType1,
     sendTokenType1,
     burnTokenType1,
-    burnAllTokenType1,
     txDetails,
     getSlpjsTxDetails,
     tokenStats,

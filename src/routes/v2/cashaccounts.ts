@@ -1,33 +1,31 @@
 // imports
-import axios, { AxiosResponse } from 'axios';
-import * as cashAccountClass from 'cashaccounts';
-import * as express from 'express';
-import * as util from 'util';
+import * as cashAccountClass from "cashaccounts"
+import * as express from "express"
+import * as util from "util"
 import {
   CashAccountInterface,
   CashAccountRegistration
-} from './interfaces/RESTInterfaces';
-import logger = require('./logging.js');
-import routeUtils = require('./route-utils');
-import wlogger = require('../../util/winston-logging');
+} from "./interfaces/RESTInterfaces"
+import routeUtils = require("./route-utils")
+import wlogger = require("../../util/winston-logging")
 
 // consts
-const router: express.Router = express.Router();
+const router: express.Router = express.Router()
 const cashAccounts: cashAccountClass = new cashAccountClass(
   process.env.CASHACCOUNT_LOOKUPSERVER
-);
-const SLPSDK: any = require('slp-sdk');
-const SLP: any = new SLPSDK();
-const slp: any = SLP.slpjs;
-const utils: any = slp.Utils;
+)
+const SLPSDK: any = require("slp-sdk")
+const SLP: any = new SLPSDK()
+const slp: any = SLP.slpjs
+const utils: any = slp.Utils
 
 // Used for processing error messages before sending them to the user.
-util.inspect.defaultOptions = { depth: 1 };
+util.inspect.defaultOptions = { depth: 1 }
 
 // Connect the route endpoints to their handler functions.
-router.get('/', root);
-router.get('/lookup/:account/:number/:collision?', lookup);
-router.post('/registration', registration);
+router.get("/", root)
+router.get("/lookup/:account/:number/:collision?", lookup)
+router.post("/registration", registration)
 
 // Root API endpoint. Simply acknowledges that it exists.
 function root(
@@ -35,7 +33,7 @@ function root(
   res: express.Response,
   next: express.NextFunction
 ): express.Response {
-  return res.json({ status: 'cashaccount' });
+  return res.json({ status: "cashaccount" })
 }
 
 /**
@@ -48,9 +46,9 @@ function root(
  */
 function formHandle(account: string, number: string, collision: string) {
   const handle = `${account}#${number}${
-    collision !== undefined ? '.' + collision : ''
-  }`;
-  return handle;
+    collision !== undefined ? "." + collision : ""
+  }`
+  return handle
 }
 
 /**
@@ -60,7 +58,7 @@ function formHandle(account: string, number: string, collision: string) {
  * @returns {boolean}
  */
 function isCashAccount(handle: string) {
-  return cashAccounts.isCashAccount(handle);
+  return cashAccounts.isCashAccount(handle)
 }
 
 /**
@@ -81,37 +79,37 @@ async function lookup(
       account,
       number,
       collision
-    }: { account: string; number: string; collision: string } = req.params;
+    }: { account: string; number: string; collision: string } = req.params
 
-    const handle: string = formHandle(account, number, collision);
-    const valid: boolean = isCashAccount(handle);
+    const handle: string = formHandle(account, number, collision)
+    const valid: boolean = isCashAccount(handle)
 
     if (!valid) {
-      return res.status(500).json({ error: 'Not a valid CashAccount' });
+      return res.status(500).json({ error: "Not a valid CashAccount" })
     }
 
-    let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle);
+    let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
     if (lookup === undefined) {
       return res.status(500).json({
-        error: 'No account could be found with the requested parameters.'
-      });
+        error: "No account could be found with the requested parameters."
+      })
     }
 
     // Return the retrieved address information.
-    res.status(200);
-    return res.json(lookup);
+    res.status(200)
+    return res.json(lookup)
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err);
+    const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
-      res.status(status);
-      return res.json({ error: msg });
+      res.status(status)
+      return res.json({ error: msg })
     }
 
-    wlogger.error(`Error in cashaccounts.ts/lookup().`, err);
+    wlogger.error(`Error in cashaccounts.ts/lookup().`, err)
 
-    res.status(500);
-    return res.json({ error: util.inspect(err) });
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
   }
 }
 
@@ -131,75 +129,75 @@ async function registration(
   try {
     const {
       username,
-      bchAddress,
+      cashAddress,
       slpAddress
     }: {
-      username: string;
-      bchAddress: string;
-      slpAddress: string;
-    } = req.body;
+      username: string
+      cashAddress: string
+      slpAddress: string
+    } = req.body
 
     if (username === undefined) {
-      res.status(400);
+      res.status(400)
       return res.json({
         error: `Missing username.`
-      });
+      })
     }
 
-    if (bchAddress === undefined) {
-      res.status(400);
+    if (cashAddress === undefined) {
+      res.status(400)
       return res.json({
         error: `Missing BCH address.`
-      });
+      })
     }
 
     // Ensure the input is a valid BCH address.
     try {
-      utils.toCashAddress(bchAddress);
+      utils.toCashAddress(cashAddress)
     } catch (err) {
-      res.status(400);
+      res.status(400)
       return res.json({
-        error: `Invalid BCH address. Double check your address is valid: ${bchAddress}`
-      });
+        error: `Invalid BCH address. Double check your address is valid: ${cashAddress}`
+      })
     }
 
     // Ensure the input is a valid SLP address.
     try {
-      utils.toSlpAddress(slpAddress);
+      utils.toSlpAddress(slpAddress)
     } catch (err) {
-      res.status(400);
+      res.status(400)
       return res.json({
         error: `Invalid SLP address. Double check your address is valid: ${slpAddress}`
-      });
+      })
     }
 
-    const cashAccountRegex: RegExp = /^([a-zA-Z0-9_]{2,99})?$/i;
-    const valid: boolean = cashAccountRegex.test(username);
+    const cashAccountRegex: RegExp = /^([a-zA-Z0-9_]{2,99})?$/i
+    const valid: boolean = cashAccountRegex.test(username)
 
     if (!valid) {
-      return res.status(500).json({ error: 'Invalid characters' });
+      return res.status(500).json({ error: "Invalid characters" })
     }
 
     let txid: CashAccountRegistration = await cashAccounts.trustedRegistration(
       username,
-      bchAddress,
+      cashAddress,
       slpAddress
-    );
+    )
 
-    res.status(200);
-    return res.json(txid);
+    res.status(200)
+    return res.json(txid)
   } catch (err) {
     // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err);
+    const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
-      res.status(status);
-      return res.json({ error: msg });
+      res.status(status)
+      return res.json({ error: msg })
     }
 
-    wlogger.error(`Error in cashaccounts.ts/registration().`, err);
+    wlogger.error(`Error in cashaccounts.ts/registration().`, err)
 
-    res.status(500);
-    return res.json({ error: util.inspect(err) });
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
   }
 }
 
@@ -210,4 +208,4 @@ module.exports = {
     lookup,
     registration
   }
-};
+}

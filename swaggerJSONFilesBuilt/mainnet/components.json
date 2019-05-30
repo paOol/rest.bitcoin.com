@@ -1109,20 +1109,6 @@
 				"items": {
 					"type": "string"
 				}
-			},
-			"CashAccount": {
-				"type": "object",
-				"properties": {
-					"username": {
-						"type": "string"
-					},
-					"cashAddress": {
-						"type": "string"
-					},
-					"slpAddress": {
-						"type": "string"
-					}
-				}
 			}
 		}
 	}

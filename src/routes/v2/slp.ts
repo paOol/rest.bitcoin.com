@@ -1363,7 +1363,11 @@ async function txDetails(
     const tmpbitboxNetwork: any = new slp.BitboxNetwork(tmpSLP, slpValidator)
 
     // Get TX info + token info
-    const result: Promise<any> = await tmpbitboxNetwork.getTransactionDetails(
+    // Wrapped in a testable function so that it can be stubbed for unit tests.
+    const result: Promise<
+      any
+    > = await module.exports.testableComponents.getSlpjsTxDetails(
+      tmpbitboxNetwork,
       txid
     )
 
@@ -1389,6 +1393,18 @@ async function txDetails(
     res.status(500)
     return res.json({ error: util.inspect(err) })
   }
+}
+
+// This function is a simple wrapper to make unit tests possible.
+// It expects an instance of the slpjs BitboxNetwork class as input.
+// Wrapping this in a function allows it to be stubbed so that the txDetails
+// route can be tested as a unit test.
+async function getSlpjsTxDetails(slpjsBitboxNetworkInstance, txid) {
+  const result: Promise<
+    any
+  > = await slpjsBitboxNetworkInstance.getTransactionDetails(txid)
+
+  return result
 }
 
 async function tokenStats(
@@ -1554,6 +1570,7 @@ module.exports = {
     sendTokenType1,
     burnTokenType1,
     txDetails,
+    getSlpjsTxDetails,
     tokenStats,
     balancesForTokenSingle,
     txsTokenIdAddressSingle

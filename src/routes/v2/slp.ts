@@ -163,6 +163,9 @@ function formatTokenOutput(token: any): TokenInterface {
   delete token.tokenStats.block_last_active_mint
   delete token.tokenStats.qty_valid_txns_since_genesis
   delete token.tokenStats.qty_valid_token_addresses
+
+  token.tokenDetails.timestampUnix = token.tokenDetails.timestamp_unix
+  delete token.tokenDetails.timestamp_unix
   return token
 }
 
@@ -1374,7 +1377,6 @@ async function txDetails(
     res.status(200)
     return res.json(result)
   } catch (err) {
-    console.log(err)
     wlogger.error(`Error in slp.ts/txDetails().`, err)
 
     // Attempt to decode the error message.

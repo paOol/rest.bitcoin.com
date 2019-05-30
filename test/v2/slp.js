@@ -225,7 +225,7 @@ describe("#SLP", () => {
       req.params.tokenId = tokenIdToTest
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
         "id",
@@ -238,6 +238,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -368,6 +369,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -398,7 +400,7 @@ describe("#SLP", () => {
         ]
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
@@ -411,6 +413,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -821,6 +824,7 @@ describe("#SLP", () => {
         "documentHash",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "documentUri",
         "name",
         "symbol",

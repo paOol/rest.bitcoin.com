@@ -119,7 +119,7 @@ describe("#Mining", () => {
       }
 
       const result = await getMiningInfo(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
         "blocks",
@@ -127,7 +127,7 @@ describe("#Mining", () => {
         "currentblocktx",
         "difficulty",
         "blockprioritypercentage",
-        "errors",
+        "warnings",
         "networkhashps",
         "pooledtx",
         "chain"

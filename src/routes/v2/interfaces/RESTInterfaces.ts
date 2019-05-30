@@ -307,7 +307,7 @@ export interface ValidateAddressInterface {
 export interface TokenInterface {
   decimals: number
   timestamp: string
-  timestamp_unix: number
+  timestampUnix: number
   versionType: number
   documentUri: string
   symbol: string

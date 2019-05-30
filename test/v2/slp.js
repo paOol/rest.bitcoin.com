@@ -9,18 +9,18 @@
   -See listSingleToken() tests.
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
-const proxyquire = require("proxyquire").noPreserveCache()
+//const proxyquire = require("proxyquire").noPreserveCache();
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
 const slpRoute = require("../../dist/routes/v2/slp")
-const pathStub = {} // Used to stub methods within slpjs.
-const slpRouteStub = proxyquire("../../dist/routes/v2/slp", { slpjs: pathStub })
+//const pathStub = {}; // Used to stub methods within slpjs.
+//const slpRouteStub = proxyquire("../../dist/routes/v2/slp", {
+//  slpjs: pathStub
+//});
 
 let originalEnvVars // Used during transition from integration to unit tests.
 
@@ -225,7 +225,7 @@ describe("#SLP", () => {
       req.params.tokenId = tokenIdToTest
 
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
         "id",
@@ -238,6 +238,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -368,6 +369,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -398,7 +400,7 @@ describe("#SLP", () => {
         ]
 
       const result = await listBulkToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [
@@ -411,6 +413,7 @@ describe("#SLP", () => {
         "txnsSinceGenesis",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "symbol",
         "name",
         "documentUri",
@@ -821,6 +824,7 @@ describe("#SLP", () => {
         "documentHash",
         "versionType",
         "timestamp",
+        "timestampUnix",
         "documentUri",
         "name",
         "symbol",
@@ -871,7 +875,7 @@ describe("#SLP", () => {
 
     it("should throw 400 if txid is empty", async () => {
       const result = await txDetails(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      //console.log(`result: ${util.inspect(txDetailsresult)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "txid can not be empty")
@@ -902,21 +906,22 @@ describe("#SLP", () => {
       }
     })
 
-    // it("should get tx details with token info", async () => {
-    //   // if (process.env.TEST === "unit") {
-    //   //   // Mock the slpjs library for unit tests.
-    //   //   pathStub.BitboxNetwork = slpjsMock.BitboxNetwork
-    //   //   txDetails = slpRouteStub.testableComponents.txDetails
-    //   // }
+    it("should get tx details with token info", async () => {
+      if (process.env.TEST === "unit") {
+        // Mock the slpjs library for unit tests.
+        sandbox
+          .stub(slpRoute.testableComponents, "getSlpjsTxDetails")
+          .resolves(mockData.mockTx)
+      }
 
-    //   req.params.txid =
-    //     "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
+      req.params.txid =
+        "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d446"
 
-    //   const result = await txDetails(req, res)
-    //   // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      const result = await txDetails(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`);
 
-    //   assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
-    // })
+      assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
+    })
   })
 
   describe("txsTokenIdAddressSingle()", () => {

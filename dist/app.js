@@ -45,7 +45,6 @@ var slpV1 = require("./routes/v1/slp");
 var indexV2 = require("./routes/v2/index");
 var healthCheckV2 = require("./routes/v2/health-check");
 var addressV2 = require("./routes/v2/address");
-var cashAccountsV2 = require("./routes/v2/cashAccounts");
 var blockV2 = require("./routes/v2/block");
 var blockchainV2 = require("./routes/v2/blockchain");
 var controlV2 = require("./routes/v2/control");
@@ -102,7 +101,6 @@ app.use("/" + v2prefix + "/", route_ratelimit_1.routeRateLimit);
 app.use("/", indexV2);
 app.use("/" + v2prefix + "/" + "health-check", healthCheckV2);
 app.use("/" + v2prefix + "/" + "address", addressV2.router);
-app.use("/" + v2prefix + "/" + "cashAccounts", cashAccountsV2.router);
 app.use("/" + v2prefix + "/" + "blockchain", blockchainV2.router);
 app.use("/" + v2prefix + "/" + "block", blockV2.router);
 app.use("/" + v2prefix + "/" + "control", controlV2.router);
@@ -172,7 +170,7 @@ if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
             }
         }
         catch (error) {
-            var errorMessage = "Error processing ZMQ message";
+            var errorMessage = 'Error processing ZMQ message';
             console.log(errorMessage, error);
             wlogger.error(errorMessage, error);
         }

@@ -333,3 +333,21 @@ export interface BurnTotalInterface {
   outputTotal: number
   burnTotal: number
 }
+
+export interface CashAccountInterface {
+  identifier: string
+  information: {
+    emoji: string
+    name: string
+    number: number
+    collision: {
+      hash: string
+    }
+    payment: string[]
+  }
+}
+
+export interface CashAccountRegistration {
+  txid: string,
+  hex: string
+}

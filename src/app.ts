@@ -1,8 +1,6 @@
 "use strict"
-import { Socket } from "net"
-
 import * as express from "express"
-
+import { Socket } from "net"
 // Middleware
 import { routeRateLimit } from "./middleware/route-ratelimit"
 
@@ -53,6 +51,7 @@ const slpV1 = require("./routes/v1/slp")
 const indexV2 = require("./routes/v2/index")
 const healthCheckV2 = require("./routes/v2/health-check")
 const addressV2 = require("./routes/v2/address")
+const cashAccountsV2 = require("./routes/v2/cashAccounts")
 const blockV2 = require("./routes/v2/block")
 const blockchainV2 = require("./routes/v2/blockchain")
 const controlV2 = require("./routes/v2/control")
@@ -144,6 +143,7 @@ app.use(`/${v2prefix}/`, routeRateLimit)
 app.use("/", indexV2)
 app.use(`/${v2prefix}/` + `health-check`, healthCheckV2)
 app.use(`/${v2prefix}/` + `address`, addressV2.router)
+app.use(`/${v2prefix}/` + `cashAccounts`, cashAccountsV2.router)
 app.use(`/${v2prefix}/` + `blockchain`, blockchainV2.router)
 app.use(`/${v2prefix}/` + `block`, blockV2.router)
 app.use(`/${v2prefix}/` + `control`, controlV2.router)
@@ -168,20 +168,27 @@ app.use(
 )
 
 // error handler
-app.use((err: IError, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const status = err.status || 500
+app.use(
+  (
+    err: IError,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const status = err.status || 500
 
-  // set locals, only providing error in development
-  res.locals.message = err.message
-  res.locals.error = req.app.get("env") === "development" ? err : {}
+    // set locals, only providing error in development
+    res.locals.message = err.message
+    res.locals.error = req.app.get("env") === "development" ? err : {}
 
-  // render the error page
-  res.status(status)
-  res.json({
-    status: status,
-    message: err.message
-  })
-})
+    // render the error page
+    res.status(status)
+    res.json({
+      status: status,
+      message: err.message
+    })
+  }
+)
 
 /**
  * Get port from environment and store in Express.
@@ -208,7 +215,11 @@ io.on("connection", (socket: Socket) => {
  */
 
 if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
-  console.log(`Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
+  console.log(
+    `Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${
+      process.env.ZEROMQ_PORT
+    }`
+  )
   const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
 
   sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
@@ -225,13 +236,15 @@ if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
         io.emit("blocks", JSON.stringify(blck, null, 2))
       }
     } catch (error) {
-      const errorMessage = 'Error processing ZMQ message'
+      const errorMessage = "Error processing ZMQ message"
       console.log(errorMessage, error)
       wlogger.error(errorMessage, error)
     }
   })
 } else {
-  console.log("ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection.")
+  console.log(
+    "ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection."
+  )
 }
 
 /**

@@ -1856,30 +1856,6 @@
           }
         }
       }
-    },
-    "/cashAccounts/registration": {
-      "post": {
-        "tags": ["cashAccounts"],
-        "summary": "Register new cash account",
-        "description": "Register new cash account",
-        "operationId": "registerSingle",
-        "requestBody": {
-          "description": "Cash Account",
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CashAccount"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "successful response"
-          }
-        }
-      }
     }
   }
 }

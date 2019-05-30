@@ -25,7 +25,7 @@ util.inspect.defaultOptions = { depth: 1 }
 // Connect the route endpoints to their handler functions.
 router.get("/", root)
 router.get("/lookup/:account/:number/:collision?", lookup)
-router.post("/registration", registration)
+// router.post("/registration", registration)
 
 // Root API endpoint. Simply acknowledges that it exists.
 function root(
@@ -121,91 +121,90 @@ async function lookup(
  * @param {string} slpAddress - simpleledger:asdf
  * @returns {object} - CashAccountRegistration
  */
-async function registration(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): Promise<express.Response> {
-  try {
-    const {
-      username,
-      cashAddress,
-      slpAddress
-    }: {
-      username: string
-      cashAddress: string
-      slpAddress: string
-    } = req.body
+// async function registration(
+//   req: express.Request,
+//   res: express.Response,
+//   next: express.NextFunction
+// ): Promise<express.Response> {
+//   try {
+//     const {
+//       username,
+//       cashAddress,
+//       slpAddress
+//     }: {
+//       username: string
+//       cashAddress: string
+//       slpAddress: string
+//     } = req.body
 
-    if (username === undefined) {
-      res.status(400)
-      return res.json({
-        error: `Missing username.`
-      })
-    }
+//     if (username === undefined) {
+//       res.status(400)
+//       return res.json({
+//         error: `Missing username.`
+//       })
+//     }
 
-    if (cashAddress === undefined) {
-      res.status(400)
-      return res.json({
-        error: `Missing BCH address.`
-      })
-    }
+//     if (cashAddress === undefined) {
+//       res.status(400)
+//       return res.json({
+//         error: `Missing BCH address.`
+//       })
+//     }
 
-    // Ensure the input is a valid BCH address.
-    try {
-      utils.toCashAddress(cashAddress)
-    } catch (err) {
-      res.status(400)
-      return res.json({
-        error: `Invalid BCH address. Double check your address is valid: ${cashAddress}`
-      })
-    }
+//     // Ensure the input is a valid BCH address.
+//     try {
+//       utils.toCashAddress(cashAddress)
+//     } catch (err) {
+//       res.status(400)
+//       return res.json({
+//         error: `Invalid BCH address. Double check your address is valid: ${cashAddress}`
+//       })
+//     }
 
-    // Ensure the input is a valid SLP address.
-    try {
-      utils.toSlpAddress(slpAddress)
-    } catch (err) {
-      res.status(400)
-      return res.json({
-        error: `Invalid SLP address. Double check your address is valid: ${slpAddress}`
-      })
-    }
+//     // Ensure the input is a valid SLP address.
+//     try {
+//       utils.toSlpAddress(slpAddress)
+//     } catch (err) {
+//       res.status(400)
+//       return res.json({
+//         error: `Invalid SLP address. Double check your address is valid: ${slpAddress}`
+//       })
+//     }
 
-    const cashAccountRegex: RegExp = /^([a-zA-Z0-9_]{2,99})?$/i
-    const valid: boolean = cashAccountRegex.test(username)
+//     const cashAccountRegex: RegExp = /^([a-zA-Z0-9_]{2,99})?$/i
+//     const valid: boolean = cashAccountRegex.test(username)
 
-    if (!valid) {
-      return res.status(500).json({ error: "Invalid characters" })
-    }
+//     if (!valid) {
+//       return res.status(500).json({ error: "Invalid characters" })
+//     }
 
-    let txid: CashAccountRegistration = await cashAccounts.trustedRegistration(
-      username,
-      cashAddress,
-      slpAddress
-    )
+//     let txid: CashAccountRegistration = await cashAccounts.trustedRegistration(
+//       username,
+//       cashAddress,
+//       slpAddress
+//     )
 
-    res.status(200)
-    return res.json(txid)
-  } catch (err) {
-    // Attempt to decode the error message.
-    const { msg, status } = routeUtils.decodeError(err)
-    if (msg) {
-      res.status(status)
-      return res.json({ error: msg })
-    }
+//     res.status(200)
+//     return res.json(txid)
+//   } catch (err) {
+//     // Attempt to decode the error message.
+//     const { msg, status } = routeUtils.decodeError(err)
+//     if (msg) {
+//       res.status(status)
+//       return res.json({ error: msg })
+//     }
 
-    wlogger.error(`Error in cashaccounts.ts/registration().`, err)
+//     wlogger.error(`Error in cashaccounts.ts/registration().`, err)
 
-    res.status(500)
-    return res.json({ error: util.inspect(err) })
-  }
-}
+//     res.status(500)
+//     return res.json({ error: util.inspect(err) })
+//   }
+// }
 
 module.exports = {
   router,
   lookupableComponents: {
     root,
-    lookup,
-    registration
+    lookup
   }
 }

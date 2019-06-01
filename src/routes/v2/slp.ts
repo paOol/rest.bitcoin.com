@@ -617,6 +617,7 @@ async function balancesForTokenSingle(
       (addy: any): any => {
         delete addy.satoshis_balance
         addy.tokenBalance = parseFloat(addy.token_balance)
+        addy.tokenBalanceString = addy.token_balance
         addy.slpAddress = addy.address
         addy.tokenId = tokenId
         delete addy.address
@@ -710,15 +711,20 @@ async function balancesForAddressByTokenID(
 
     // Get data from SLPDB.
     const tokenRes: AxiosResponse<any> = await axios.get(url)
-    let resVal: any
+    let resVal: any = {
+      tokenId: tokenId,
+      balance: 0,
+      balanceString: '0'
+    }
     res.status(200)
     if (tokenRes.data.a.length > 0) {
       tokenRes.data.a.forEach(
         async (token: any): Promise<any> => {
           if (token.tokenDetails.tokenIdHex === tokenId) {
             resVal = {
-              tokenId: tokenRes.data.a[0].tokenDetails.tokenIdHex,
-              balance: parseFloat(tokenRes.data.a[0].token_balance)
+              tokenId: token.tokenDetails.tokenIdHex,
+              balance: parseFloat(token.token_balance),
+              balanceString: token.token_balance
             }
             //       const query2 = {
             //         v: 3,
@@ -751,18 +757,14 @@ async function balancesForAddressByTokenID(
             //       }
             //       console.log("resVal", resVal)
             // return res.json(resVal)
-          } else {
-            resVal = {
-              tokenId: tokenId,
-              balance: 0
-            }
           }
         }
       )
     } else {
       resVal = {
         tokenId: tokenId,
-        balance: 0
+        balance: 0,
+        balanceString: '0'
       }
     }
     return res.json(resVal)

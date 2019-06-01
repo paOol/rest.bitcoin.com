@@ -490,6 +490,7 @@ async function balancesForAddress(
         token.tokenId = token.tokenDetails.tokenIdHex
         tokenIds.push(token.tokenId)
         token.balance = parseFloat(token.token_balance)
+        token.balanceString = token.token_balance
         token.slpAddress = token.address
         delete token.tokenDetails
         delete token.satoshis_balance
@@ -568,7 +569,7 @@ async function balancesForAddress(
 
     res.status(500)
     return res.json({
-      error: `Error in /ddress/:address: ${err.message}`
+      error: `Error in /balancesForAddress/:address: ${err.message}`
     })
   }
 }

@@ -505,6 +505,7 @@ describe("#SLP", () => {
       assert.hasAllKeys(result[0], [
         "tokenId",
         "balance",
+        "balanceString",
         "slpAddress",
         "decimalCount"
       ])
@@ -606,7 +607,7 @@ describe("#SLP", () => {
 
       // TODO - add decimalCount
       // assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
-      assert.hasAllKeys(result, ["tokenId", "balance"])
+      assert.hasAllKeys(result, ["tokenId", "balance", "balanceString"])
     })
   })
 
@@ -866,7 +867,7 @@ describe("#SLP", () => {
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result[0], ["tokenId", "slpAddress", "tokenBalance"])
+      assert.hasAllKeys(result[0], ["tokenId", "slpAddress", "tokenBalance", "tokenBalanceString"])
     })
   })
 

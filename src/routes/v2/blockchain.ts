@@ -236,13 +236,12 @@ async function getBlockHeaderBulk(
       }
     }
 
-    const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
-
     // Loop through each hash and creates an array of requests to call in parallel
     const promises: Promise<
       VerboseBlockHeaderInterface | string
     >[] = hashes.map(
       async (hash: string): Promise<VerboseBlockHeaderInterface | string> => {
+        const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
         requestConfig.data.id = "getblockheader"
         requestConfig.data.method = "getblockheader"
         requestConfig.data.params = [hash, verbose]

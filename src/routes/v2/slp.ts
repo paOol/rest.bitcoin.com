@@ -2,7 +2,15 @@
 import axios, { AxiosResponse } from "axios"
 import * as express from "express"
 import * as util from "util"
-import { BurnTotalInterface, TokenInterface } from "./interfaces/RESTInterfaces"
+import {
+  BalanceForAddressByTokenId,
+  BalancesForAddress,
+  BalancesForToken,
+  BurnTotalResult,
+  ConvertResult,
+  TokenInterface,
+  ValidateTxidResult
+} from "./interfaces/RESTInterfaces"
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -539,7 +547,7 @@ async function balancesForAddress(
         }
       })
 
-      const details: AxiosResponse<any>[] = await axios.all(promises)
+      const details: BalancesForAddress[] = await axios.all(promises)
       tokenRes.data.a = tokenRes.data.a.map(
         (token: any): any => {
           details.forEach(
@@ -613,7 +621,7 @@ async function balancesForTokenSingle(
 
     // Get data from SLPDB.
     const tokenRes: AxiosResponse = await axios.get(url)
-    let resBalances: any[] = tokenRes.data.a.map(
+    let resBalances: BalancesForToken[] = tokenRes.data.a.map(
       (addy: any): any => {
         delete addy.satoshis_balance
         addy.tokenBalance = parseFloat(addy.token_balance)
@@ -711,10 +719,10 @@ async function balancesForAddressByTokenID(
 
     // Get data from SLPDB.
     const tokenRes: AxiosResponse<any> = await axios.get(url)
-    let resVal: any = {
+    let resVal: BalanceForAddressByTokenId = {
       tokenId: tokenId,
       balance: 0,
-      balanceString: '0'
+      balanceString: "0"
     }
     res.status(200)
     if (tokenRes.data.a.length > 0) {
@@ -764,7 +772,7 @@ async function balancesForAddressByTokenID(
       resVal = {
         tokenId: tokenId,
         balance: 0,
-        balanceString: '0'
+        balanceString: "0"
       }
     }
     return res.json(resVal)
@@ -801,11 +809,7 @@ async function convertAddressSingle(
 
     const slpAddr: string = SLP.Address.toSLPAddress(address)
 
-    const obj: {
-      [slpAddress: string]: any
-      cashAddress: any
-      legacyAddress: any
-    } = {
+    const obj: ConvertResult = {
       slpAddress: "",
       cashAddress: "",
       legacyAddress: ""
@@ -855,7 +859,7 @@ async function convertAddressBulk(
   }
 
   // Convert each address in the array.
-  const convertedAddresses: any[] = []
+  const convertedAddresses: ConvertResult[] = []
   for (let i: number = 0; i < addresses.length; i++) {
     const address = addresses[i]
 
@@ -867,11 +871,7 @@ async function convertAddressBulk(
 
     const slpAddr: string = SLP.Address.toSLPAddress(address)
 
-    const obj: {
-      [slpAddress: string]: any
-      cashAddress: any
-      legacyAddress: any
-    } = {
+    const obj: ConvertResult = {
       slpAddress: "",
       cashAddress: "",
       legacyAddress: ""
@@ -937,7 +937,7 @@ async function validateBulk(
     })
 
     // Filter array to only valid txid results
-    const validateResults: AxiosResponse<any>[] = await axios.all(
+    const validateResults: ValidateTxidResult[] = await axios.all(
       validatePromises
     )
     const validTxids: any[] = validateResults.filter(result => result)
@@ -981,11 +981,7 @@ async function validateSingle(
       boolean
     > = await module.exports.testableComponents.isValidSlpTxid(txid)
 
-    let tmp: {
-      txid: string
-      valid: boolean
-      invalidReason?: string
-    } = {
+    let tmp: ValidateTxidResult = {
       txid: txid,
       valid: isValid ? true : false
     }
@@ -1023,7 +1019,6 @@ async function burnTotalSingle(
 ): Promise<express.Response> {
   try {
     let txid: string = req.params.transactionId
-    console.log(txid)
     const query: {
       v: number
       q: {
@@ -1060,7 +1055,7 @@ async function burnTotalSingle(
     // Get data from SLPDB.
     const tokenRes: AxiosResponse = await axios.get(url)
 
-    let burnTotal: BurnTotalInterface = {
+    let burnTotal: BurnTotalResult = {
       transactionId: txid,
       inputTotal: 0,
       outputTotal: 0,

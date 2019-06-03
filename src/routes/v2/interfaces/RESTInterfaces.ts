@@ -327,13 +327,6 @@ export interface TokenInterface {
   mintingBatonStatus: string
 }
 
-export interface BurnTotalInterface {
-  transactionId: string
-  inputTotal: number
-  outputTotal: number
-  burnTotal: number
-}
-
 export interface CashAccountInterface {
   identifier: string
   information: {
@@ -348,6 +341,46 @@ export interface CashAccountInterface {
 }
 
 export interface CashAccountRegistration {
-  txid: string,
+  txid: string
   hex: string
+}
+
+export interface ValidateTxidResult {
+  txid: string
+  valid: boolean
+  invalidReason?: string
+}
+
+export interface BalancesForAddress {
+  tokenId: string
+  balance: number
+  balanceString: string
+  slpAddress: string
+  decimalCount: number
+}
+
+export interface BalancesForToken {
+  tokenBalance: number
+  tokenBalanceString: string
+  slpAddress: string
+  tokenId: string
+}
+
+export interface BalanceForAddressByTokenId {
+  tokenId: string
+  balance: number
+  balanceString: string
+}
+
+export interface ConvertResult {
+  slpAddress: string
+  cashAddress: string
+  legacyAddress: string
+}
+
+export interface BurnTotalResult {
+  transactionId: string
+  inputTotal: number
+  outputTotal: number
+  burnTotal: number
 }

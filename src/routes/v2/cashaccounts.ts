@@ -27,6 +27,7 @@ util.inspect.defaultOptions = { depth: 1 }
 router.get("/", root)
 router.get("/lookup/:account/:number/:collision?", lookup)
 router.get("/check/:account/:number", check)
+router.get("/reverselookup/:address", reverseLookup)
 // router.post("/registration", registration)
 
 // Root API endpoint. Simply acknowledges that it exists.
@@ -105,7 +106,7 @@ async function lookup(
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
-      return res.json({ error: msg })
+      return res.json({ error: msg.error })
     }
 
     wlogger.error(`Error in cashaccounts.ts/lookup().`, err)
@@ -155,10 +156,50 @@ async function check(
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
-      return res.json({ error: msg })
+      return res.json({ error: msg.error })
     }
 
     wlogger.error(`Error in cashaccounts.ts/check().`, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+/**
+ *  CashAccount Reverse Lookup
+ *
+ * @param {string} address - bitcoincash:qr4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst
+ * @returns {object} - results
+ */
+async function reverseLookup(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const { address }: { address: string } = req.params
+
+    let lookup = await cashAccounts.reverseLookup(address)
+
+    if (lookup === undefined) {
+      return res.status(500).json({
+        error: "No account matched the requested parameters",
+      })
+    }
+
+    // Return the retrieved address information.
+    res.status(200)
+    return res.json(lookup)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg.error })
+    }
+
+    wlogger.error(`Error in cashaccounts.ts/reverseLookup().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -243,7 +284,7 @@ async function check(
 //     const { msg, status } = routeUtils.decodeError(err)
 //     if (msg) {
 //       res.status(status)
-//       return res.json({ error: msg })
+//       return res.json({ error:.error msg })
 //     }
 
 //     wlogger.error(`Error in cashaccounts.ts/registration().`, err)
@@ -258,5 +299,6 @@ module.exports = {
   lookupableComponents: {
     root,
     lookup,
+    reverseLookup,
   },
 }

@@ -27,7 +27,7 @@
     "bitbox-sdk": "8.0.2",
     "bitcoincash-zmq-decoder": "0.1.5",
     "body-parser": "^1.18.3",
-    "cashaccounts": "^0.3.4",
+    "cashaccounts": "^0.4.0",
     "cookie-parser": "~1.4.3",
     "cors": "^2.8.3",
     "debug": "~2.6.3",
@@ -87,5 +87,13 @@
         "npmPublish": false
       }
     ]
+  },
+  "prettier": {
+    "singleQuote": false,
+    "printWidth": 80,
+    "arrowParens": "avoid",
+    "trailingComma": "false",
+    "bracketSpacing": true,
+    "semi": false
   }
 }

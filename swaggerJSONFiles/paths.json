@@ -1857,5 +1857,41 @@
         }
       }
     }
+  },
+    "/cashAccounts/check/{account}/{number}": {
+      "get": {
+        "tags": ["cashAccounts"],
+        "summary": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
+        "description": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
+        "operationId": "checkSingle",
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "description": "The account",
+            "required": true,
+            "example": "cgcardona",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "number",
+            "in": "path",
+            "description": "The number",
+            "required": true,
+            "example": "122",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    }
   }
 }

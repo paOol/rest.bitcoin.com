@@ -4,7 +4,8 @@ import * as express from "express"
 import * as util from "util"
 import {
   CashAccountInterface,
-  CashAccountRegistration
+  CashAccountRegistration,
+  CashAccountBatchResults,
 } from "./interfaces/RESTInterfaces"
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -25,6 +26,7 @@ util.inspect.defaultOptions = { depth: 1 }
 // Connect the route endpoints to their handler functions.
 router.get("/", root)
 router.get("/lookup/:account/:number/:collision?", lookup)
+router.get("/check/:account/:number", check)
 // router.post("/registration", registration)
 
 // Root API endpoint. Simply acknowledges that it exists.
@@ -44,7 +46,7 @@ function root(
  * @param {string} collision
  * @returns Jonathan#100.123 // if collision supplied
  */
-function formHandle(account: string, number: string, collision: string) {
+function formHandle(account: string, number: string, collision?: string) {
   const handle = `${account}#${number}${
     collision !== undefined ? "." + collision : ""
   }`
@@ -78,7 +80,7 @@ async function lookup(
     const {
       account,
       number,
-      collision
+      collision,
     }: { account: string; number: string; collision: string } = req.params
 
     const handle: string = formHandle(account, number, collision)
@@ -91,7 +93,7 @@ async function lookup(
     let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account could be found with the requested parameters."
+        error: "No account could be found with the requested parameters.",
       })
     }
 
@@ -107,6 +109,56 @@ async function lookup(
     }
 
     wlogger.error(`Error in cashaccounts.ts/lookup().`, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+/**
+ *  CashAccount Check
+ *
+ * @param {string} account - Jonathan
+ * @param {string} number - 100
+ * @returns {object} - CashAccountBatchResults
+ */
+async function check(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const { account, number }: { account: string; number: string } = req.params
+
+    const handle: string = formHandle(account, number)
+    const valid: boolean = isCashAccount(handle)
+
+    if (!valid) {
+      return res.status(500).json({ error: "Not a valid CashAccount" })
+    }
+
+    let lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
+      handle
+    )
+
+    if (lookup === undefined) {
+      return res.status(500).json({
+        error: "No account matched the requested parameters",
+      })
+    }
+
+    // Return the retrieved address information.
+    res.status(200)
+    return res.json(lookup)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    wlogger.error(`Error in cashaccounts.ts/check().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -205,6 +257,6 @@ module.exports = {
   router,
   lookupableComponents: {
     root,
-    lookup
-  }
+    lookup,
+  },
 }

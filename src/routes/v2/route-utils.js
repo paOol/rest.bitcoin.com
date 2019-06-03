@@ -5,6 +5,7 @@
 "use strict"
 
 const axios = require("axios")
+const logger = require("./logging.js")
 const wlogger = require("../../util/winston-logging")
 
 const util = require("util")

@@ -15,10 +15,6 @@ const router: express.Router = express.Router()
 const cashAccounts: cashAccountClass = new cashAccountClass(
   process.env.CASHACCOUNT_LOOKUPSERVER
 )
-const SLPSDK: any = require("slp-sdk")
-const SLP: any = new SLPSDK()
-const slp: any = SLP.slpjs
-const utils: any = slp.Utils
 
 // Used for processing error messages before sending them to the user.
 util.inspect.defaultOptions = { depth: 1 }
@@ -246,7 +242,7 @@ async function reverseLookup(
 
 //     // Ensure the input is a valid BCH address.
 //     try {
-//       utils.toCashAddress(cashAddress)
+//       isCashAccount(cashAddress)
 //     } catch (err) {
 //       res.status(400)
 //       return res.json({
@@ -256,7 +252,7 @@ async function reverseLookup(
 
 //     // Ensure the input is a valid SLP address.
 //     try {
-//       utils.toSlpAddress(slpAddress)
+//       cashAccounts.toSlpAddress(slpAddress)
 //     } catch (err) {
 //       res.status(400)
 //       return res.json({
@@ -296,7 +292,7 @@ async function reverseLookup(
 
 module.exports = {
   router,
-  lookupableComponents: {
+  testableComponents: {
     root,
     lookup,
     reverseLookup

@@ -5,7 +5,7 @@ import * as util from "util"
 import {
   CashAccountInterface,
   CashAccountRegistration,
-  CashAccountBatchResults,
+  CashAccountBatchResults
 } from "./interfaces/RESTInterfaces"
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -81,7 +81,7 @@ async function lookup(
     const {
       account,
       number,
-      collision,
+      collision
     }: { account: string; number: string; collision: string } = req.params
 
     const handle: string = formHandle(account, number, collision)
@@ -94,7 +94,7 @@ async function lookup(
     let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account could be found with the requested parameters.",
+        error: "No account could be found with the requested parameters."
       })
     }
 
@@ -144,7 +144,7 @@ async function check(
 
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account matched the requested parameters",
+        error: "No account matched the requested parameters"
       })
     }
 
@@ -184,7 +184,7 @@ async function reverseLookup(
 
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account matched the requested parameters",
+        error: "No account matched the requested parameters"
       })
     }
 
@@ -299,6 +299,6 @@ module.exports = {
   lookupableComponents: {
     root,
     lookup,
-    reverseLookup,
-  },
+    reverseLookup
+  }
 }

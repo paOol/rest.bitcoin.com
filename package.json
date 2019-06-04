@@ -92,7 +92,7 @@
     "singleQuote": false,
     "printWidth": 80,
     "arrowParens": "avoid",
-    "trailingComma": "false",
+    "trailingComma": "none",
     "bracketSpacing": true,
     "semi": false
   }

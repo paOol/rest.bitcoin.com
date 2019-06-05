@@ -1817,7 +1817,7 @@
         "tags": ["cashAccounts"],
         "summary": "Lookup Cash Account by account, number and optional collision hash",
         "description": "Lookup Cash Account by account, number and optional collision hash",
-        "operationId": "lookupSingle",
+        "operationId": "lookup",
         "parameters": [
           {
             "name": "account",
@@ -1854,6 +1854,76 @@
           "200": {
             "description": "successful response"
           }
+        }
+      }
+    }
+  },
+  "/cashAccounts/check/{account}/{number}": {
+    "get": {
+      "tags": ["cashAccounts"],
+      "summary": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
+      "description": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
+      "operationId": "check",
+      "parameters": [
+        {
+          "name": "account",
+          "in": "path",
+          "description": "The account",
+          "required": true,
+          "example": "cgcardona",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "number",
+          "in": "path",
+          "description": "The number",
+          "required": true,
+          "example": "122",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "successful response"
+        }
+      }
+    }
+  },
+  "/cashAccounts/reverselookup/{address}": {
+    "get": {
+      "tags": ["cashAccounts"],
+      "summary": "get Cash Accounts associated with the address provided.",
+      "description": "get Cash Accounts associated with the address provided.",
+      "operationId": "reverseLookup",
+      "parameters": [
+        {
+          "name": "address",
+          "in": "path",
+          "description": "The BCH/SLP address",
+          "required": true,
+          "example": "bitcoincash:qr4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst",
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "number",
+          "in": "path",
+          "description": "The number",
+          "required": true,
+          "example": "122",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "successful response"
         }
       }
     }

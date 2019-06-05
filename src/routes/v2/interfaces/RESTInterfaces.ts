@@ -384,3 +384,10 @@ export interface BurnTotalResult {
   outputTotal: number
   burnTotal: number
 }
+
+
+export interface CashAccountBatchResults {
+  identifier: string
+  block: number
+  results: string[]
+}

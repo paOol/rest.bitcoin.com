@@ -4,7 +4,8 @@ import * as express from "express"
 import * as util from "util"
 import {
   CashAccountInterface,
-  CashAccountRegistration
+  CashAccountRegistration,
+  CashAccountBatchResults
 } from "./interfaces/RESTInterfaces"
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -14,10 +15,6 @@ const router: express.Router = express.Router()
 const cashAccounts: cashAccountClass = new cashAccountClass(
   process.env.CASHACCOUNT_LOOKUPSERVER
 )
-const SLPSDK: any = require("slp-sdk")
-const SLP: any = new SLPSDK()
-const slp: any = SLP.slpjs
-const utils: any = slp.Utils
 
 // Used for processing error messages before sending them to the user.
 util.inspect.defaultOptions = { depth: 1 }
@@ -25,6 +22,8 @@ util.inspect.defaultOptions = { depth: 1 }
 // Connect the route endpoints to their handler functions.
 router.get("/", root)
 router.get("/lookup/:account/:number/:collision?", lookup)
+router.get("/check/:account/:number", check)
+router.get("/reverselookup/:address", reverseLookup)
 // router.post("/registration", registration)
 
 // Root API endpoint. Simply acknowledges that it exists.
@@ -44,7 +43,7 @@ function root(
  * @param {string} collision
  * @returns Jonathan#100.123 // if collision supplied
  */
-function formHandle(account: string, number: string, collision: string) {
+function formHandle(account: string, number: string, collision?: string) {
   const handle = `${account}#${number}${
     collision !== undefined ? "." + collision : ""
   }`
@@ -81,11 +80,23 @@ async function lookup(
       collision
     }: { account: string; number: string; collision: string } = req.params
 
+    if (!account || account === "") {
+      res.status(400)
+      return res.json({ error: "account name can not be empty" })
+    }
+    if (!number || number === "") {
+      res.status(400)
+      return res.json({ error: "number can not be empty" })
+    }
+
     const handle: string = formHandle(account, number, collision)
     const valid: boolean = isCashAccount(handle)
 
     if (!valid) {
-      return res.status(500).json({ error: "Not a valid CashAccount" })
+      res.status(500)
+      return res.json({
+        error: "No account could be found with the requested parameters."
+      })
     }
 
     let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
@@ -103,10 +114,115 @@ async function lookup(
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
       res.status(status)
-      return res.json({ error: msg })
+      return res.json({ error: msg.error })
     }
 
     wlogger.error(`Error in cashaccounts.ts/lookup().`, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+/**
+ *  CashAccount Check
+ *
+ * @param {string} account - Jonathan
+ * @param {string} number - 100
+ * @returns {object} - CashAccountBatchResults
+ */
+async function check(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const { account, number }: { account: string; number: string } = req.params
+
+    if (!account || account === "") {
+      res.status(400)
+      return res.json({ error: "account name can not be empty" })
+    }
+    if (!number || number === "") {
+      res.status(400)
+      return res.json({ error: "number can not be empty" })
+    }
+
+    const handle: string = formHandle(account, number)
+    const valid: boolean = isCashAccount(handle)
+
+    if (!valid) {
+      res.status(500)
+      return res.json({ error: "Not a valid CashAccount" })
+    }
+
+    let lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
+      handle
+    )
+
+    if (lookup === undefined) {
+      return res.status(500).json({
+        error: "No account could be found with the requested parameters."
+      })
+    }
+
+    // Return the retrieved address information.
+    res.status(200)
+    return res.json(lookup)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg.error })
+    }
+
+    wlogger.error(`Error in cashaccounts.ts/check().`, err)
+
+    res.status(500)
+    return res.json({ error: util.inspect(err) })
+  }
+}
+
+/**
+ *  CashAccount Reverse Lookup
+ *
+ * @param {string} address - bitcoincash:qr4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst
+ * @returns {object} - results
+ */
+async function reverseLookup(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const { address }: { address: string } = req.params
+
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+
+    let lookup = await cashAccounts.reverseLookup(address)
+
+    if (lookup === undefined) {
+      return res.status(500).json({
+        error: "No account could be found with the requested parameters."
+      })
+    }
+
+    // Return the retrieved address information.
+    res.status(200)
+    return res.json(lookup)
+  } catch (err) {
+    // Attempt to decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg.error })
+    }
+
+    wlogger.error(`Error in cashaccounts.ts/reverseLookup().`, err)
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
@@ -153,7 +269,7 @@ async function lookup(
 
 //     // Ensure the input is a valid BCH address.
 //     try {
-//       utils.toCashAddress(cashAddress)
+//       isCashAccount(cashAddress)
 //     } catch (err) {
 //       res.status(400)
 //       return res.json({
@@ -163,7 +279,7 @@ async function lookup(
 
 //     // Ensure the input is a valid SLP address.
 //     try {
-//       utils.toSlpAddress(slpAddress)
+//       cashAccounts.toSlpAddress(slpAddress)
 //     } catch (err) {
 //       res.status(400)
 //       return res.json({
@@ -191,7 +307,7 @@ async function lookup(
 //     const { msg, status } = routeUtils.decodeError(err)
 //     if (msg) {
 //       res.status(status)
-//       return res.json({ error: msg })
+//       return res.json({ error:.error msg })
 //     }
 
 //     wlogger.error(`Error in cashaccounts.ts/registration().`, err)
@@ -203,8 +319,10 @@ async function lookup(
 
 module.exports = {
   router,
-  lookupableComponents: {
+  testableComponents: {
     root,
-    lookup
+    lookup,
+    check,
+    reverseLookup
   }
 }

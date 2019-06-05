@@ -384,3 +384,26 @@ export interface BurnTotalResult {
   outputTotal: number
   burnTotal: number
 }
+
+export interface CashAccountBatchResults {
+  identifier: string
+  block: number
+  results: string[]
+}
+
+export interface CashAccountReverseLookupResults {
+  account_emoji: any
+  name_text: string
+  account_number: number
+  account_hash: string
+  account_collision_length: number
+  payload_type: number
+  payload_address: string
+  accountEmoji: any
+  nameText: string
+  accountNumber: number
+  accountHash: string
+  accountCollisionLength: number
+  payloadType: number
+  payloadAddress: string
+}

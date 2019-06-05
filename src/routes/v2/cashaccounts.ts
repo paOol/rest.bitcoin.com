@@ -3,9 +3,9 @@ import * as cashAccountClass from "cashaccounts"
 import * as express from "express"
 import * as util from "util"
 import {
+  CashAccountBatchResults,
   CashAccountInterface,
-  CashAccountRegistration,
-  CashAccountBatchResults
+  CashAccountReverseLookupResults
 } from "./interfaces/RESTInterfaces"
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -166,6 +166,11 @@ async function check(
       })
     }
 
+    lookup.results.forEach((result: any) => {
+      result.inclusionProof = result.inclusion_proof
+      delete result.inclusion_proof
+    })
+
     // Return the retrieved address information.
     res.status(200)
     return res.json(lookup)
@@ -203,13 +208,32 @@ async function reverseLookup(
       return res.json({ error: "address can not be empty" })
     }
 
-    let lookup = await cashAccounts.reverseLookup(address)
+    let lookup: {
+      results: CashAccountReverseLookupResults[]
+    } = await cashAccounts.reverseLookup(address)
 
     if (lookup === undefined) {
       return res.status(500).json({
         error: "No account could be found with the requested parameters."
       })
     }
+
+    lookup.results.forEach((result: CashAccountReverseLookupResults) => {
+      result.accountEmoji = result.account_emoji
+      result.nameText = result.name_text
+      result.accountNumber = result.account_number
+      result.accountHash = result.account_hash
+      result.accountCollisionLength = result.account_collision_length
+      result.payloadType = result.payload_type
+      result.payloadAddress = result.payload_address
+      delete result.account_emoji
+      delete result.name_text
+      delete result.account_number
+      delete result.account_hash
+      delete result.account_collision_length
+      delete result.payload_type
+      delete result.payload_address
+    })
 
     // Return the retrieved address information.
     res.status(200)

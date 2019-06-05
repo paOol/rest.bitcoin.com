@@ -80,11 +80,23 @@ async function lookup(
       collision
     }: { account: string; number: string; collision: string } = req.params
 
+    if (!account || account === "") {
+      res.status(400)
+      return res.json({ error: "account name can not be empty" })
+    }
+    if (!number || number === "") {
+      res.status(400)
+      return res.json({ error: "number can not be empty" })
+    }
+
     const handle: string = formHandle(account, number, collision)
     const valid: boolean = isCashAccount(handle)
 
     if (!valid) {
-      return res.status(500).json({ error: "Not a valid CashAccount" })
+      res.status(500)
+      return res.json({
+        error: "No account could be found with the requested parameters."
+      })
     }
 
     let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
@@ -127,11 +139,21 @@ async function check(
   try {
     const { account, number }: { account: string; number: string } = req.params
 
+    if (!account || account === "") {
+      res.status(400)
+      return res.json({ error: "account name can not be empty" })
+    }
+    if (!number || number === "") {
+      res.status(400)
+      return res.json({ error: "number can not be empty" })
+    }
+
     const handle: string = formHandle(account, number)
     const valid: boolean = isCashAccount(handle)
 
     if (!valid) {
-      return res.status(500).json({ error: "Not a valid CashAccount" })
+      res.status(500)
+      return res.json({ error: "Not a valid CashAccount" })
     }
 
     let lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
@@ -140,7 +162,7 @@ async function check(
 
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account matched the requested parameters"
+        error: "No account could be found with the requested parameters."
       })
     }
 
@@ -176,11 +198,16 @@ async function reverseLookup(
   try {
     const { address }: { address: string } = req.params
 
+    if (!address || address === "") {
+      res.status(400)
+      return res.json({ error: "address can not be empty" })
+    }
+
     let lookup = await cashAccounts.reverseLookup(address)
 
     if (lookup === undefined) {
       return res.status(500).json({
-        error: "No account matched the requested parameters"
+        error: "No account could be found with the requested parameters."
       })
     }
 
@@ -295,6 +322,7 @@ module.exports = {
   testableComponents: {
     root,
     lookup,
+    check,
     reverseLookup
   }
 }

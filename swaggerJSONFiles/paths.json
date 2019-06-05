@@ -1817,7 +1817,7 @@
         "tags": ["cashAccounts"],
         "summary": "Lookup Cash Account by account, number and optional collision hash",
         "description": "Lookup Cash Account by account, number and optional collision hash",
-        "operationId": "lookupSingle",
+        "operationId": "lookup",
         "parameters": [
           {
             "name": "account",
@@ -1863,7 +1863,7 @@
       "tags": ["cashAccounts"],
       "summary": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
       "description": "get multiple Cash Accounts block height and inclusion proof for independent verification ",
-      "operationId": "checkSingle",
+      "operationId": "check",
       "parameters": [
         {
           "name": "account",
@@ -1898,7 +1898,7 @@
       "tags": ["cashAccounts"],
       "summary": "get Cash Accounts associated with the address provided.",
       "description": "get Cash Accounts associated with the address provided.",
-      "operationId": "reverseLookupSingle",
+      "operationId": "reverseLookup",
       "parameters": [
         {
           "name": "address",

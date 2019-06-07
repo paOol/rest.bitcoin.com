@@ -87,7 +87,7 @@ app.set("view engine", "jade")
 app.use("/public", express.static(`${__dirname}/public`))
 
 // Log each request to the console with IP addresses.
-app.use(logger(`:remote-addr :remote-user :method :url :status :response-time ms - :res[content-length]`))
+app.use(logger(`:remote-addr :remote-user :method :url :status :response-time ms - :res[content-length] :user-agent`))
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))

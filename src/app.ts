@@ -1,4 +1,6 @@
+"use strict"
 import * as express from "express"
+import { Socket } from "net"
 // Middleware
 import { routeRateLimit } from "./middleware/route-ratelimit"
 
@@ -14,11 +16,11 @@ const http = require("http")
 const cors = require("cors")
 const AuthMW = require("./middleware/auth")
 
-// const BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder")
+const BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder")
 
-// const zmq = require("zeromq")
+const zmq = require("zeromq")
 
-// const sock: any = zmq.socket("sub")
+const sock: any = zmq.socket("sub")
 
 const swStats = require("swagger-stats")
 let apiSpec
@@ -27,6 +29,23 @@ if (process.env.NETWORK === "mainnet") {
 } else {
   apiSpec = require("./public/bitcoin-com-testnet-rest-v2.json")
 }
+
+// v1
+const indexV1 = require("./routes/v1/index")
+const healthCheckV1 = require("./routes/v1/health-check")
+const addressV1 = require("./routes/v1/address")
+const blockV1 = require("./routes/v1/block")
+const blockchainV1 = require("./routes/v1/blockchain")
+const controlV1 = require("./routes/v1/control")
+const generatingV1 = require("./routes/v1/generating")
+const miningV1 = require("./routes/v1/mining")
+const networkV1 = require("./routes/v1/network")
+const rawtransactionsV1 = require("./routes/v1/rawtransactions")
+const transactionV1 = require("./routes/v1/transaction")
+const utilV1 = require("./routes/v1/util")
+const dataRetrievalV1 = require("./routes/v1/dataRetrieval")
+const payloadCreationV1 = require("./routes/v1/payloadCreation")
+const slpV1 = require("./routes/v1/slp")
 
 // v2
 const indexV2 = require("./routes/v2/index")
@@ -88,15 +107,32 @@ interface ICustomRequest extends express.Request {
 }
 
 // Make io accessible to our router
-// app.use(
-//   (req: ICustomRequest, res: express.Response, next: express.NextFunction) => {
-//     req.io = io
+app.use(
+  (req: ICustomRequest, res: express.Response, next: express.NextFunction) => {
+    req.io = io
 
-//     next()
-//   }
-// )
+    next()
+  }
+)
 
+const v1prefix = "v1"
 const v2prefix = "v2"
+
+app.use("/", indexV1)
+app.use(`/${v1prefix}/` + `health-check`, healthCheckV1)
+app.use(`/${v1prefix}/` + `address`, addressV1)
+app.use(`/${v1prefix}/` + `blockchain`, blockchainV1)
+app.use(`/${v1prefix}/` + `block`, blockV1)
+app.use(`/${v1prefix}/` + `control`, controlV1)
+app.use(`/${v1prefix}/` + `generating`, generatingV1)
+app.use(`/${v1prefix}/` + `mining`, miningV1)
+app.use(`/${v1prefix}/` + `network`, networkV1)
+app.use(`/${v1prefix}/` + `rawtransactions`, rawtransactionsV1)
+app.use(`/${v1prefix}/` + `transaction`, transactionV1)
+app.use(`/${v1prefix}/` + `util`, utilV1)
+app.use(`/${v1prefix}/` + `dataRetrieval`, dataRetrievalV1)
+app.use(`/${v1prefix}/` + `payloadCreation`, payloadCreationV1)
+app.use(`/${v1prefix}/` + `slp`, slpV1)
 
 // Instantiate the authorization middleware, used to implement pro-tier rate limiting.
 const auth = new AuthMW()
@@ -165,51 +201,51 @@ console.log(`rest.bitcoin.com started on port ${port}`)
  * Create HTTP server.
  */
 const server = http.createServer(app)
-// const io = require("socket.io").listen(server)
-// io.on("connection", (socket: Socket) => {
-//   console.log("Socket Connected")
+const io = require("socket.io").listen(server)
+io.on("connection", (socket: Socket) => {
+  console.log("Socket Connected")
 
-//   socket.on("disconnect", () => {
-//     console.log("Socket Disconnected")
-//   })
-// })
+  socket.on("disconnect", () => {
+    console.log("Socket Disconnected")
+  })
+})
 
 /**
  * Setup ZMQ connections if ZMQ URL and port provided
  */
 
-// if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
-//   console.log(
-//     `Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${
-//       process.env.ZEROMQ_PORT
-//     }`
-//   )
-//   const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
+if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
+  console.log(
+    `Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${
+      process.env.ZEROMQ_PORT
+    }`
+  )
+  const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
 
-//   sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
-//   sock.subscribe("raw")
+  sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
+  sock.subscribe("raw")
 
-//   sock.on("message", (topic: any, message: string) => {
-//     try {
-//       const decoded = topic.toString("ascii")
-//       if (decoded === "rawtx") {
-//         const txd = bitcoincashZmqDecoder.decodeTransaction(message)
-//         io.emit("transactions", JSON.stringify(txd, null, 2))
-//       } else if (decoded === "rawblock") {
-//         const blck = bitcoincashZmqDecoder.decodeBlock(message)
-//         io.emit("blocks", JSON.stringify(blck, null, 2))
-//       }
-//     } catch (error) {
-//       const errorMessage = "Error processing ZMQ message"
-//       console.log(errorMessage, error)
-//       wlogger.error(errorMessage, error)
-//     }
-//   })
-// } else {
-//   console.log(
-//     "ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection."
-//   )
-// }
+  sock.on("message", (topic: any, message: string) => {
+    try {
+      const decoded = topic.toString("ascii")
+      if (decoded === "rawtx") {
+        const txd = bitcoincashZmqDecoder.decodeTransaction(message)
+        io.emit("transactions", JSON.stringify(txd, null, 2))
+      } else if (decoded === "rawblock") {
+        const blck = bitcoincashZmqDecoder.decodeBlock(message)
+        io.emit("blocks", JSON.stringify(blck, null, 2))
+      }
+    } catch (error) {
+      const errorMessage = "Error processing ZMQ message"
+      console.log(errorMessage, error)
+      wlogger.error(errorMessage, error)
+    }
+  })
+} else {
+  console.log(
+    "ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection."
+  )
+}
 
 /**
  * Listen on provided port, on all network interfaces.

@@ -1,3 +1,4 @@
+"use strict"
 import * as express from "express"
 // Middleware
 import { routeRateLimit } from "./middleware/route-ratelimit"
@@ -27,6 +28,23 @@ if (process.env.NETWORK === "mainnet") {
 } else {
   apiSpec = require("./public/bitcoin-com-testnet-rest-v2.json")
 }
+
+// v1
+const indexV1 = require("./routes/v1/index")
+const healthCheckV1 = require("./routes/v1/health-check")
+const addressV1 = require("./routes/v1/address")
+const blockV1 = require("./routes/v1/block")
+const blockchainV1 = require("./routes/v1/blockchain")
+const controlV1 = require("./routes/v1/control")
+const generatingV1 = require("./routes/v1/generating")
+const miningV1 = require("./routes/v1/mining")
+const networkV1 = require("./routes/v1/network")
+const rawtransactionsV1 = require("./routes/v1/rawtransactions")
+const transactionV1 = require("./routes/v1/transaction")
+const utilV1 = require("./routes/v1/util")
+const dataRetrievalV1 = require("./routes/v1/dataRetrieval")
+const payloadCreationV1 = require("./routes/v1/payloadCreation")
+const slpV1 = require("./routes/v1/slp")
 
 // v2
 const indexV2 = require("./routes/v2/index")
@@ -83,11 +101,11 @@ app.use(express.static(path.join(__dirname, "public")))
 //   }
 // ));
 
-interface ICustomRequest extends express.Request {
-  io: any
-}
+// interface ICustomRequest extends express.Request {
+//   io: any
+// }
 
-// Make io accessible to our router
+// // Make io accessible to our router
 // app.use(
 //   (req: ICustomRequest, res: express.Response, next: express.NextFunction) => {
 //     req.io = io
@@ -96,7 +114,24 @@ interface ICustomRequest extends express.Request {
 //   }
 // )
 
+const v1prefix = "v1"
 const v2prefix = "v2"
+
+app.use("/", indexV1)
+app.use(`/${v1prefix}/` + `health-check`, healthCheckV1)
+app.use(`/${v1prefix}/` + `address`, addressV1)
+app.use(`/${v1prefix}/` + `blockchain`, blockchainV1)
+app.use(`/${v1prefix}/` + `block`, blockV1)
+app.use(`/${v1prefix}/` + `control`, controlV1)
+app.use(`/${v1prefix}/` + `generating`, generatingV1)
+app.use(`/${v1prefix}/` + `mining`, miningV1)
+app.use(`/${v1prefix}/` + `network`, networkV1)
+app.use(`/${v1prefix}/` + `rawtransactions`, rawtransactionsV1)
+app.use(`/${v1prefix}/` + `transaction`, transactionV1)
+app.use(`/${v1prefix}/` + `util`, utilV1)
+app.use(`/${v1prefix}/` + `dataRetrieval`, dataRetrievalV1)
+app.use(`/${v1prefix}/` + `payloadCreation`, payloadCreationV1)
+app.use(`/${v1prefix}/` + `slp`, slpV1)
 
 // Instantiate the authorization middleware, used to implement pro-tier rate limiting.
 const auth = new AuthMW()

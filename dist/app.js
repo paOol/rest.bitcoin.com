@@ -67,7 +67,7 @@ app.enable("trust proxy");
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 app.use("/public", express.static(__dirname + "/public"));
-//app.use(logger("dev"))
+// Log each request to the console with IP addresses.
 app.use(logger(":remote-addr :remote-user :method :url :status :response-time ms - :res[content-length]"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));

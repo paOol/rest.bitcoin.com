@@ -911,39 +911,53 @@ async function validateBulk(
 
     logger.debug(`Executing slp/validate with these txids: `, txids)
 
-    // Validate each txid
-    const validatePromises: Promise<any>[] = txids.map(async txid => {
-      try {
-        // Dev note: must call module.exports to allow stubs in unit tests.
-        const isValid: Promise<
-          boolean
-        > = await module.exports.testableComponents.isValidSlpTxid(txid)
-
-        let tmp: {
-          txid: string
-          valid: boolean
-          invalidReason?: string
-        } = {
-          txid: txid,
-          valid: isValid ? true : false
-        }
-        if (!isValid) {
-          tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
-        }
-        return tmp
-      } catch (err) {
-        throw err
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": { $in: txids }
+        },
+        limit: 300,
+        project: { "slp.valid": 1, "tx.h": 1, "slp.invalidReason": 1 }
       }
-    })
+    }
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Filter array to only valid txid results
-    const validateResults: ValidateTxidResult[] = await axios.all(
-      validatePromises
-    )
-    const validTxids: any[] = validateResults.filter(result => result)
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
+    let formattedTokens: any[] = []
+
+    let concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
+    let tokenIds: string[] = []
+    if (concatArray.length > 0) {
+      concatArray.forEach((token: any) => {
+        tokenIds.push(token.tx.h)
+        const validationResult: any = {
+          txid: token.tx.h,
+          valid: token.slp.valid
+        }
+        if (!validationResult.valid) {
+          validationResult.invalidReason = token.slp.invalidReason
+        }
+        formattedTokens.push(validationResult)
+      })
+
+      txids.forEach((tokenId: string) => {
+        if (!tokenIds.includes(tokenId)) {
+          formattedTokens.push({
+            txid: tokenId,
+            valid: false
+          })
+        }
+      })
+    }
 
     res.status(200)
-    return res.json(validTxids)
+    return res.json(formattedTokens)
   } catch (err) {
     wlogger.error(`Error in slp.ts/validateBulk().`, err)
 
@@ -975,22 +989,43 @@ async function validateSingle(
 
     logger.debug(`Executing slp/validate/:txid with this txid: `, txid)
 
-    // Validate txid
-    // Dev note: must call module.exports to allow stubs in unit tests.
-    const isValid: Promise<
-      boolean
-    > = await module.exports.testableComponents.isValidSlpTxid(txid)
-
-    let tmp: ValidateTxidResult = {
-      txid: txid,
-      valid: isValid ? true : false
+    const query = {
+      v: 3,
+      q: {
+        db: ["c", "u"],
+        find: {
+          "tx.h": txid
+        },
+        limit: 300,
+        project: { "slp.valid": 1, "tx.h": 1, "slp.invalidReason": 1 }
+      }
     }
-    if (!isValid) {
-      tmp.invalidReason = slpValidator.cachedValidations[txid].invalidReason
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+
+    let result: any = {
+      txid: txid,
+      valid: false
+    }
+
+    let concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
+    if (concatArray.length > 0) {
+      result = {
+        txid: concatArray[0].tx.h,
+        valid: concatArray[0].slp.valid
+      }
+      if (!result.valid) {
+        result.invalidReason = concatArray[0].slp.invalidReason
+      }
     }
 
     res.status(200)
-    return res.json(tmp)
+    return res.json(result)
   } catch (err) {
     wlogger.error(`Error in slp.ts/validateSingle().`, err)
 

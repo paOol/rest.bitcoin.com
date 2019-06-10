@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 // Middleware
 var route_ratelimit_1 = require("./middleware/route-ratelimit");
+var req_logging_1 = require("./middleware/req-logging");
 var path = require("path");
 var logger = require("morgan");
 var wlogger = require("./util/winston-logging");
@@ -73,6 +74,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/", req_logging_1.logReqInfo);
 //
 // let username = process.env.USERNAME;
 // let password = process.env.PASSWORD;

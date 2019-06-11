@@ -18,8 +18,8 @@ var transport = new winston.transports.DailyRotateFile({
   filename: `${__dirname}/../../logs/rest-${NETWORK}-%DATE%.log`,
   datePattern: "YYYY-MM-DD",
   zippedArchive: false,
-  maxSize: "1m",
-  maxFiles: "20",
+  maxSize: "1m",   // 1 megabyte per file.
+  maxFiles: "100", // Will overwrite old log files after 100 megs used.
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json()

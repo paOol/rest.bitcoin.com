@@ -1,5 +1,7 @@
 /*
-
+  This middleware logs connection information to local logs. It gives the ability
+  to detect when the server is being DDOS attacked, and also to collect metrics,
+  like the most popular endpoints.
 */
 
 import * as express from "express"
@@ -49,7 +51,7 @@ const logReqInfo = function(
     body: req.body
   }
 
-  wlogger.info(`Request: ${ip} ${method} ${url}`, dataToLog)
+  wlogger.verbose(`Request: ${ip} ${method} ${url}`, dataToLog)
 
   next()
 }

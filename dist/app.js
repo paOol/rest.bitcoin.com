@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 // Middleware
 var route_ratelimit_1 = require("./middleware/route-ratelimit");
+var req_logging_1 = require("./middleware/req-logging");
 var path = require("path");
 var logger = require("morgan");
 var wlogger = require("./util/winston-logging");
@@ -67,12 +68,14 @@ app.enable("trust proxy");
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 app.use("/public", express.static(__dirname + "/public"));
-//app.use(logger("dev"))
-app.use(logger(":remote-addr :remote-user :method :url :status :response-time ms - :res[content-length]"));
+// Log each request to the console with IP addresses.
+app.use(logger(":remote-addr :remote-user :method :url :status :response-time ms - :res[content-length] :user-agent"));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+// Local logging middleware for tracking incoming connection information.
+app.use("/", req_logging_1.logReqInfo);
 //
 // let username = process.env.USERNAME;
 // let password = process.env.PASSWORD;

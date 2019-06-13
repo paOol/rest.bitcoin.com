@@ -2,6 +2,7 @@
 import * as express from "express"
 // Middleware
 import { routeRateLimit } from "./middleware/route-ratelimit"
+import { logReqInfo } from "./middleware/req-logging"
 
 const path = require("path")
 const logger = require("morgan")
@@ -87,12 +88,19 @@ app.set("view engine", "jade")
 app.use("/public", express.static(`${__dirname}/public`))
 
 // Log each request to the console with IP addresses.
-app.use(logger(`:remote-addr :remote-user :method :url :status :response-time ms - :res[content-length] :user-agent`))
+app.use(
+  logger(
+    `:remote-addr :remote-user :method :url :status :response-time ms - :res[content-length] :user-agent`
+  )
+)
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, "public")))
+
+// Local logging middleware for tracking incoming connection information.
+app.use(`/`, logReqInfo)
 
 //
 // let username = process.env.USERNAME;

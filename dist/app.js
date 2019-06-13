@@ -74,6 +74,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+// Local logging middleware for tracking incoming connection information.
 app.use("/", req_logging_1.logReqInfo);
 //
 // let username = process.env.USERNAME;

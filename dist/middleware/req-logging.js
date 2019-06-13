@@ -1,6 +1,8 @@
 "use strict";
 /*
-
+  This middleware logs connection information to local logs. It gives the ability
+  to detect when the server is being DDOS attacked, and also to collect metrics,
+  like the most popular endpoints.
 */
 Object.defineProperty(exports, "__esModule", { value: true });
 var wlogger = require("../util/winston-logging");
@@ -30,7 +32,7 @@ var logReqInfo = function (req, res, next) {
         real_ip: ip,
         body: req.body
     };
-    wlogger.info("Request: " + ip + " " + method + " " + url, dataToLog);
+    wlogger.verbose("Request: " + ip + " " + method + " " + url, dataToLog);
     next();
 };
 exports.logReqInfo = logReqInfo;

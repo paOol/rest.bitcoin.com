@@ -8,12 +8,14 @@ var winston = require("winston");
 require("winston-daily-rotate-file");
 var NETWORK = process.env.NETWORK;
 // Configure daily-rotation transport.
+// Configured to only save 20 megs worth of files. Specifically 20 files of
+// 1 megabyte each. Old log files will be deleted to make room for new log files.
 var transport = new winston.transports.DailyRotateFile({
     filename: __dirname + "/../../logs/rest-" + NETWORK + "-%DATE%.log",
     datePattern: "YYYY-MM-DD",
     zippedArchive: false,
     maxSize: "1m",
-    maxFiles: "3",
+    maxFiles: "100",
     format: winston.format.combine(winston.format.timestamp(), winston.format.json())
 });
 transport.on("rotate", function (oldFilename, newFilename) {

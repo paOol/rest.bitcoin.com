@@ -214,10 +214,10 @@ console.log(`rest.bitcoin.com started on port ${port}`)
 const server = http.createServer(app)
 const io = require("socket.io").listen(server)
 io.on("connection", (socket: Socket) => {
-  console.log("Socket Connected")
+  // console.log("Socket Connected")
 
   socket.on("disconnect", () => {
-    console.log("Socket Disconnected")
+    // console.log("Socket Disconnected")
   })
 })
 

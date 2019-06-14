@@ -150,9 +150,9 @@ console.log("rest.bitcoin.com started on port " + port);
 var server = http.createServer(app);
 var io = require("socket.io").listen(server);
 io.on("connection", function (socket) {
-    console.log("Socket Connected");
+    // console.log("Socket Connected")
     socket.on("disconnect", function () {
-        console.log("Socket Disconnected");
+        // console.log("Socket Disconnected")
     });
 });
 /**

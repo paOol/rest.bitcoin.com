@@ -1,6 +1,5 @@
 "use strict"
 import * as express from "express"
-import { Socket } from "net"
 import { logReqInfo } from "./middleware/req-logging"
 // Middleware
 import { routeRateLimit } from "./middleware/route-ratelimit"
@@ -213,13 +212,13 @@ console.log(`rest.bitcoin.com started on port ${port}`)
  */
 const server = http.createServer(app)
 const io = require("socket.io").listen(server)
-io.on("connection", (socket: Socket) => {
-  console.log("Socket Connected")
+// io.on("connection", (socket: Socket) => {
+//   // console.log("Socket Connected")
 
-  socket.on("disconnect", () => {
-    console.log("Socket Disconnected")
-  })
-})
+//   socket.on("disconnect", () => {
+//     // console.log("Socket Disconnected")
+//   })
+// })
 
 /**
  * Setup ZMQ connections if ZMQ URL and port provided

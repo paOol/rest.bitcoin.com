@@ -1129,7 +1129,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.11.4",
+		"version": "3.11.5",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -3025,7 +3025,7 @@
 						"in": "path",
 						"description": "The slp address",
 						"required": true,
-						"example": "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz",
+						"example": "simpleledger:qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqnt0wauwu",
 						"schema": {
 							"type": "string"
 						}

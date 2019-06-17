@@ -5478,7 +5478,7 @@
             var r = n(20), i = n(531);
             t.exports = function (t) { if ((t = r(t)) > i)
                 throw new TypeError(t + " exceeds maximum possible timeout"); return t; };
-        }, function (t, e) { t.exports = "../public/logo.png"; }, function (t, e, n) { (function (e) { function n(t, e) { function n() { if (!i) {
+        }, function (t, e) { t.exports = "../public/bitcoin-com-logo.png"; }, function (t, e, n) { (function (e) { function n(t, e) { function n() { if (!i) {
             if (r("throwDeprecation"))
                 throw new Error(e);
             r("traceDeprecation") ? console.trace(e) : console.warn(e), i = !0;

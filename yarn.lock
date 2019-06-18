@@ -1902,7 +1902,6 @@ bitcoincashjs-lib@Bitcoin-com/bitcoincashjs-lib#v4.0.1:
 
 "bitcoincashjs-lib@https://github.com/Bitcoin-com/bitcoincashjs-lib.git":
   version "4.0.1"
-  uid "28447b40a4ccd23913f7ade6589dc7214c99e60a"
   resolved "https://github.com/Bitcoin-com/bitcoincashjs-lib.git#28447b40a4ccd23913f7ade6589dc7214c99e60a"
   dependencies:
     bech32 "^1.1.2"
@@ -10917,6 +10916,11 @@ ws@~6.1.0:
   resolved "https://registry.yarnpkg.com/ws/-/ws-6.1.4.tgz#5b5c8800afab925e94ccb29d153c8d02c1776ef9"
   dependencies:
     async-limiter "~1.0.0"
+
+wtfnode@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/wtfnode/-/wtfnode-0.8.0.tgz#26a1a6b8e07727d7ed29dacc6708bea4647ccd20"
+  integrity sha512-A5jm/0REykxUac1q4Q5kv+hDIiacvqVpwIoXzCQcRL7syeEKucVVOxyLLrt+jIiZoXfla3lnsxUw/cmWXIaGWA==
 
 x-xss-protection@1.1.0:
   version "1.1.0"

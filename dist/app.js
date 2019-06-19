@@ -208,7 +208,7 @@ wtfnode.setLogger("error", function (data) {
 });
 setInterval(function () {
     wtfnode.dump();
-}, 60000);
+}, 60000 * 5);
 /**
  * Normalize a port into a number, string, or false.
  */

@@ -1373,9 +1373,9 @@ describe("#AddressRouter", () => {
       // Assert that required fields exist in the returned object.
       assert.exists(result.legacyAddress);
       assert.exists(result.cashAddress);
-      assert.isTrue(result.cashAddress.includes('bitcoincash:'))
+      assert.isTrue(result.cashAddress.includes('bchtest:'))
       assert.exists(result.slpAddress);
-      assert.isTrue(result.slpAddress.includes('simpleledger:'))
+      assert.isTrue(result.slpAddress.includes('slptest:'))
     });
   });
 });

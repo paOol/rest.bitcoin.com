@@ -6,8 +6,6 @@
   --Needs e2e test to create unconfirmed tx, for real-world test.
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking

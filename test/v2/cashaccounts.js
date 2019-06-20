@@ -3,8 +3,6 @@
 
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const cashaccountsRoute = require("../../dist/routes/v2/cashaccounts")

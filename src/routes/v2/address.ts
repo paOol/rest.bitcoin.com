@@ -845,10 +845,12 @@ async function fromXPubSingle(
 
     let cashAddr: string = bitbox.Address.fromXPub(xpub, hdPath)
     let legacyAddr: string = bitbox.Address.toLegacyAddress(cashAddr)
+    let slpAddr: string = SLP.Address.toSLPAddress(cashAddr)
     res.status(200)
     return res.json({
       cashAddress: cashAddr,
-      legacyAddress: legacyAddr
+      legacyAddress: legacyAddr,
+      slpAddress: slpAddr
     })
   } catch (err) {
     // Attempt to decode the error message.

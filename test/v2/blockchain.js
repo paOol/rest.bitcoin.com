@@ -537,11 +537,12 @@ describe("#BlockchainRouter", () => {
       // Restore the saved URL.
       process.env.RPC_BASEURL = savedUrl2
 
-      assert.equal(res.statusCode, 503, "HTTP status code 503 expected.")
-      assert.include(
-        result.error,
-        "Could not communicate with full node",
-        "Error message expected"
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
       )
     })
 
@@ -577,6 +578,8 @@ describe("#BlockchainRouter", () => {
       // Restore the saved URL.
       process.env.RPC_BASEURL = savedUrl2
 
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
       assert.isAbove(
         res.statusCode,
         499,

@@ -572,7 +572,7 @@ describe("#BlockchainRouter", () => {
       // Manipulate the URL to cause a 500 network error.
       process.env.RPC_BASEURL = "http://fakeurl/api/"
 
-      const result = await getMempoolInfo(req, res)
+      await getMempoolInfo(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.

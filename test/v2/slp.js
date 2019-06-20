@@ -181,12 +181,13 @@ describe("#SLP", () => {
       // Restore the saved URL.
       process.env.SLPDB_URL = savedUrl2
 
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
       assert.isAbove(
         res.statusCode,
         499,
         "HTTP status code 500 or greater expected."
       )
-      //assert.include(result.error,"Network error: Could not communicate with full node","Error message expected")
     })
 
     it("should return 'not found' for mainnet txid on testnet", async () => {
@@ -313,12 +314,13 @@ describe("#SLP", () => {
       // Restore the saved URL.
       process.env.SLPDB_URL = savedUrl2
 
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
       assert.isAbove(
         res.statusCode,
         499,
         "HTTP status code 500 or greater expected."
       )
-      //assert.include(result.error,"Network error: Could not communicate with full node","Error message expected")
     })
 
     it("should return 'not found' for mainnet txid on testnet", async () => {
@@ -475,15 +477,12 @@ describe("#SLP", () => {
       // Restore the saved URL.
       process.env.SLPDB_URL = savedUrl2
 
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
       assert.isAbove(
         res.statusCode,
         499,
         "HTTP status code 500 or greater expected."
-      )
-      assert.include(
-        result.error,
-        "Network error: Could not communicate",
-        "Error message expected"
       )
     })
 
@@ -578,15 +577,12 @@ describe("#SLP", () => {
       // Restore the saved URL.
       process.env.SLPDB_URL = savedUrl2
 
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
       assert.isAbove(
         res.statusCode,
         499,
         "HTTP status code 500 or greater expected."
-      )
-      assert.include(
-        result.error,
-        "Network error: Could not communicate",
-        "Error message expected"
       )
     })
 
@@ -867,12 +863,17 @@ describe("#SLP", () => {
       const result = await balancesForTokenSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result[0], ["tokenId", "slpAddress", "tokenBalance", "tokenBalanceString"])
+      assert.hasAllKeys(result[0], [
+        "tokenId",
+        "slpAddress",
+        "tokenBalance",
+        "tokenBalanceString"
+      ])
     })
   })
 
   describe("#txDetails()", () => {
-    let txDetails = slpRoute.testableComponents.txDetails
+    const txDetails = slpRoute.testableComponents.txDetails
 
     it("should throw 400 if txid is empty", async () => {
       const result = await txDetails(req, res)

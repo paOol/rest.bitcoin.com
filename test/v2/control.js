@@ -7,8 +7,6 @@
 
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const controlRoute = require("../../dist/routes/v2/control")

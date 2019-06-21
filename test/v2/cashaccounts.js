@@ -186,14 +186,23 @@ describe("#cashaccountsRouter", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(
         result.error,
-        "No account matched the requested parameters."
+        "No account could be found with the requested parameters."
       )
     })
 
     it("return success object if account is valid", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "getBatchResults")
+          .resolves(mockData.check)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "100"
+
       const result = await check(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       // Assert that required fields exist in the returned object.
       assert.exists(result.identifier)
@@ -214,17 +223,36 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should warn if using a bad address", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          .reply(404)
+      }
+
       req.params.address = "bitcoincash:ljqgqqj64s9la9"
       const result = await reverseLookup(req, res)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Not a valid BCH address.")
+      assert.include(
+        result.error,
+        "No account could be found with the requested parameters."
+      )
     })
 
     it("should return results with valid address", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "caReverseLookup")
+          .resolves(mockData.reverseLookup)
+      }
+
       req.params.address =
         "bitcoincash:qrhncn6hgkhljqg4fuq4px5qg74sjz9fqqj64s9la9"
+
       const result = await reverseLookup(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       // Assert that required fields exist in the returned object.
       assert.exists(result.results)

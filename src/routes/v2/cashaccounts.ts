@@ -226,6 +226,21 @@ async function check(
   }
 }
 
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function caReverseLookup(cashAccountsInstance, address) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.reverseLookup(
+      address
+    )
+
+    return result
+  } catch (err) {
+    return undefined
+  }
+}
+
 /**
  *  CashAccount Reverse Lookup
  *
@@ -245,12 +260,20 @@ async function reverseLookup(
       return res.json({ error: "address can not be empty" })
     }
 
+    //const lookup: {
+    //  results: CashAccountReverseLookupResults[]
+    //} = await cashAccounts.reverseLookup(address)
     const lookup: {
       results: CashAccountReverseLookupResults[]
-    } = await cashAccounts.reverseLookup(address)
+    } = await module.exports.testableComponents.caReverseLookup(
+      cashAccounts,
+      address
+    )
+    //console.log(`lookup: ${JSON.stringify(lookup, null, 2)}`)
 
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -386,6 +409,7 @@ module.exports = {
     check,
     reverseLookup,
     trustedLookup,
-    getBatchResults
+    getBatchResults,
+    caReverseLookup
   }
 }

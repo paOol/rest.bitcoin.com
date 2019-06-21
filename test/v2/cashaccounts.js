@@ -7,6 +7,7 @@ const chai = require("chai")
 const assert = chai.assert
 const cashaccountsRoute = require("../../dist/routes/v2/cashaccounts")
 const nock = require("nock") // HTTP mocking
+const sinon = require("sinon")
 
 let originalUrl // Used during transition from integration to unit tests.
 
@@ -20,12 +21,13 @@ util.inspect.defaultOptions = { depth: 1 }
 
 describe("#cashaccountsRouter", () => {
   let req, res
+  let sandbox
 
   before(() => {
     originalUrl = process.env.CASHACCOUNT_LOOKUPSERVER
 
     // Set default environment variables for unit tests.
-    if (!process.env.TEST) process.env.TEST = "integration"
+    if (!process.env.TEST) process.env.TEST = "unit"
     if (process.env.TEST === "integration")
       process.env.CASHACCOUNT_LOOKUPSERVER = "https://cashaccounts.bchdata.cash"
   })
@@ -43,12 +45,16 @@ describe("#cashaccountsRouter", () => {
 
     // Activate nock if it's inactive.
     if (!nock.isActive()) nock.activate()
+
+    sandbox = sinon.createSandbox()
   })
 
   afterEach(() => {
     // Clean up HTTP mocks.
     nock.cleanAll() // clear interceptor list.
     nock.restore()
+
+    sandbox.restore()
   })
 
   after(() => {
@@ -88,6 +94,7 @@ describe("#cashaccountsRouter", () => {
     it("should throw 500 if handle is invalid", async () => {
       req.params.account = "test"
       req.params.number = "344a"
+
       const result = await lookup(req, res)
 
       assert.hasAllKeys(result, ["error"])
@@ -98,9 +105,23 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should throw 500 if handle is valid but not found", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        //sandbox
+        //  .stub(cashaccountsRoute.testableComponents, "trustedLookup")
+        //  .throws("Error", "Request failed with status code 404")
+
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          //.reply(404, { error: { message: "Not Found" } })
+          .reply(404)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "111"
+
       const result = await lookup(req, res)
+      console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(
@@ -110,6 +131,15 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("return success object if account is valid", async () => {
+      // Mock the cashaccounts library for unit tests.
+      /*
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "trustedLookup")
+          .resolves(undefined)
+      }
+      */
+
       req.params.account = "Jonathan"
       req.params.number = "100"
       const result = await lookup(req, res)

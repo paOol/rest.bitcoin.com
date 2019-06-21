@@ -45,7 +45,7 @@ function root(
  */
 function formHandle(account: string, number: string, collision?: string) {
   const handle = `${account}#${number}${
-    collision !== undefined ? "." + collision : ""
+    collision !== undefined ? `.${collision}` : ""
   }`
   return handle
 }
@@ -58,6 +58,22 @@ function formHandle(account: string, number: string, collision?: string) {
  */
 function isCashAccount(handle: string) {
   return cashAccounts.isCashAccount(handle)
+}
+
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function trustedLookup(cashAccountsInstance, handle) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.trustedLookup(
+      handle
+    )
+
+    return result
+  } catch (err) {
+    console.log(`Error handler for trustedLookup()`)
+    return undefined
+  }
 }
 
 /**
@@ -99,9 +115,17 @@ async function lookup(
       })
     }
 
-    let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
+    console.log(`Executing trustedLookup()`)
+    //let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
+    const lookup: CashAccountInterface = await module.exports.testableComponents.trustedLookup(
+      cashAccounts,
+      handle
+    )
+    console.log(`lookup: ${JSON.stringify(lookup, null, 2)}`)
+
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -110,6 +134,7 @@ async function lookup(
     res.status(200)
     return res.json(lookup)
   } catch (err) {
+    console.log(`err: ${util.inspect(err)}`)
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {
@@ -156,7 +181,7 @@ async function check(
       return res.json({ error: "Not a valid CashAccount" })
     }
 
-    let lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
+    const lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
       handle
     )
 
@@ -208,7 +233,7 @@ async function reverseLookup(
       return res.json({ error: "address can not be empty" })
     }
 
-    let lookup: {
+    const lookup: {
       results: CashAccountReverseLookupResults[]
     } = await cashAccounts.reverseLookup(address)
 
@@ -347,6 +372,7 @@ module.exports = {
     root,
     lookup,
     check,
-    reverseLookup
+    reverseLookup,
+    trustedLookup
   }
 }

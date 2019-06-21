@@ -144,6 +144,21 @@ async function lookup(
   }
 }
 
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function getBatchResults(cashAccountsInstance, handle) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.getBatchResults(
+      handle
+    )
+
+    return result
+  } catch (err) {
+    return undefined
+  }
+}
+
 /**
  *  CashAccount Check
  *
@@ -176,12 +191,14 @@ async function check(
       return res.json({ error: "Not a valid CashAccount" })
     }
 
-    const lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
+    const lookup: CashAccountBatchResults = await module.exports.testableComponents.getBatchResults(
+      cashAccounts,
       handle
     )
 
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -368,6 +385,7 @@ module.exports = {
     lookup,
     check,
     reverseLookup,
-    trustedLookup
+    trustedLookup,
+    getBatchResults
   }
 }

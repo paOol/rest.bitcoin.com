@@ -172,6 +172,13 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should throw 500 if handle is valid but not found", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          .reply(404)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "111"
       const result = await check(req, res)

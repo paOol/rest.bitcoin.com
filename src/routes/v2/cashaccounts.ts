@@ -71,7 +71,6 @@ async function trustedLookup(cashAccountsInstance, handle) {
 
     return result
   } catch (err) {
-    console.log(`Error handler for trustedLookup()`)
     return undefined
   }
 }
@@ -115,13 +114,10 @@ async function lookup(
       })
     }
 
-    console.log(`Executing trustedLookup()`)
-    //let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
     const lookup: CashAccountInterface = await module.exports.testableComponents.trustedLookup(
       cashAccounts,
       handle
     )
-    console.log(`lookup: ${JSON.stringify(lookup, null, 2)}`)
 
     if (lookup === undefined) {
       res.status(500)
@@ -134,7 +130,6 @@ async function lookup(
     res.status(200)
     return res.json(lookup)
   } catch (err) {
-    console.log(`err: ${util.inspect(err)}`)
     // Attempt to decode the error message.
     const { msg, status } = routeUtils.decodeError(err)
     if (msg) {

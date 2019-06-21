@@ -13,7 +13,7 @@ let originalUrl // Used during transition from integration to unit tests.
 
 // Mocking data.
 const { mockReq, mockRes } = require("./mocks/express-mocks")
-// const mockData = require("./mocks/cashaccounts-mock")
+const mockData = require("./mocks/cashaccounts-mock")
 
 // Used for debugging.
 const util = require("util")
@@ -107,13 +107,8 @@ describe("#cashaccountsRouter", () => {
     it("should throw 500 if handle is valid but not found", async () => {
       // Mock the cashaccounts library for unit tests.
       if (process.env.TEST === "unit") {
-        //sandbox
-        //  .stub(cashaccountsRoute.testableComponents, "trustedLookup")
-        //  .throws("Error", "Request failed with status code 404")
-
         nock(`https://cashaccounts.bchdata.cash`)
           .get(uri => uri.includes("/"))
-          //.reply(404, { error: { message: "Not Found" } })
           .reply(404)
       }
 
@@ -121,7 +116,7 @@ describe("#cashaccountsRouter", () => {
       req.params.number = "111"
 
       const result = await lookup(req, res)
-      console.log(`result: ${JSON.stringify(result, null, 2)}`)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(
@@ -132,13 +127,11 @@ describe("#cashaccountsRouter", () => {
 
     it("return success object if account is valid", async () => {
       // Mock the cashaccounts library for unit tests.
-      /*
       if (process.env.TEST === "unit") {
         sandbox
           .stub(cashaccountsRoute.testableComponents, "trustedLookup")
-          .resolves(undefined)
+          .resolves(mockData.lookup)
       }
-      */
 
       req.params.account = "Jonathan"
       req.params.number = "100"

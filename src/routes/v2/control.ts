@@ -13,7 +13,7 @@ util.inspect.defaultOptions = { depth: 1 }
 
 router.get("/", root)
 router.get("/getInfo", getInfo)
-router.get("/getNetworkInfo", getNeworkInfo)
+router.get("/getNetworkInfo", getNetworkInfo)
 
 function root(
   req: express.Request,
@@ -56,7 +56,7 @@ async function getInfo(
 
 
 // Execute the RPC getinfo call.
-async function getNeworkInfo(
+async function getNetworkInfo(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -126,6 +126,7 @@ module.exports = {
   router,
   testableComponents: {
     root,
-    getInfo
+    getInfo,
+    getNetworkInfo
   }
 }

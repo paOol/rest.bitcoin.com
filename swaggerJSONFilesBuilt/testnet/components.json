@@ -1083,19 +1083,6 @@
 					"excessutxocharge": {
 						"type": "number"
 					},
-					"localaddresses": [
-						{
-							"address": {
-								"type": "string"
-							},
-							"port": {
-								"type": "number"
-							},
-							"score": {
-								"type": "number"
-							}
-						}
-					],
 					"warnings": {
 						"type": "string"
 					}

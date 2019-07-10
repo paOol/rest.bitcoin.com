@@ -237,6 +237,30 @@ export interface InfoInterface {
   errors: string
 }
 
+export interface NetworkInfoInterface {
+  version: number
+  subversion: string
+  protocolversion: number
+  localservices: string
+  localrelay: boolean
+  timeoffset: number
+  networkactive: boolean
+  connections: number
+  networks: [
+    {
+      name: string
+      limited: boolean
+      reachable: boolean
+      proxy: string
+      proxy_randomize_credentials: boolean
+    }
+  ]
+  relayfee: number
+  excessutxocharge: number
+  localaddresses?: []
+  warnings: string
+}
+
 export interface MiningInfoInterface {
   blocks: number
   currentblocksize: number

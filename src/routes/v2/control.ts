@@ -13,6 +13,7 @@ util.inspect.defaultOptions = { depth: 1 }
 
 router.get("/", root)
 router.get("/getInfo", getInfo)
+router.get("/getNetworkInfo", getNetworkInfo)
 
 function root(
   req: express.Request,
@@ -23,6 +24,7 @@ function root(
 }
 
 // Execute the RPC getinfo call.
+// Deprecated in v0.19.08 of ABC full node.
 async function getInfo(
   req: express.Request,
   res: express.Response,
@@ -41,6 +43,37 @@ async function getInfo(
     return res.json(info)
   } catch (error) {
     wlogger.error(`Error in control.ts/getInfo().`, error)
+
+    // Write out error to error log.
+    //logger.error(`Error in control/getInfo: `, error)
+
+    res.status(500)
+    if (error.response && error.response.data && error.response.data.error)
+      return res.json({ error: error.response.data.error })
+    return res.json({ error: util.inspect(error) })
+  }
+}
+
+
+// Execute the RPC getinfo call.
+async function getNetworkInfo(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  const { BitboxHTTP, requestConfig } = routeUtils.setEnvVars()
+
+  requestConfig.data.id = "getnetworkinfo"
+  requestConfig.data.method = "getnetworkinfo"
+  requestConfig.data.params = []
+
+  try {
+    const response: AxiosResponse = await BitboxHTTP(requestConfig)
+    const info: InfoInterface = response.data.result
+
+    return res.json(info)
+  } catch (error) {
+    wlogger.error(`Error in control.ts/getNetworkInfo().`, error)
 
     // Write out error to error log.
     //logger.error(`Error in control/getInfo: `, error)
@@ -93,6 +126,7 @@ module.exports = {
   router,
   testableComponents: {
     root,
-    getInfo
+    getInfo,
+    getNetworkInfo
   }
 }

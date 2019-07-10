@@ -1001,6 +1001,26 @@
         }
       }
     },
+    "/control/getNetworkInfo": {
+      "get": {
+        "tags": ["control"],
+        "summary": "Various network info.",
+        "description": "Returns an object containing various network info.",
+        "operationId": "getNetworkInfo",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mining/getMiningInfo": {
       "get": {
         "tags": ["mining"],

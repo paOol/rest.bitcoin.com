@@ -45,7 +45,7 @@ function root(
  */
 function formHandle(account: string, number: string, collision?: string) {
   const handle = `${account}#${number}${
-    collision !== undefined ? "." + collision : ""
+    collision !== undefined ? `.${collision}` : ""
   }`
   return handle
 }
@@ -58,6 +58,21 @@ function formHandle(account: string, number: string, collision?: string) {
  */
 function isCashAccount(handle: string) {
   return cashAccounts.isCashAccount(handle)
+}
+
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function trustedLookup(cashAccountsInstance, handle) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.trustedLookup(
+      handle
+    )
+
+    return result
+  } catch (err) {
+    return undefined
+  }
 }
 
 /**
@@ -99,9 +114,14 @@ async function lookup(
       })
     }
 
-    let lookup: CashAccountInterface = await cashAccounts.trustedLookup(handle)
+    const lookup: CashAccountInterface = await module.exports.testableComponents.trustedLookup(
+      cashAccounts,
+      handle
+    )
+
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -121,6 +141,21 @@ async function lookup(
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
+  }
+}
+
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function getBatchResults(cashAccountsInstance, handle) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.getBatchResults(
+      handle
+    )
+
+    return result
+  } catch (err) {
+    return undefined
   }
 }
 
@@ -156,12 +191,14 @@ async function check(
       return res.json({ error: "Not a valid CashAccount" })
     }
 
-    let lookup: CashAccountBatchResults = await cashAccounts.getBatchResults(
+    const lookup: CashAccountBatchResults = await module.exports.testableComponents.getBatchResults(
+      cashAccounts,
       handle
     )
 
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -189,6 +226,21 @@ async function check(
   }
 }
 
+// This function is a simple wrapper to make unit tests possible.
+// Wrapping this in a function allows it to be stubbed so that the
+// route can be tested as a unit test.
+async function caReverseLookup(cashAccountsInstance, address) {
+  try {
+    const result: Promise<any> = await cashAccountsInstance.reverseLookup(
+      address
+    )
+
+    return result
+  } catch (err) {
+    return undefined
+  }
+}
+
 /**
  *  CashAccount Reverse Lookup
  *
@@ -208,12 +260,20 @@ async function reverseLookup(
       return res.json({ error: "address can not be empty" })
     }
 
-    let lookup: {
+    //const lookup: {
+    //  results: CashAccountReverseLookupResults[]
+    //} = await cashAccounts.reverseLookup(address)
+    const lookup: {
       results: CashAccountReverseLookupResults[]
-    } = await cashAccounts.reverseLookup(address)
+    } = await module.exports.testableComponents.caReverseLookup(
+      cashAccounts,
+      address
+    )
+    //console.log(`lookup: ${JSON.stringify(lookup, null, 2)}`)
 
     if (lookup === undefined) {
-      return res.status(500).json({
+      res.status(500)
+      return res.json({
         error: "No account could be found with the requested parameters."
       })
     }
@@ -347,6 +407,9 @@ module.exports = {
     root,
     lookup,
     check,
-    reverseLookup
+    reverseLookup,
+    trustedLookup,
+    getBatchResults,
+    caReverseLookup
   }
 }

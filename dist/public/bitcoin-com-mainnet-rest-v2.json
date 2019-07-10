@@ -1031,6 +1031,76 @@
 					}
 				}
 			},
+			"NetworkInfo": {
+				"type": "object",
+				"properties": {
+					"version": {
+						"type": "number"
+					},
+					"subversion": {
+						"type": "string"
+					},
+					"protocolversion": {
+						"type": "number"
+					},
+					"localservices": {
+						"type": "string"
+					},
+					"localrelay": {
+						"type": "boolean"
+					},
+					"timeoffset": {
+						"type": "number"
+					},
+					"networkactive": {
+						"type": "boolean"
+					},
+					"connections": {
+						"type": "number"
+					},
+					"networks": [
+						{
+							"name": {
+								"type": "string"
+							},
+							"limited": {
+								"type": "boolean"
+							},
+							"reachable": {
+								"type": "boolean"
+							},
+							"proxy": {
+								"type": "string"
+							},
+							"proxy_randomize_credentials": {
+								"type": "boolean"
+							}
+						}
+					],
+					"relayfee": {
+						"type": "number"
+					},
+					"excessutxocharge": {
+						"type": "number"
+					},
+					"localaddresses": [
+						{
+							"address": {
+								"type": "string"
+							},
+							"port": {
+								"type": "number"
+							},
+							"score": {
+								"type": "number"
+							}
+						}
+					],
+					"warnings": {
+						"type": "string"
+					}
+				}
+			},
 			"MemoryInfo": {
 				"type": "object",
 				"properties": {
@@ -1129,7 +1199,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.11.7",
+		"version": "3.11.8",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2191,6 +2261,28 @@
 							"application/json": {
 								"schema": {
 									"$ref": "#/components/schemas/Info"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/control/getNetworkInfo": {
+			"get": {
+				"tags": [
+					"control"
+				],
+				"summary": "Various network info.",
+				"description": "Returns an object containing various network info.",
+				"operationId": "getNetworkInfo",
+				"responses": {
+					"200": {
+						"description": "successful operation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NetworkInfo"
 								}
 							}
 						}

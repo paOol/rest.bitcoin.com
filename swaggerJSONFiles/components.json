@@ -1013,6 +1013,76 @@
           }
         }
       },
+      "NetworkInfo": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number"
+          },
+          "subversion": {
+            "type": "string"
+          },
+          "protocolversion": {
+            "type": "number"
+          },
+          "localservices": {
+            "type": "string"
+          },
+          "localrelay": {
+            "type": "boolean"
+          },
+          "timeoffset": {
+            "type": "number"
+          },
+          "networkactive": {
+            "type": "boolean"
+          },
+          "connections": {
+            "type": "number"
+          },
+          "networks": [
+            {
+              "name": {
+                "type": "string"
+              },
+              "limited": {
+                "type": "boolean"
+              },
+              "reachable": {
+                "type": "boolean"
+              },
+              "proxy": {
+                "type": "string"
+              },
+              "proxy_randomize_credentials": {
+                "type": "boolean"
+              }
+            }
+          ],
+          "relayfee": {
+            "type": "number"
+          },
+          "excessutxocharge": {
+            "type": "number"
+          },
+          "localaddresses": [
+            {
+              "address": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number"
+              },
+              "score": {
+                "type": "number"
+              }
+            }
+          ],
+          "warnings": {
+            "type": "string"
+          }
+        }
+      },
       "MemoryInfo": {
         "type": "object",
         "properties": {

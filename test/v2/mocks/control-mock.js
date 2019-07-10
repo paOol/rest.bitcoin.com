@@ -2,8 +2,6 @@
   This library contains mocking data for running unit tests on the address route.
 */
 
-"use strict"
-
 const mockGetInfo = {
   version: 170200,
   protocolversion: 70015,
@@ -22,6 +20,24 @@ const mockGetInfo = {
   errors: "Warning: unknown new rules activated (versionbit 28)"
 }
 
+mockGetNetworkInfo = {
+  version: 190600,
+  subversion: "/Bitcoin ABC:0.19.6(EB32.0)/",
+  protocolversion: 70015,
+  localservices: "0000000000000425",
+  localrelay: true,
+  timeoffset: 0,
+  networkactive: true,
+  connections: 18,
+  networks: [{}, {}, {}],
+  relayfee: 0.00001,
+  excessutxocharge: 0,
+  localaddresses: [],
+  warnings:
+    "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
+}
+
 module.exports = {
-  mockGetInfo
+  mockGetInfo,
+  mockGetNetworkInfo
 }

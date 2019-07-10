@@ -1,7 +1,10 @@
 // imports
 import { AxiosResponse } from "axios"
 import * as express from "express"
-import { InfoInterface } from "./interfaces/RESTInterfaces"
+import {
+  InfoInterface,
+  NetworkInfoInterface
+} from "./interfaces/RESTInterfaces"
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
 
@@ -54,7 +57,6 @@ async function getInfo(
   }
 }
 
-
 // Execute the RPC getinfo call.
 async function getNetworkInfo(
   req: express.Request,
@@ -69,9 +71,10 @@ async function getNetworkInfo(
 
   try {
     const response: AxiosResponse = await BitboxHTTP(requestConfig)
-    const info: InfoInterface = response.data.result
+    const networkInfo: NetworkInfoInterface = response.data.result
+    delete networkInfo.localaddresses
 
-    return res.json(info)
+    return res.json(networkInfo)
   } catch (error) {
     wlogger.error(`Error in control.ts/getNetworkInfo().`, error)
 

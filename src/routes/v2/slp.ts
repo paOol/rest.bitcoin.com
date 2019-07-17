@@ -167,6 +167,9 @@ function formatTokenOutput(token: any): TokenInterface {
   )
   token.tokenDetails.mintingBatonStatus = token.tokenStats.minting_baton_status
 
+  if(token.tokenDetails.versionType !== slp.SlpVersionType.TokenVersionType1_NFT_Child) {
+    delete token.nftParentId
+  }
   delete token.tokenStats.block_last_active_send
   delete token.tokenStats.block_last_active_mint
   delete token.tokenStats.qty_valid_txns_since_genesis
@@ -198,6 +201,7 @@ async function list(
         find: any
         project: {
           tokenDetails: number
+          nftParentId: number
           tokenStats: number
           _id: number
         }
@@ -211,7 +215,7 @@ async function list(
         find: {
           $query: {}
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         sort: { "tokenStats.block_created": -1 },
         limit: 10000
       }
@@ -310,6 +314,7 @@ async function listBulkToken(
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         sort: any
@@ -324,7 +329,7 @@ async function listBulkToken(
             $in: tokenIds
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         sort: { "tokenStats.block_created": -1 },
         limit: 10000
       }
@@ -381,6 +386,7 @@ async function lookupToken(tokenId: string): Promise<any> {
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         limit: number
@@ -394,7 +400,7 @@ async function lookupToken(tokenId: string): Promise<any> {
             "tokenDetails.tokenIdHex": tokenId
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         limit: 1000
       }
     }
@@ -1427,6 +1433,7 @@ async function tokenStats(
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         limit: number
@@ -1440,7 +1447,7 @@ async function tokenStats(
             "tokenDetails.tokenIdHex": tokenId
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1,  _id: 0 },
         limit: 10
       }
     }

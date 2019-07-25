@@ -174,6 +174,8 @@ function formatTokenOutput(token: any): TokenInterface {
 
   token.tokenDetails.timestampUnix = token.tokenDetails.timestamp_unix
   delete token.tokenDetails.timestamp_unix
+
+  if (token.nftParentId) token.tokenDetails.nftParentId = token.nftParentId
   return token
 }
 
@@ -198,6 +200,7 @@ async function list(
         find: any
         project: {
           tokenDetails: number
+          nftParentId: number
           tokenStats: number
           _id: number
         }
@@ -211,7 +214,7 @@ async function list(
         find: {
           $query: {}
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         sort: { "tokenStats.block_created": -1 },
         limit: 10000
       }
@@ -310,6 +313,7 @@ async function listBulkToken(
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         sort: any
@@ -324,7 +328,7 @@ async function listBulkToken(
             $in: tokenIds
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         sort: { "tokenStats.block_created": -1 },
         limit: 10000
       }
@@ -381,6 +385,7 @@ async function lookupToken(tokenId: string): Promise<any> {
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         limit: number
@@ -394,7 +399,7 @@ async function lookupToken(tokenId: string): Promise<any> {
             "tokenDetails.tokenIdHex": tokenId
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         limit: 1000
       }
     }
@@ -548,18 +553,14 @@ async function balancesForAddress(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-              }
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     } else {
@@ -1427,6 +1428,7 @@ async function tokenStats(
         project: {
           tokenDetails: number
           tokenStats: number
+          nftParentId: number
           _id: number
         }
         limit: number
@@ -1440,7 +1442,7 @@ async function tokenStats(
             "tokenDetails.tokenIdHex": tokenId
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         limit: 10
       }
     }

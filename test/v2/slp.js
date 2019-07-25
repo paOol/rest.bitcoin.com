@@ -660,14 +660,9 @@ describe("#SLP", () => {
     it("should error on malformed address", async () => {
       try {
         req.body.addresses = ["bitcoincash:qzs02v05l7qs5s5dwuj0cx5ehjm2c"]
-
         await convertAddressBulk(req, res)
-
-        assert.equal(true, false, "Unsupported address format")
       } catch (err) {
-        // console.log(`err.message: ${util.inspect(err.message)}`)
-
-        assert.include(err.message, `Unsupported address format`)
+        assert.include(err.message, `Invalid BCH address.`)
       }
     })
 

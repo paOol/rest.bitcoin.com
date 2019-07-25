@@ -167,9 +167,6 @@ function formatTokenOutput(token: any): TokenInterface {
   )
   token.tokenDetails.mintingBatonStatus = token.tokenStats.minting_baton_status
 
-  if(token.tokenDetails.versionType !== slp.SlpVersionType.TokenVersionType1_NFT_Child) {
-    delete token.nftParentId
-  }
   delete token.tokenStats.block_last_active_send
   delete token.tokenStats.block_last_active_mint
   delete token.tokenStats.qty_valid_txns_since_genesis
@@ -177,6 +174,8 @@ function formatTokenOutput(token: any): TokenInterface {
 
   token.tokenDetails.timestampUnix = token.tokenDetails.timestamp_unix
   delete token.tokenDetails.timestamp_unix
+
+  if (token.nftParentId) token.tokenDetails.nftParentId = token.nftParentId
   return token
 }
 
@@ -554,18 +553,14 @@ async function balancesForAddress(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-              }
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     } else {
@@ -1447,7 +1442,7 @@ async function tokenStats(
             "tokenDetails.tokenIdHex": tokenId
           }
         },
-        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1,  _id: 0 },
+        project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
         limit: 10
       }
     }

@@ -2,34 +2,101 @@
   This library contains mocking data for running unit tests.
 */
 
-"use strict"
-
 const mockList = {
   t: [
     {
       tokenDetails: {
+        decimals: 0,
         tokenIdHex:
-          "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb",
+          "d925365bd7c24f826fa9aa3d577f0ff76709fad9178131627741f5b73894f769",
+        timestamp: "2019-07-19 16:08:27",
+        timestamp_unix: 1563552507,
+        transactionType: "GENESIS",
+        versionType: 65,
         documentUri: "",
-        documentSha256: "",
-        symbol: "NAKAMOTO",
-        name: "NAKAMOTO",
-        decimals: 8
+        documentSha256Hex: null,
+        symbol: "NFT1 Child",
+        name: "My NFT1 Child",
+        batonVout: null,
+        containsBaton: false,
+        genesisOrMintQuantity: "1",
+        sendOutputs: null
       },
       tokenStats: {
-        qty_valid_txns_since_genesis: 241,
-        qty_valid_token_utxos: 151,
-        qty_valid_token_addresses: 113,
-        qty_token_circulating_supply: "20995990",
-        qty_token_burned: "4010",
-        qty_token_minted: "21000000",
-        qty_satoshis_locked_up: 81900
-      }
+        block_created: 592013,
+        block_last_active_send: null,
+        block_last_active_mint: null,
+        qty_valid_txns_since_genesis: 1,
+        qty_valid_token_utxos: 1,
+        qty_valid_token_addresses: 1,
+        qty_token_minted: "1",
+        qty_token_burned: "0",
+        qty_token_circulating_supply: "1",
+        qty_satoshis_locked_up: 546,
+        minting_baton_status: "NEVER_CREATED"
+      },
+      nftParentId:
+        "112f967519e18083c8e4bd7ba67ebc04d72aaaa941826d38655c53d677e6a5be"
     }
   ]
 }
 
 const mockSingleToken = {
+  t: [
+    {
+      tokenDetails: {
+        decimals: 0,
+        tokenIdHex:
+          "d925365bd7c24f826fa9aa3d577f0ff76709fad9178131627741f5b73894f769",
+        timestamp: "2019-07-19 16:08:27",
+        timestamp_unix: 1563552507,
+        transactionType: "GENESIS",
+        versionType: 65,
+        documentUri: "",
+        documentSha256Hex: null,
+        symbol: "NFT1 Child",
+        name: "My NFT1 Child",
+        batonVout: null,
+        containsBaton: false,
+        genesisOrMintQuantity: "1",
+        sendOutputs: null
+      },
+      tokenStats: {
+        block_created: 592013,
+        block_last_active_send: null,
+        block_last_active_mint: null,
+        qty_valid_txns_since_genesis: 1,
+        qty_valid_token_utxos: 1,
+        qty_valid_token_addresses: 1,
+        qty_token_minted: "1",
+        qty_token_burned: "0",
+        qty_token_circulating_supply: "1",
+        qty_satoshis_locked_up: 546,
+        minting_baton_status: "NEVER_CREATED"
+      },
+      nftParentId:
+        "112f967519e18083c8e4bd7ba67ebc04d72aaaa941826d38655c53d677e6a5be"
+    }
+  ]
+}
+
+const mockSingleTokenError = {
+  t: []
+}
+
+const mockSingleAddress = {
+  a: [
+    {
+      _id: "5c93ed62a19119333d1595bc",
+      tokenDetails: {
+        tokenIdHex:
+          "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
+      },
+      address: "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7",
+      satoshis_balance: 546,
+      token_balance: "4616984"
+    }
+  ],
   t: [
     {
       tokenDetails: {
@@ -60,58 +127,6 @@ const mockSingleToken = {
         qty_token_circulating_supply: "0",
         qty_satoshis_locked_up: 0,
         minting_baton_status: "NEVER_CREATED"
-      }
-    }
-  ]
-}
-
-const mockSingleTokenError = {
-  t: []
-}
-
-const mockSingleAddress = {
-  a: [
-    {
-      _id: "5c93ed62a19119333d1595bc",
-      tokenDetails: {
-        tokenIdHex:
-          "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
-      },
-      address: "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7",
-      satoshis_balance: 546,
-      token_balance: "4616984"
-    }
-  ],
-  t: [
-    {
-      tokenDetails: {
-        decimals: 8,
-        tokenIdHex:
-          "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29",
-        timestamp: "2019-02-25 10:05",
-        transactionType: "GENESIS",
-        versionType: 1,
-        documentUri: "https://developer.bitcoin.com",
-        documentSha256Hex: "",
-        symbol: "DEV",
-        name: "DEVCOIN",
-        batonVout: 2,
-        containsBaton: true,
-        genesisOrMintQuantity: "500000000",
-        sendOutputs: null
-      },
-      tokenStats: {
-        block_created: 571272,
-        block_last_active_send: 574758,
-        block_last_active_mint: 571272,
-        qty_valid_txns_since_genesis: 172,
-        qty_valid_token_utxos: 170,
-        qty_valid_token_addresses: 170,
-        qty_token_minted: "1000000000",
-        qty_token_burned: "4.99999995",
-        qty_token_circulating_supply: "999999995.00000005",
-        qty_satoshis_locked_up: 92820,
-        minting_baton_status: "ALIVE"
       }
     }
   ]

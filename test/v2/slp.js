@@ -209,7 +209,7 @@ describe("#SLP", () => {
     it("should get token information", async () => {
       // testnet
       const tokenIdToTest =
-        "d925365bd7c24f826fa9aa3d577f0ff76709fad9178131627741f5b73894f769"
+        "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
 
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
@@ -237,7 +237,6 @@ describe("#SLP", () => {
         "timestampUnix",
         "symbol",
         "name",
-        "nftParentId",
         "documentUri",
         "documentHash",
         "decimals",
@@ -370,7 +369,6 @@ describe("#SLP", () => {
         "timestampUnix",
         "symbol",
         "name",
-        "nftParentId",
         "documentUri",
         "documentHash",
         "decimals",
@@ -415,7 +413,6 @@ describe("#SLP", () => {
         "timestampUnix",
         "symbol",
         "name",
-        "nftParentId",
         "documentUri",
         "documentHash",
         "decimals",
@@ -503,7 +500,8 @@ describe("#SLP", () => {
         "tokenId",
         "balance",
         "balanceString",
-        "slpAddress"
+        "slpAddress",
+        "decimalCount"
       ])
     })
   })
@@ -662,9 +660,14 @@ describe("#SLP", () => {
     it("should error on malformed address", async () => {
       try {
         req.body.addresses = ["bitcoincash:qzs02v05l7qs5s5dwuj0cx5ehjm2c"]
+
         await convertAddressBulk(req, res)
+
+        assert.equal(true, false, "Unsupported address format")
       } catch (err) {
-        assert.include(err.message, `Invalid BCH address.`)
+        // console.log(`err.message: ${util.inspect(err.message)}`)
+
+        assert.include(err.message, `Unsupported address format`)
       }
     })
 

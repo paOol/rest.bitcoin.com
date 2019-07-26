@@ -2,8 +2,6 @@
   This library contains mocking data for running unit tests.
 */
 
-"use strict"
-
 const mockDecodeRawTransaction = {
   txid: "a332237d82a2543af1b0e1ae3c8cea1610c290ebcaf084a7e9894a61de0be988",
   hash: "a332237d82a2543af1b0e1ae3c8cea1610c290ebcaf084a7e9894a61de0be988",

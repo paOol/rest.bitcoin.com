@@ -549,18 +549,14 @@ async function balancesForAddress(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-              }
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     } else {
@@ -1558,69 +1554,10 @@ async function tokenStatsBulk(
 
   // Filter array to only valid txid results
   const statsResults: ValidateTxidResult[] = await axios.all(statsPromises)
-  console.log(statsResults)
   const validTxids: any[] = statsResults.filter(result => result)
 
   res.status(200)
   return res.json(validTxids)
-
-  // try {
-  //   const query: {
-  //     v: number
-  //     q: {
-  //       db: string[]
-  //       find: any
-  //       project: {
-  //         tokenDetails: number
-  //         tokenStats: number
-  //         nftParentId: number
-  //         _id: number
-  //       }
-  //       limit: number
-  //     }
-  //   } = {
-  //     v: 3,
-  //     q: {
-  //       db: ["t"],
-  //       find: {
-  //         $query: {
-  //           "tokenDetails.tokenIdHex": tokenId
-  //         }
-  //       },
-  //       project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
-  //       limit: 10
-  //     }
-  //   }
-
-  //   const s: string = JSON.stringify(query)
-  //   const b64: string = Buffer.from(s).toString("base64")
-  //   const url: string = `${process.env.SLPDB_URL}q/${b64}`
-
-  //   // Get data from BitDB.
-  //   const tokenRes: AxiosResponse<any> = await axios.get(url)
-
-  //   let formattedTokens: any[] = []
-
-  //   if (tokenRes.data.t.length) {
-  //     tokenRes.data.t.forEach((token: any) => {
-  //       token = formatTokenOutput(token)
-  //       formattedTokens.push(token.tokenDetails)
-  //     })
-  //   }
-
-  //   res.status(200)
-  //   return res.json(formattedTokens[0])
-  // } catch (err) {
-  //   wlogger.error(`Error in slp.ts/tokenStats().`, err)
-
-  //   const { msg, status } = routeUtils.decodeError(err)
-  //   if (msg) {
-  //     res.status(status)
-  //     return res.json({ error: msg })
-  //   }
-  //   res.status(500)
-  //   return res.json({ error: `Error in /tokenStats: ${err.message}` })
-  // }
 }
 
 // Retrieve transactions by tokenId and address.

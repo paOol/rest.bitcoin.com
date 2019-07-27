@@ -548,22 +548,18 @@ async function balancesForAddress(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-              }
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     } else {
-      return res.json("No balance for this address")
+      return res.json([])
     }
   } catch (err) {
     wlogger.error(`Error in slp.ts/balancesForAddress().`, err)

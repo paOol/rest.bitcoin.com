@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var wtfnode = require("wtfnode"); // Debugging the event loop
-var util = require("util");
+// const util = require("util")
 var express = require("express");
 var req_logging_1 = require("./middleware/req-logging");
 // Middleware
@@ -11,15 +11,15 @@ var logger = require("morgan");
 var wlogger = require("./util/winston-logging");
 var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
-var basicAuth = require("express-basic-auth");
+// const basicAuth = require("express-basic-auth")
 var helmet = require("helmet");
 var debug = require("debug")("rest-cloud:server");
 var http = require("http");
 var cors = require("cors");
 var AuthMW = require("./middleware/auth");
-var BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder");
-var zmq = require("zeromq");
-var sock = zmq.socket("sub");
+// const BitcoinCashZMQDecoder = require("bitcoincash-zmq-decoder")
+// const zmq = require("zeromq")
+// const sock: any = zmq.socket("sub")
 var swStats = require("swagger-stats");
 var apiSpec;
 if (process.env.NETWORK === "mainnet") {
@@ -160,33 +160,34 @@ var io = require("socket.io").listen(server);
 /**
  * Setup ZMQ connections if ZMQ URL and port provided
  */
-if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
-    console.log("Connecting to BCH ZMQ at " + process.env.ZEROMQ_URL + ":" + process.env.ZEROMQ_PORT);
-    var bitcoincashZmqDecoder_1 = new BitcoinCashZMQDecoder(process.env.NETWORK);
-    sock.connect("tcp://" + process.env.ZEROMQ_URL + ":" + process.env.ZEROMQ_PORT);
-    sock.subscribe("raw");
-    sock.on("message", function (topic, message) {
-        try {
-            var decoded = topic.toString("ascii");
-            if (decoded === "rawtx") {
-                var txd = bitcoincashZmqDecoder_1.decodeTransaction(message);
-                io.emit("transactions", JSON.stringify(txd, null, 2));
-            }
-            else if (decoded === "rawblock") {
-                var blck = bitcoincashZmqDecoder_1.decodeBlock(message);
-                io.emit("blocks", JSON.stringify(blck, null, 2));
-            }
-        }
-        catch (error) {
-            var errorMessage = "Error processing ZMQ message";
-            console.log(errorMessage, error);
-            wlogger.error(errorMessage, error);
-        }
-    });
-}
-else {
-    console.log("ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection.");
-}
+// if (process.env.ZEROMQ_URL && process.env.ZEROMQ_PORT) {
+//   console.log(
+//     `Connecting to BCH ZMQ at ${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`
+//   )
+//   const bitcoincashZmqDecoder = new BitcoinCashZMQDecoder(process.env.NETWORK)
+//   sock.connect(`tcp://${process.env.ZEROMQ_URL}:${process.env.ZEROMQ_PORT}`)
+//   sock.subscribe("raw")
+//   sock.on("message", (topic: any, message: string) => {
+//     try {
+//       const decoded = topic.toString("ascii")
+//       if (decoded === "rawtx") {
+//         const txd = bitcoincashZmqDecoder.decodeTransaction(message)
+//         io.emit("transactions", JSON.stringify(txd, null, 2))
+//       } else if (decoded === "rawblock") {
+//         const blck = bitcoincashZmqDecoder.decodeBlock(message)
+//         io.emit("blocks", JSON.stringify(blck, null, 2))
+//       }
+//     } catch (error) {
+//       const errorMessage = "Error processing ZMQ message"
+//       console.log(errorMessage, error)
+//       wlogger.error(errorMessage, error)
+//     }
+//   })
+// } else {
+//   console.log(
+//     "ZEROMQ_URL and ZEROMQ_PORT env vars missing. Skipping ZMQ connection."
+//   )
+// }
 /**
  * Listen on provided port, on all network interfaces.
  */

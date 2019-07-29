@@ -2,8 +2,6 @@
   A private library of utility functions used by several different routes.
 */
 
-"use strict"
-
 const axios = require("axios")
 const logger = require("./logging.js")
 const wlogger = require("../../util/winston-logging")
@@ -13,6 +11,10 @@ util.inspect.defaultOptions = { depth: 1 }
 
 const BITBOX = require("bitbox-sdk").BITBOX
 const bitbox = new BITBOX()
+
+const SLPSDK = require("slp-sdk")
+const SLP = new SLPSDK()
+let Utils = SLP.slpjs.Utils
 
 module.exports = {
   validateNetwork, // Prevents a common user error
@@ -55,7 +57,7 @@ function validateNetwork(addr) {
 
     // Convert the user-provided address to a cashaddress, for easy detection
     // of the intended network.
-    const cashAddr = bitbox.Address.toCashAddress(addr)
+    const cashAddr = Utils.toCashAddress(addr)
 
     // Return true if the network and address both match testnet
     const addrIsTest = bitbox.Address.isTestnetAddress(cashAddr)

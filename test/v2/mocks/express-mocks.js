@@ -2,8 +2,6 @@
   Contains mocks of Express req and res objects.
 */
 
-"use strict"
-
 const sinon = require("sinon")
 
 // Inspect JS Objects.

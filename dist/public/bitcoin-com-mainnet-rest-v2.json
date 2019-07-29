@@ -25,6 +25,9 @@
 			"SLPTxid": {
 				"type": "string"
 			},
+			"SLPTokenId": {
+				"type": "string"
+			},
 			"RawTxid": {
 				"type": "string"
 			},
@@ -161,6 +164,18 @@
 							"88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa",
 							"fb0eeaa501a6e1acb721669c62a3f70741f48ae0fd7f4b8e1d72088785c51952"
 						]
+					}
+				}
+			},
+			"SLPTokenIds": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPTokenId"
+						},
+						"example": []
 					}
 				}
 			},
@@ -1186,7 +1201,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.11.9",
+		"version": "3.12.0",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -3046,6 +3061,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/tokenStats": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "List stats for multiple slp tokens",
+				"description": "List stats for multiple slp tokens",
+				"operationId": "bulkTokenStats",
+				"requestBody": {
+					"description": "Array of tokenIds",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPTokenIds"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"

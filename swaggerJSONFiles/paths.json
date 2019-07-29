@@ -1747,6 +1747,30 @@
         }
       }
     },
+    "/slp/tokenStats": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "List stats for multiple slp tokens",
+        "description": "List stats for multiple slp tokens",
+        "operationId": "bulkTokenStats",
+        "requestBody": {
+          "description": "Array of tokenIds",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPTokenIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/txDetails/{txid}": {
       "get": {
         "tags": ["slp"],

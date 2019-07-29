@@ -16,6 +16,9 @@
       "SLPTxid": {
         "type": "string"
       },
+      "SLPTokenId": {
+        "type": "string"
+      },
       "RawTxid": {
         "type": "string"
       },
@@ -147,6 +150,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SLPTxid"
+            },
+            "example": []
+          }
+        }
+      },
+      "SLPTokenIds": {
+        "type": "object",
+        "properties": {
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SLPTokenId"
             },
             "example": []
           }

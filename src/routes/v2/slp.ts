@@ -45,7 +45,8 @@ router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
 router.get("/validateTxid/:txid", validateSingle)
 router.get("/txDetails/:txid", txDetails)
-router.get("/tokenStats/:tokenId", tokenStats)
+router.get("/tokenStats/:tokenId", tokenStatsSingle)
+router.post("/tokenStats", tokenStatsBulk)
 router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
 router.get("/burnTotal/:transactionId", burnTotalSingle)
 
@@ -548,22 +549,18 @@ async function balancesForAddress(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-              }
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId) {
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+          }
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     } else {
-      return res.json("No balance for this address")
+      return res.json([])
     }
   } catch (err) {
     wlogger.error(`Error in slp.ts/balancesForAddress().`, err)
@@ -1407,7 +1404,7 @@ async function getSlpjsTxDetails(slpjsBitboxNetworkInstance, txid) {
   return result
 }
 
-async function tokenStats(
+async function tokenStatsSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -1474,6 +1471,93 @@ async function tokenStats(
     res.status(500)
     return res.json({ error: `Error in /tokenStats: ${err.message}` })
   }
+}
+
+async function tokenStatsBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  let tokenIds: string[] = req.body.tokenIds
+
+  // Reject if hashes is not an array.
+  if (!Array.isArray(tokenIds)) {
+    res.status(400)
+    return res.json({
+      error: "tokenIds needs to be an array. Use GET for single tokenId."
+    })
+  }
+
+  // Enforce array size rate limits
+  if (!routeUtils.validateArraySize(req, tokenIds)) {
+    res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+    return res.json({
+      error: `Array too large.`
+    })
+  }
+
+  logger.debug(`Executing slp/tokenStats with these tokenIds: `, tokenIds)
+
+  // Validate each txid
+  const statsPromises: Promise<any>[] = tokenIds.map(
+    async (tokenId: string) => {
+      try {
+        const query: {
+          v: number
+          q: {
+            db: string[]
+            find: any
+            project: {
+              tokenDetails: number
+              tokenStats: number
+              nftParentId: number
+              _id: number
+            }
+            limit: number
+          }
+        } = {
+          v: 3,
+          q: {
+            db: ["t"],
+            find: {
+              $query: {
+                "tokenDetails.tokenIdHex": tokenId
+              }
+            },
+            project: { tokenDetails: 1, tokenStats: 1, nftParentId: 1, _id: 0 },
+            limit: 10
+          }
+        }
+
+        const s: string = JSON.stringify(query)
+        const b64: string = Buffer.from(s).toString("base64")
+        const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+        // Get data from BitDB.
+        const tokenRes: AxiosResponse<any> = await axios.get(url)
+
+        let formattedTokens: any[] = []
+
+        if (tokenRes.data.t.length) {
+          tokenRes.data.t.forEach((token: any) => {
+            token = formatTokenOutput(token)
+            formattedTokens.push(token.tokenDetails)
+          })
+        }
+
+        return formattedTokens[0]
+      } catch (err) {
+        throw err
+      }
+    }
+  )
+
+  // Filter array to only valid txid results
+  const statsResults: ValidateTxidResult[] = await axios.all(statsPromises)
+  const validTxids: any[] = statsResults.filter(result => result)
+
+  res.status(200)
+  return res.json(validTxids)
 }
 
 // Retrieve transactions by tokenId and address.
@@ -1571,7 +1655,8 @@ module.exports = {
     burnTokenType1,
     txDetails,
     getSlpjsTxDetails,
-    tokenStats,
+    tokenStatsSingle,
+    tokenStatsBulk,
     balancesForTokenSingle,
     txsTokenIdAddressSingle
   }

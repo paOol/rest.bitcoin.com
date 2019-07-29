@@ -772,7 +772,7 @@ describe("#SLP", () => {
   })
 
   describe("tokenStatsSingle()", () => {
-    const tokenStatsSingle = slpRoute.testableComponents.tokenStats
+    const tokenStatsSingle = slpRoute.testableComponents.tokenStatsSingle
 
     it("should throw 400 if tokenID is empty", async () => {
       req.params.tokenId = ""

@@ -25,6 +25,9 @@
 			"SLPTxid": {
 				"type": "string"
 			},
+			"SLPTokenId": {
+				"type": "string"
+			},
 			"RawTxid": {
 				"type": "string"
 			},
@@ -161,6 +164,18 @@
 							"88b121101d71b73599dfc7d79eead599031912b2c48298bf5c1f37f4dd743ffa",
 							"fb0eeaa501a6e1acb721669c62a3f70741f48ae0fd7f4b8e1d72088785c51952"
 						]
+					}
+				}
+			},
+			"SLPTokenIds": {
+				"type": "object",
+				"properties": {
+					"tokenIds": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPTokenId"
+						},
+						"example": []
 					}
 				}
 			},

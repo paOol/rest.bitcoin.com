@@ -560,7 +560,7 @@ async function balancesForAddress(
 
       return res.json(tokenRes.data.a)
     } else {
-      return res.json("No balance for this address")
+      return res.json([])
     }
   } catch (err) {
     wlogger.error(`Error in slp.ts/balancesForAddress().`, err)

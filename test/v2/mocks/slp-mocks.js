@@ -2,8 +2,6 @@
   This library contains mocking data for running unit tests.
 */
 
-"use strict"
-
 const mockList = {
   t: [
     {

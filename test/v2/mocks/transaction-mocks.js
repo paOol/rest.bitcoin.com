@@ -2,8 +2,6 @@
   This library contains mocking data for running unit tests on the address route.
 */
 
-"use strict"
-
 /*
 const mockDetails = {
   txid: "6f235bd3a689f03c11969cd649ccad592462ca958bc519a30194e7a67b349a40",

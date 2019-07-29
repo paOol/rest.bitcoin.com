@@ -2,8 +2,6 @@
   This library contains mocking data for running unit tests on the address route.
 */
 
-"use strict"
-
 const mockAddressDetails = {
   addrStr: "1Fg4r9iDrEkCcDmHTy2T79EusNfhyQpu7W",
   balance: 0.00126419,

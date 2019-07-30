@@ -425,11 +425,12 @@ describe("#SLP", () => {
     })
   })
 
-  describe("balancesForAddress()", () => {
-    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
+  describe("balancesForAddressSingle()", () => {
+    const balancesForAddressSingle =
+      slpRoute.testableComponents.balancesForAddressSingle
 
     it("should throw 400 if address is empty", async () => {
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -439,7 +440,7 @@ describe("#SLP", () => {
     it("should throw 400 if address is invalid", async () => {
       req.params.address = "badAddress"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -450,7 +451,7 @@ describe("#SLP", () => {
       req.params.address =
         "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -466,7 +467,7 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -492,7 +493,7 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)

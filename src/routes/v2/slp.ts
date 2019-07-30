@@ -50,6 +50,7 @@ router.get("/tokenStats/:tokenId", tokenStatsSingle)
 router.post("/tokenStats", tokenStatsBulk)
 router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
 router.get("/burnTotal/:transactionId", burnTotalSingle)
+router.post("/burnTotal", burnTotalBulk)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -589,10 +590,10 @@ async function balancesForAddressBulk(
   try {
     const addresses: string[] = req.body.addresses
 
-    // Reject if txids is not an array.
+    // Reject if addresses is not an array.
     if (!Array.isArray(addresses)) {
       res.status(400)
-      return res.json({ error: "txids needs to be an array" })
+      return res.json({ error: "addresses needs to be an array" })
     }
 
     // Enforce array size rate limits
@@ -1258,6 +1259,100 @@ async function burnTotalSingle(
   }
 }
 
+async function burnTotalBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    const txids: string[] = req.body.txids
+
+    // Reject if txids is not an array.
+    if (!Array.isArray(txids)) {
+      res.status(400)
+      return res.json({ error: "txids needs to be an array" })
+    }
+
+    // Enforce array size rate limits
+    if (!routeUtils.validateArraySize(req, txids)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      return res.json({
+        error: `Array too large.`
+      })
+    }
+
+    logger.debug(`Executing slp/burnTotal with these txids: `, txids)
+
+    const txidPromises = txids.map(async (txid: string) => {
+      const query: {
+        v: number
+        q: {
+          db: string[]
+          aggregate: any
+          limit: number
+        }
+      } = {
+        v: 3,
+        q: {
+          db: ["g"],
+          aggregate: [
+            {
+              $match: {
+                "graphTxn.txid": txid
+              }
+            },
+            {
+              $project: {
+                "graphTxn.txid": 1,
+                inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
+                outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
+              }
+            }
+          ],
+          limit: 1000
+        }
+      }
+
+      const s: string = JSON.stringify(query)
+      const b64: string = Buffer.from(s).toString("base64")
+      const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+      // Get data from SLPDB.
+      const tokenRes = await axios.get(url)
+      let burnTotal: BurnTotalResult = {
+        transactionId: txids[0],
+        inputTotal: 0,
+        outputTotal: 0,
+        burnTotal: 0
+      }
+      if (tokenRes.data.g >= 1) {
+        if (tokenRes.data.g.length) {
+          let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
+          let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
+          burnTotal.inputTotal = inputTotal
+          burnTotal.outputTotal = outputTotal
+          burnTotal.burnTotal = inputTotal - outputTotal
+        }
+      }
+      return burnTotal
+    })
+    const axiosResult = await axios.all(txidPromises)
+
+    res.status(200)
+    return res.json(axiosResult)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/burnTotalSingle().`, err)
+
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /burnTotal: ${err.message}` })
+  }
+}
+
 // Below are functions which are enabled for teams not using our javascript SDKs which still need to create txs
 // These should never be enabled on our public REST API
 
@@ -1622,7 +1717,6 @@ async function tokenStatsSingle(
     const b64: string = Buffer.from(s).toString("base64")
     const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from BitDB.
     const tokenRes: AxiosResponse<any> = await axios.get(url)
 
     let formattedTokens: any[] = []
@@ -1709,7 +1803,6 @@ async function tokenStatsBulk(
         const b64: string = Buffer.from(s).toString("base64")
         const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
-        // Get data from BitDB.
         const tokenRes: AxiosResponse<any> = await axios.get(url)
 
         let formattedTokens: any[] = []
@@ -1835,6 +1928,8 @@ module.exports = {
     tokenStatsSingle,
     tokenStatsBulk,
     balancesForTokenSingle,
-    txsTokenIdAddressSingle
+    txsTokenIdAddressSingle,
+    burnTotalSingle,
+    burnTotalBulk
   }
 }

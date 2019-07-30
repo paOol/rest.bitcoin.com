@@ -425,11 +425,12 @@ describe("#SLP", () => {
     })
   })
 
-  describe("balancesForAddress()", () => {
-    const balancesForAddress = slpRoute.testableComponents.balancesForAddress
+  describe("balancesForAddressSingle()", () => {
+    const balancesForAddressSingle =
+      slpRoute.testableComponents.balancesForAddressSingle
 
     it("should throw 400 if address is empty", async () => {
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -439,7 +440,7 @@ describe("#SLP", () => {
     it("should throw 400 if address is invalid", async () => {
       req.params.address = "badAddress"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -450,7 +451,7 @@ describe("#SLP", () => {
       req.params.address =
         "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -466,7 +467,7 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -492,7 +493,7 @@ describe("#SLP", () => {
 
       req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
 
-      const result = await balancesForAddress(req, res)
+      const result = await balancesForAddressSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
@@ -506,15 +507,15 @@ describe("#SLP", () => {
     })
   })
 
-  describe("balancesForAddressByTokenID()", () => {
-    const balancesForAddressByTokenID =
-      slpRoute.testableComponents.balancesForAddressByTokenID
+  describe("balancesForAddressByTokenIDSingle()", () => {
+    const balancesForAddressByTokenIDSingle =
+      slpRoute.testableComponents.balancesForAddressByTokenIDSingle
 
     it("should throw 400 if address is empty", async () => {
       req.params.address = ""
       req.params.tokenId =
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -525,7 +526,7 @@ describe("#SLP", () => {
       req.params.address =
         "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
       req.params.tokenId = ""
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -537,7 +538,7 @@ describe("#SLP", () => {
       req.params.tokenId =
         "650dea14c77f4d749608e36e375450c9ac91deb8b1b53e50cb0de2059a52d19a"
 
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -548,7 +549,7 @@ describe("#SLP", () => {
       req.params.address =
         "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
 
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
@@ -566,7 +567,7 @@ describe("#SLP", () => {
       req.params.tokenId =
         "7ac7f4bb50b019fe0f5c81e3fc13fc0720e130282ea460768cafb49785eb2796"
 
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -593,12 +594,19 @@ describe("#SLP", () => {
       req.params.tokenId =
         "6b081fcd1f78b187be1464313dac8ff257251b727a42b613552a4040870aeb29"
 
-      const result = await balancesForAddressByTokenID(req, res)
+      const result = await balancesForAddressByTokenIDSingle(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
       // TODO - add decimalCount
       // assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
-      assert.hasAllKeys(result, ["tokenId", "balance", "balanceString"])
+      assert.hasAllKeys(result, [
+        "cashAddress",
+        "legacyAddress",
+        "slpAddress",
+        "tokenId",
+        "balance",
+        "balanceString"
+      ])
     })
   })
 
@@ -907,8 +915,6 @@ describe("#SLP", () => {
     })
 */
 
-    // CT 6/21/19 - Commenting out this test for now until testnet insight API comes
-    // back up. It's been down now for several days.
     if (process.env.TEST !== "integration") {
       it("should get tx details with token info", async () => {
         if (process.env.TEST === "unit") {

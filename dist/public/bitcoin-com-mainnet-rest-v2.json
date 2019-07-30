@@ -2,6 +2,17 @@
 	"components": {
 		"schemas": {
 			"Address": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "string"
+					},
+					"tokenIds": {
+						"type": "string"
+					}
+				}
+			},
+			"BalanceAddress": {
 				"type": "string"
 			},
 			"Hash": {
@@ -28,6 +39,9 @@
 			"SLPTokenId": {
 				"type": "string"
 			},
+			"SLPAddress": {
+				"type": "string"
+			},
 			"RawTxid": {
 				"type": "string"
 			},
@@ -39,6 +53,13 @@
 			},
 			"Proof": {
 				"type": "string"
+			},
+			"BalanceAddresses": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/BalanceAddress"
+				},
+				"example": []
 			},
 			"Addresses": {
 				"type": "object",
@@ -174,6 +195,18 @@
 						"type": "array",
 						"items": {
 							"$ref": "#/components/schemas/SLPTokenId"
+						},
+						"example": []
+					}
+				}
+			},
+			"SLPAddresses": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPAddress"
 						},
 						"example": []
 					}
@@ -1201,7 +1234,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"description": "rest.bitcoin.com is the REST layer for Bitcoin.com's Cloud. More info: [developer.bitcoin.com/rest](https://developer.bitcoin.com/rest). Chatroom [geni.us/CashDev](http://geni.us/CashDev)",
-		"version": "3.12.1",
+		"version": "3.12.2",
 		"title": "REST",
 		"license": {
 			"name": "MIT",
@@ -2902,9 +2935,9 @@
 				"tags": [
 					"slp"
 				],
-				"summary": "list slp balances for address",
-				"description": "List SLP token balances for address",
-				"operationId": "balancesForAddress",
+				"summary": "list slp balances for single address",
+				"description": "List SLP token balances for single address",
+				"operationId": "balancesForAddressSingle",
 				"parameters": [
 					{
 						"name": "address",
@@ -2917,6 +2950,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/balancesForAddress": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list slp balances for bulk addresses",
+				"description": "List SLP token balances for bulk addresses",
+				"operationId": "balancesForAddressBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPAddresses"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"
@@ -2951,6 +3010,32 @@
 				}
 			}
 		},
+		"/slp/balancesForToken": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list SLP addresses and balances for bulk tokenIds",
+				"description": "List SLP addresses and balances for bulk tokenIds",
+				"operationId": "balancesForTokenBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPTokenIds"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/balance/{address}/{tokenId}": {
 			"get": {
 				"tags": [
@@ -2958,7 +3043,7 @@
 				],
 				"summary": "list single slp token balance for address",
 				"description": "List single SLP token balance for address",
-				"operationId": "singleBalanceForAddress",
+				"operationId": "balanceForAddressSingle",
 				"parameters": [
 					{
 						"name": "address",
@@ -2981,6 +3066,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/balance": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list bulk slp token balances for addresses",
+				"description": "List bulk SLP token balances for addresses",
+				"operationId": "balanceForAddressBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BalanceAddresses"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"
@@ -3158,6 +3269,32 @@
 				}
 			}
 		},
+		"/slp/transactions": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Bulk SLP transactions by tokenId and address",
+				"description": "Bulk Transactions by tokenId and address.",
+				"operationId": "txsTokenIdAddressBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BalanceAddresses"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/burnTotal/{transactionId}": {
 			"get": {
 				"tags": [
@@ -3178,6 +3315,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/burnTotal": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Total burn count for slp transactions",
+				"description": "total input, ouput and burn counts by transaction Id.",
+				"operationId": "burnTotalBulk",
+				"requestBody": {
+					"description": "Array of transactionIds",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Txids"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"

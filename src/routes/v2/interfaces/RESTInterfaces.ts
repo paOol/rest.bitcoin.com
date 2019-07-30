@@ -391,6 +391,9 @@ export interface BalancesForToken {
 }
 
 export interface BalanceForAddressByTokenId {
+  cashAddress: string
+  legacyAddress: string
+  slpAddress: string
   tokenId: string
   balance: number
   balanceString: string

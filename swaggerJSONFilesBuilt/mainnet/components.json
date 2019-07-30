@@ -2,6 +2,17 @@
 	"components": {
 		"schemas": {
 			"Address": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "string"
+					},
+					"tokenIds": {
+						"type": "string"
+					}
+				}
+			},
+			"BalanceAddress": {
 				"type": "string"
 			},
 			"Hash": {
@@ -28,6 +39,9 @@
 			"SLPTokenId": {
 				"type": "string"
 			},
+			"SLPAddress": {
+				"type": "string"
+			},
 			"RawTxid": {
 				"type": "string"
 			},
@@ -39,6 +53,13 @@
 			},
 			"Proof": {
 				"type": "string"
+			},
+			"BalanceAddresses": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/BalanceAddress"
+				},
+				"example": []
 			},
 			"Addresses": {
 				"type": "object",
@@ -174,6 +195,18 @@
 						"type": "array",
 						"items": {
 							"$ref": "#/components/schemas/SLPTokenId"
+						},
+						"example": []
+					}
+				}
+			},
+			"SLPAddresses": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/SLPAddress"
 						},
 						"example": []
 					}

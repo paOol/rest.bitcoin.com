@@ -49,6 +49,7 @@ router.get("/tokenStats/:tokenId", tokenStatsSingle)
 router.post("/tokenStats", tokenStatsBulk)
 router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
 router.get("/burnTotal/:transactionId", burnTotalSingle)
+router.post("/burnTotal", burnTotalBulk)
 
 if (process.env.NON_JS_FRAMEWORK && process.env.NON_JS_FRAMEWORK === "true") {
   router.get(
@@ -1082,6 +1083,100 @@ async function burnTotalSingle(
   }
 }
 
+async function burnTotalBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    let txids: string[] = req.body.txids
+
+    // Reject if hashes is not an array.
+    if (!Array.isArray(txids)) {
+      res.status(400)
+      return res.json({
+        error: "txids needs to be an array. Use GET for single txid."
+      })
+    }
+
+    // Enforce array size rate limits
+    if (!routeUtils.validateArraySize(req, tokenIds)) {
+      res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
+      return res.json({
+        error: `Array too large.`
+      })
+    }
+    logger.debug(`Executing slp/burnTotal with these txids: `, tokenIds)
+
+    ////
+
+    let txid: string = req.params.transactionId
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        aggregate: any
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["g"],
+        aggregate: [
+          {
+            $match: {
+              "graphTxn.txid": txid
+            }
+          },
+          {
+            $project: {
+              "graphTxn.txid": 1,
+              inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
+              outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
+            }
+          }
+        ],
+        limit: 1000
+      }
+    }
+
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let burnTotal: BurnTotalResult = {
+      transactionId: txid,
+      inputTotal: 0,
+      outputTotal: 0,
+      burnTotal: 0
+    }
+
+    if (tokenRes.data.g.length) {
+      let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
+      let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
+      burnTotal.inputTotal = inputTotal
+      burnTotal.outputTotal = outputTotal
+      burnTotal.burnTotal = inputTotal - outputTotal
+    }
+
+    res.status(200)
+    return res.json(burnTotal)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/burnTotalSingle().`, err)
+
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+    res.status(500)
+    return res.json({ error: `Error in /burnTotal: ${err.message}` })
+  }
+}
+
 // Below are functions which are enabled for teams not using our javascript SDKs which still need to create txs
 // These should never be enabled on our public REST API
 
@@ -1658,6 +1753,8 @@ module.exports = {
     tokenStatsSingle,
     tokenStatsBulk,
     balancesForTokenSingle,
-    txsTokenIdAddressSingle
+    txsTokenIdAddressSingle,
+    burnTotalSingle,
+    burnTotalBulk
   }
 }

@@ -2027,6 +2027,32 @@
 				}
 			}
 		},
+		"/slp/transactions": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Bulk SLP transactions by tokenId and address",
+				"description": "Bulk Transactions by tokenId and address.",
+				"operationId": "txsTokenIdAddressBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/BalanceAddresses"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/slp/burnTotal/{transactionId}": {
 			"get": {
 				"tags": [

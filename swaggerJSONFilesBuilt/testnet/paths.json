@@ -1693,9 +1693,9 @@
 				"tags": [
 					"slp"
 				],
-				"summary": "list slp balances for address",
-				"description": "List SLP token balances for address",
-				"operationId": "balancesForAddress",
+				"summary": "list slp balances for single address",
+				"description": "List SLP token balances for single address",
+				"operationId": "balancesForAddressSingle",
 				"parameters": [
 					{
 						"name": "address",
@@ -1708,6 +1708,32 @@
 						}
 					}
 				],
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
+		"/slp/balancesForAddress": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "list slp balances for bulk addresses",
+				"description": "List SLP token balances for bulk addresses",
+				"operationId": "balancesForAddressBulk",
+				"requestBody": {
+					"description": "",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/SLPAddresses"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "successful response"

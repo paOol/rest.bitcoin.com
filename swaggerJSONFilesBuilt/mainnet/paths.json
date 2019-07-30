@@ -2002,6 +2002,32 @@
 				}
 			}
 		},
+		"/slp/burnTotal": {
+			"post": {
+				"tags": [
+					"slp"
+				],
+				"summary": "Total burn count for slp transactions",
+				"description": "total input, ouput and burn counts by transaction Id.",
+				"operationId": "burnTotalBulk",
+				"requestBody": {
+					"description": "Array of transactionIds",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Txids"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "successful response"
+					}
+				}
+			}
+		},
 		"/cashAccounts/lookup/{account}/{number}/{collision}": {
 			"get": {
 				"tags": [

@@ -590,10 +590,10 @@ async function balancesForAddressBulk(
   try {
     const addresses: string[] = req.body.addresses
 
-    // Reject if txids is not an array.
+    // Reject if addresses is not an array.
     if (!Array.isArray(addresses)) {
       res.status(400)
-      return res.json({ error: "txids needs to be an array" })
+      return res.json({ error: "addresses needs to be an array" })
     }
 
     // Enforce array size rate limits
@@ -1265,81 +1265,81 @@ async function burnTotalBulk(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    let txids: string[] = req.body.txids
+    const txids: string[] = req.body.txids
 
-    // Reject if hashes is not an array.
+    // Reject if txids is not an array.
     if (!Array.isArray(txids)) {
       res.status(400)
-      return res.json({
-        error: "txids needs to be an array. Use GET for single txid."
-      })
+      return res.json({ error: "txids needs to be an array" })
     }
 
     // Enforce array size rate limits
-    if (!routeUtils.validateArraySize(req, tokenIds)) {
+    if (!routeUtils.validateArraySize(req, txids)) {
       res.status(429) // https://github.com/Bitcoin-com/rest.bitcoin.com/issues/330
       return res.json({
         error: `Array too large.`
       })
     }
-    logger.debug(`Executing slp/burnTotal with these txids: `, tokenIds)
 
-    ////
+    logger.debug(`Executing slp/burnTotal with these txids: `, txids)
 
-    let txid: string = req.params.transactionId
-    const query: {
-      v: number
-      q: {
-        db: string[]
-        aggregate: any
-        limit: number
-      }
-    } = {
-      v: 3,
-      q: {
-        db: ["g"],
-        aggregate: [
-          {
-            $match: {
-              "graphTxn.txid": txid
+    const txidPromises = txids.map(async (txid: string) => {
+      const query: {
+        v: number
+        q: {
+          db: string[]
+          aggregate: any
+          limit: number
+        }
+      } = {
+        v: 3,
+        q: {
+          db: ["g"],
+          aggregate: [
+            {
+              $match: {
+                "graphTxn.txid": txid
+              }
+            },
+            {
+              $project: {
+                "graphTxn.txid": 1,
+                inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
+                outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
+              }
             }
-          },
-          {
-            $project: {
-              "graphTxn.txid": 1,
-              inputTotal: { $sum: "$graphTxn.inputs.slpAmount" },
-              outputTotal: { $sum: "$graphTxn.outputs.slpAmount" }
-            }
-          }
-        ],
-        limit: 1000
+          ],
+          limit: 1000
+        }
       }
-    }
 
-    const s: string = JSON.stringify(query)
-    const b64: string = Buffer.from(s).toString("base64")
-    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+      const s: string = JSON.stringify(query)
+      const b64: string = Buffer.from(s).toString("base64")
+      const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from SLPDB.
-    const tokenRes: AxiosResponse = await axios.get(url)
-
-    let burnTotal: BurnTotalResult = {
-      transactionId: txid,
-      inputTotal: 0,
-      outputTotal: 0,
-      burnTotal: 0
-    }
-
-    if (tokenRes.data.g.length) {
-      let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
-      let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
-      burnTotal.inputTotal = inputTotal
-      burnTotal.outputTotal = outputTotal
-      burnTotal.burnTotal = inputTotal - outputTotal
-    }
+      // Get data from SLPDB.
+      const tokenRes = await axios.get(url)
+      let burnTotal: BurnTotalResult = {
+        transactionId: txids[0],
+        inputTotal: 0,
+        outputTotal: 0,
+        burnTotal: 0
+      }
+      if (tokenRes.data.g >= 1) {
+        if (tokenRes.data.g.length) {
+          let inputTotal: number = parseFloat(tokenRes.data.g[0].inputTotal)
+          let outputTotal: number = parseFloat(tokenRes.data.g[0].outputTotal)
+          burnTotal.inputTotal = inputTotal
+          burnTotal.outputTotal = outputTotal
+          burnTotal.burnTotal = inputTotal - outputTotal
+        }
+      }
+      return burnTotal
+    })
+    const axiosResult = await axios.all(txidPromises)
 
     res.status(200)
-    return res.json(burnTotal)
+    return res.json(axiosResult)
   } catch (err) {
     wlogger.error(`Error in slp.ts/burnTotalSingle().`, err)
 
@@ -1717,7 +1717,6 @@ async function tokenStatsSingle(
     const b64: string = Buffer.from(s).toString("base64")
     const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
-    // Get data from BitDB.
     const tokenRes: AxiosResponse<any> = await axios.get(url)
 
     let formattedTokens: any[] = []
@@ -1804,7 +1803,6 @@ async function tokenStatsBulk(
         const b64: string = Buffer.from(s).toString("base64")
         const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
-        // Get data from BitDB.
         const tokenRes: AxiosResponse<any> = await axios.get(url)
 
         let formattedTokens: any[] = []

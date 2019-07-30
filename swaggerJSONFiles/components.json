@@ -19,6 +19,9 @@
       "SLPTokenId": {
         "type": "string"
       },
+      "SLPAddress": {
+        "type": "string"
+      },
       "RawTxid": {
         "type": "string"
       },
@@ -162,6 +165,18 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SLPTokenId"
+            },
+            "example": []
+          }
+        }
+      },
+      "SLPAddresses": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SLPAddress"
             },
             "example": []
           }

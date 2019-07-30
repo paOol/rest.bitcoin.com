@@ -907,8 +907,6 @@ describe("#SLP", () => {
     })
 */
 
-    // CT 6/21/19 - Commenting out this test for now until testnet insight API comes
-    // back up. It's been down now for several days.
     if (process.env.TEST !== "integration") {
       it("should get tx details with token info", async () => {
         if (process.env.TEST === "unit") {

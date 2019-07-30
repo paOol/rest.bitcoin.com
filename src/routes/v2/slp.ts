@@ -1,16 +1,8 @@
 // imports
-import axios, { AxiosResponse } from "axios"
-import * as express from "express"
-import * as util from "util"
-import {
-  BalanceForAddressByTokenId,
-  BalancesForAddress,
-  BalancesForToken,
-  BurnTotalResult,
-  ConvertResult,
-  TokenInterface,
-  ValidateTxidResult
-} from "./interfaces/RESTInterfaces"
+import axios, { AxiosResponse } from "axios";
+import * as express from "express";
+import * as util from "util";
+import { BalanceForAddressByTokenId, BalancesForAddress, BalancesForToken, BurnTotalResult, ConvertResult, TokenInterface, ValidateTxidResult } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -41,7 +33,8 @@ router.get("/balancesForAddress/:address", balancesForAddressSingle)
 router.post("/balancesForAddress", balancesForAddressBulk)
 router.get("/balancesForToken/:tokenId", balancesForTokenSingle)
 router.post("/balancesForToken", balancesForTokenBulk)
-router.get("/balance/:address/:tokenId", balancesForAddressByTokenID)
+router.get("/balance/:address/:tokenId", balancesForAddressByTokenIDSingle)
+router.post("/balance", balancesForAddressByTokenIDBulk)
 router.get("/convert/:address", convertAddressSingle)
 router.post("/convert", convertAddressBulk)
 router.post("/validateTxid", validateBulk)
@@ -927,7 +920,7 @@ async function balancesForTokenBulk(
 }
 
 // Retrieve token balances for a single token class, for a single address.
-async function balancesForAddressByTokenID(
+async function balancesForAddressByTokenIDSingle(
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -995,31 +988,166 @@ async function balancesForAddressByTokenID(
     // Get data from SLPDB.
     const tokenRes: AxiosResponse<any> = await axios.get(url)
     let resVal: BalanceForAddressByTokenId = {
+      cashAddress: utils.toCashAddress(slpAddr),
+      legacyAddress: utils.toLegacyAddress(slpAddr),
+      slpAddress: slpAddr,
       tokenId: tokenId,
       balance: 0,
       balanceString: "0"
     }
-    res.status(200)
     if (tokenRes.data.a.length > 0) {
-      tokenRes.data.a.forEach(
-        async (token: any): Promise<any> => {
-          if (token.tokenDetails.tokenIdHex === tokenId) {
-            resVal = {
-              tokenId: token.tokenDetails.tokenIdHex,
-              balance: parseFloat(token.token_balance),
-              balanceString: token.token_balance
-            }
+      tokenRes.data.a.forEach((token: any): any => {
+        if (token.tokenDetails.tokenIdHex === tokenId) {
+          resVal = {
+            cashAddress: utils.toCashAddress(slpAddr),
+            legacyAddress: utils.toLegacyAddress(slpAddr),
+            slpAddress: slpAddr,
+            tokenId: token.tokenDetails.tokenIdHex,
+            balance: parseFloat(token.token_balance),
+            balanceString: token.token_balance
           }
         }
-      )
+      })
     } else {
       resVal = {
+        cashAddress: utils.toCashAddress(slpAddr),
+        legacyAddress: utils.toLegacyAddress(slpAddr),
+        slpAddress: slpAddr,
         tokenId: tokenId,
         balance: 0,
         balanceString: "0"
       }
     }
+    res.status(200)
     return res.json(resVal)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/balancesForAddressByTokenID().`, err)
+
+    // Decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({
+      error: `Error in /balance/:address/:tokenId: ${err.message}`
+    })
+  }
+}
+
+async function balancesForAddressByTokenIDBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    req.body.forEach((r: any) => {
+      // Validate input data.
+      if (!r.address || r.address === "") {
+        res.status(400)
+        return res.json({ error: "address can not be empty" })
+      }
+
+      if (!r.tokenId || r.tokenId === "") {
+        res.status(400)
+        return res.json({ error: "tokenId can not be empty" })
+      }
+
+      // Ensure the input is a valid BCH address.
+      try {
+        utils.toCashAddress(r.address)
+      } catch (err) {
+        res.status(400)
+        return res.json({
+          error: `Invalid BCH address. Double check your address is valid: ${r.address}`
+        })
+      }
+
+      // Prevent a common user error. Ensure they are using the correct network address.
+      let cashAddr: string = utils.toCashAddress(r.address)
+      const networkIsValid: boolean = routeUtils.validateNetwork(cashAddr)
+      if (!networkIsValid) {
+        res.status(400)
+        return res.json({
+          error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+        })
+      }
+    })
+    const tokenIdPromises: Promise<any>[] = req.body.map(async (data: any) => {
+      try {
+        // Convert input to an simpleledger: address.
+        const slpAddr: string = utils.toSlpAddress(data.address)
+        // const slpAddr: string = data.address
+
+        const query: {
+          v: number
+          q: {
+            db: string[]
+            find: any
+            limit: number
+          }
+        } = {
+          v: 3,
+          q: {
+            db: ["a"],
+            find: {
+              address: slpAddr,
+              token_balance: { $gte: 0 }
+            },
+            limit: 10
+          }
+        }
+
+        const s: string = JSON.stringify(query)
+        const b64: string = Buffer.from(s).toString("base64")
+        const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+        // Get data from SLPDB.
+        const tokenRes: AxiosResponse<any> = await axios.get(url)
+
+        let resVal: BalanceForAddressByTokenId = {
+          cashAddress: utils.toCashAddress(slpAddr),
+          legacyAddress: utils.toLegacyAddress(slpAddr),
+          slpAddress: slpAddr,
+          tokenId: data.tokenId,
+          balance: 0,
+          balanceString: "0"
+        }
+        if (tokenRes.data.a.length > 0) {
+          tokenRes.data.a.forEach(
+            async (token: any): Promise<any> => {
+              if (token.tokenDetails.tokenIdHex === data.tokenId) {
+                resVal = {
+                  cashAddress: utils.toCashAddress(data.address),
+                  legacyAddress: utils.toLegacyAddress(data.address),
+                  slpAddress: data.address,
+                  tokenId: token.tokenDetails.tokenIdHex,
+                  balance: parseFloat(token.token_balance),
+                  balanceString: token.token_balance
+                }
+              }
+            }
+          )
+        } else {
+          resVal = {
+            cashAddress: utils.toCashAddress(data.address),
+            legacyAddress: utils.toLegacyAddress(data.address),
+            slpAddress: data.address,
+            tokenId: data.tokenId,
+            balance: 0,
+            balanceString: "0"
+          }
+        }
+        return resVal
+      } catch (err) {
+        throw err
+      }
+    })
+    const axiosResult: any[] = await axios.all(tokenIdPromises)
+    res.status(200)
+    return res.json(axiosResult)
   } catch (err) {
     wlogger.error(`Error in slp.ts/balancesForAddressByTokenID().`, err)
 
@@ -1984,7 +2112,8 @@ module.exports = {
     listBulkToken,
     balancesForAddressSingle,
     balancesForAddressBulk,
-    balancesForAddressByTokenID,
+    balancesForAddressByTokenIDSingle,
+    balancesForAddressByTokenIDBulk,
     convertAddressSingle,
     convertAddressBulk,
     validateBulk,

@@ -599,7 +599,14 @@ describe("#SLP", () => {
 
       // TODO - add decimalCount
       // assert.hasAllKeys(result, ["tokenId", "balance", "decimalCount"])
-      assert.hasAllKeys(result, ["tokenId", "balance", "balanceString"])
+      assert.hasAllKeys(result, [
+        "cashAddress",
+        "legacyAddress",
+        "slpAddress",
+        "tokenId",
+        "balance",
+        "balanceString"
+      ])
     })
   })
 

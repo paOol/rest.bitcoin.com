@@ -1,8 +1,16 @@
 // imports
-import axios, { AxiosResponse } from "axios";
-import * as express from "express";
-import * as util from "util";
-import { BalanceForAddressByTokenId, BalancesForAddress, BalancesForToken, BurnTotalResult, ConvertResult, TokenInterface, ValidateTxidResult } from "./interfaces/RESTInterfaces";
+import axios, { AxiosResponse } from "axios"
+import * as express from "express"
+import * as util from "util"
+import {
+  BalanceForAddressByTokenId,
+  BalancesForAddress,
+  BalancesForToken,
+  BurnTotalResult,
+  ConvertResult,
+  TokenInterface,
+  ValidateTxidResult
+} from "./interfaces/RESTInterfaces"
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -43,6 +51,7 @@ router.get("/txDetails/:txid", txDetails)
 router.get("/tokenStats/:tokenId", tokenStatsSingle)
 router.post("/tokenStats", tokenStatsBulk)
 router.get("/transactions/:tokenId/:address", txsTokenIdAddressSingle)
+router.post("/transactions", txsTokenIdAddressBulk)
 router.get("/burnTotal/:transactionId", burnTotalSingle)
 router.post("/burnTotal", burnTotalBulk)
 
@@ -2103,6 +2112,114 @@ async function txsTokenIdAddressSingle(
   }
 }
 
+async function txsTokenIdAddressBulk(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<express.Response> {
+  try {
+    req.body.forEach((r: any) => {
+      // Validate input data.
+      if (!r.address || r.address === "") {
+        res.status(400)
+        return res.json({ error: "address can not be empty" })
+      }
+
+      if (!r.tokenId || r.tokenId === "") {
+        res.status(400)
+        return res.json({ error: "tokenId can not be empty" })
+      }
+
+      // Ensure the input is a valid BCH address.
+      try {
+        utils.toCashAddress(r.address)
+      } catch (err) {
+        res.status(400)
+        return res.json({
+          error: `Invalid BCH address. Double check your address is valid: ${r.address}`
+        })
+      }
+
+      // Prevent a common user error. Ensure they are using the correct network address.
+      let cashAddr: string = utils.toCashAddress(r.address)
+      const networkIsValid: boolean = routeUtils.validateNetwork(cashAddr)
+      if (!networkIsValid) {
+        res.status(400)
+        return res.json({
+          error: `Invalid network. Trying to use a testnet address on mainnet, or vice versa.`
+        })
+      }
+    })
+
+    const tokenIdPromises: Promise<any>[] = req.body.map(async (data: any) => {
+      try {
+        // Convert input to an simpleledger: address.
+        const slpAddr: string = utils.toSlpAddress(data.address)
+        // const slpAddr: string = data.address
+
+        const query: {
+          v: number
+          q: any
+          r: any
+        } = {
+          v: 3,
+          q: {
+            find: {
+              db: ["c", "u"],
+              $query: {
+                $or: [
+                  {
+                    "in.e.a": slpAddr
+                  },
+                  {
+                    "out.e.a": slpAddr
+                  }
+                ],
+                "slp.detail.tokenIdHex": data.tokenId
+              },
+              $orderby: {
+                "blk.i": -1
+              }
+            },
+            limit: 100
+          },
+          r: {
+            f: "[.[] | { txid: .tx.h, tokenDetails: .slp } ]"
+          }
+        }
+
+        const s: string = JSON.stringify(query)
+        const b64: string = Buffer.from(s).toString("base64")
+        const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+        // Get data from SLPDB.
+        const tokenRes: AxiosResponse = await axios.get(url)
+
+        return tokenRes.data.c
+      } catch (err) {
+        throw err
+      }
+    })
+    const axiosResult: any[] = await axios.all(tokenIdPromises)
+    res.status(200)
+    return res.json(axiosResult)
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/txsTokenIdAddressSingle().`, err)
+
+    // Decode the error message.
+    const { msg, status } = routeUtils.decodeError(err)
+    if (msg) {
+      res.status(status)
+      return res.json({ error: msg })
+    }
+
+    res.status(500)
+    return res.json({
+      error: `Error in /transactions/:tokenId/:address: ${err.message}`
+    })
+  }
+}
+
 module.exports = {
   router,
   testableComponents: {
@@ -2129,6 +2246,7 @@ module.exports = {
     balancesForTokenSingle,
     balancesForTokenBulk,
     txsTokenIdAddressSingle,
+    txsTokenIdAddressBulk,
     burnTotalSingle,
     burnTotalBulk
   }

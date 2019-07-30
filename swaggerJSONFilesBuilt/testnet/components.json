@@ -2,6 +2,17 @@
 	"components": {
 		"schemas": {
 			"Address": {
+				"type": "object",
+				"properties": {
+					"addresses": {
+						"type": "string"
+					},
+					"tokenIds": {
+						"type": "string"
+					}
+				}
+			},
+			"BalanceAddress": {
 				"type": "string"
 			},
 			"Hash": {
@@ -42,6 +53,13 @@
 			},
 			"Proof": {
 				"type": "string"
+			},
+			"BalanceAddresses": {
+				"type": "array",
+				"items": {
+					"$ref": "#/components/schemas/BalanceAddress"
+				},
+				"example": []
 			},
 			"Addresses": {
 				"type": "object",

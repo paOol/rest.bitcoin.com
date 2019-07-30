@@ -1662,6 +1662,30 @@
         }
       }
     },
+    "/slp/balancesForToken": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "list SLP addresses and balances for bulk tokenIds",
+        "description": "List SLP addresses and balances for bulk tokenIds",
+        "operationId": "balancesForTokenBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPTokenIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/balance/{address}/{tokenId}": {
       "get": {
         "tags": ["slp"],

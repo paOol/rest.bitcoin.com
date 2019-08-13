@@ -202,8 +202,7 @@ describe("#SLP", () => {
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.hasAllKeys(result, ["id"])
-      assert.include(result.id, "not found")
+      assert.equal(result, [])
     })
 
     it("should get token information", async () => {

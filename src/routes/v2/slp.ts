@@ -299,7 +299,9 @@ async function listSingleToken(
       token = formatTokenOutput(tokenRes.data.t[0])
       return res.json(token.tokenDetails)
     } else {
-      return res.json([])
+      return res.json({
+        id: "not found"
+      })
     }
   } catch (err) {
     wlogger.error(`Error in slp.ts/listSingleToken().`, err)

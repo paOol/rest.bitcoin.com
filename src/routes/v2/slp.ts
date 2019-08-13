@@ -1,16 +1,8 @@
 // imports
-import axios, { AxiosResponse } from "axios"
-import * as express from "express"
-import * as util from "util"
-import {
-  BalanceForAddressByTokenId,
-  BalancesForAddress,
-  BalancesForToken,
-  BurnTotalResult,
-  ConvertResult,
-  TokenInterface,
-  ValidateTxidResult
-} from "./interfaces/RESTInterfaces"
+import axios, { AxiosResponse } from "axios";
+import * as express from "express";
+import * as util from "util";
+import { BalanceForAddressByTokenId, BalancesForAddress, BalancesForToken, BurnTotalResult, ConvertResult, TokenInterface, ValidateTxidResult } from "./interfaces/RESTInterfaces";
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -261,16 +253,46 @@ async function listSingleToken(
 ): Promise<express.Response> {
   try {
     let tokenId: string = req.params.tokenId
-
-    if (!tokenId || tokenId === "") {
-      res.status(400)
-      return res.json({ error: "tokenId can not be empty" })
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        find: any
+        project: {
+          tokenDetails: number
+          tokenStats: number
+          _id: number
+        }
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        limit: 1000
+      }
     }
 
-    const t: Promise<any> = await lookupToken(tokenId)
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
 
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let token
     res.status(200)
-    return res.json(t)
+    if (tokenRes.data.t.length) {
+      token = formatTokenOutput(tokenRes.data.t[0])
+      return res.json(token.tokenDetails)
+    } else {
+      return res.json([])
+    }
   } catch (err) {
     wlogger.error(`Error in slp.ts/listSingleToken().`, err)
 

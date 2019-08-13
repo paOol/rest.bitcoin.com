@@ -1,8 +1,16 @@
 // imports
-import axios, { AxiosResponse } from "axios";
-import * as express from "express";
-import * as util from "util";
-import { BalanceForAddressByTokenId, BalancesForAddress, BalancesForToken, BurnTotalResult, ConvertResult, TokenInterface, ValidateTxidResult } from "./interfaces/RESTInterfaces";
+import axios, { AxiosResponse } from "axios"
+import * as express from "express"
+import * as util from "util"
+import {
+  BalanceForAddressByTokenId,
+  BalancesForAddress,
+  BalancesForToken,
+  BurnTotalResult,
+  ConvertResult,
+  TokenInterface,
+  ValidateTxidResult
+} from "./interfaces/RESTInterfaces"
 import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
@@ -291,7 +299,7 @@ async function listSingleToken(
       token = formatTokenOutput(tokenRes.data.t[0])
       return res.json(token.tokenDetails)
     } else {
-      return res.json([])
+      return res.json({})
     }
   } catch (err) {
     wlogger.error(`Error in slp.ts/listSingleToken().`, err)
@@ -377,10 +385,7 @@ async function listBulkToken(
 
     tokenIds.forEach((tokenId: string) => {
       if (!txids.includes(tokenId)) {
-        formattedTokens.push({
-          id: tokenId,
-          valid: false
-        })
+        formattedTokens.push({})
       }
     })
 

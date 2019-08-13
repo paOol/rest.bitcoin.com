@@ -149,12 +149,12 @@ describe("#SLP", () => {
     })
   })
 
-  describe("listSingleToken()", () => {
+  describe("#listSingleToken()", () => {
     const listSingleToken = slpRoute.testableComponents.listSingleToken
 
     it("should throw 400 if tokenId is empty", async () => {
       const result = await listSingleToken(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(result.error, "tokenId can not be empty")
@@ -202,7 +202,8 @@ describe("#SLP", () => {
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(result, [])
+      assert.hasAllKeys(result, ["id"])
+      assert.include(result.id, "not found")
     })
 
     it("should get token information", async () => {

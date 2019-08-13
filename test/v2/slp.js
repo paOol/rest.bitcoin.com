@@ -202,7 +202,7 @@ describe("#SLP", () => {
       const result = await listSingleToken(req, res)
       // console.log(`result: ${util.inspect(result)}`)
 
-      assert.equal(result, {})
+      assert.equal(result, [])
     })
 
     it("should get token information", async () => {
@@ -335,7 +335,8 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
-      assert.equal(result[0], {})
+      assert.hasAllKeys(result[0], ["id", "valid"])
+      assert.strictEqual(result[0].valid, false)
     })
 
     it("should get token information for single token ID", async () => {

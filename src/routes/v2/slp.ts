@@ -261,6 +261,15 @@ async function listSingleToken(
 ): Promise<express.Response> {
   try {
     let tokenId: string = req.params.tokenId
+
+    // Reject if tokenIds is not an array.
+    if (!tokenId || tokenId === "") {
+      res.status(400)
+      return res.json({
+        error: "tokenId can not be empty"
+      })
+    }
+
     const query: {
       v: number
       q: {

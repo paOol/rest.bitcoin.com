@@ -13,6 +13,7 @@ const chai = require("chai")
 const assert = chai.assert
 const nock = require("nock") // HTTP mocking
 const sinon = require("sinon")
+const axios = require("axios")
 
 // Prepare the slpRoute for stubbing dependcies on slpjs.
 const slpRoute = require("../../dist/routes/v2/slp")
@@ -188,9 +189,14 @@ describe("#SLP", () => {
     it("should return 'not found' for mainnet txid on testnet", async () => {
       // Mock the RPC call for unit tests.
       if (process.env.TEST === "unit") {
-        nock(mockServerUrl)
-          .get(uri => uri.includes("/"))
-          .reply(200, mockData.mockSingleToken)
+        sandbox.stub(axios, "get").resolves({
+          result: {
+            id: "not found"
+          },
+          data: {
+            t: []
+          }
+        })
       }
 
       req.params.tokenId =
@@ -200,7 +206,7 @@ describe("#SLP", () => {
         "259908ae44f46ef585edef4bcc1e50dc06e4c391ac4be929fae27235b8158cf1"
 
       const result = await listSingleToken(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, ["id"])
       assert.include(result.id, "not found")

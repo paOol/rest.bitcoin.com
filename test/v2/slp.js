@@ -497,10 +497,10 @@ describe("#SLP", () => {
           .reply(200, mockData.mockSingleAddress)
       }
 
-      req.params.address = "slptest:pz0qcslrqn7hr44hsszwl4lw5r6udkg6zqv7sq3kk7"
+      req.params.address = "slptest:qr7uq765zrmsv2vqtyvh00620ckje2v5ncuculxlmh"
 
       const result = await balancesForAddressSingle(req, res)
-      // console.log(`result: ${util.inspect(result)}`)
+      //console.log(`result: ${util.inspect(result)}`)
 
       assert.isArray(result)
       assert.hasAllKeys(result[0], [

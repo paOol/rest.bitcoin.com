@@ -24,6 +24,7 @@ export interface AddressUTXOsInterface {
   cashAddress: string
   slpAddress: string
   scriptPubKey: string
+  asm: string
 }
 
 export interface UTXOsInterface {

@@ -284,11 +284,14 @@ async function utxoFromInsight(
       legacyAddress: "",
       cashAddress: "",
       slpAddress: "",
-      scriptPubKey: ""
+      scriptPubKey: "",
+      asm: ""
     }
     if (response.data.length && response.data[0].scriptPubKey) {
       let spk = response.data[0].scriptPubKey
       retData.scriptPubKey = spk
+      let scriptSigBuffer: Buffer = Buffer.from(spk, "hex")
+      retData.asm = bitbox.Script.toASM(scriptSigBuffer)
     }
     retData.legacyAddress = Utils.toLegacyAddress(thisAddress)
     retData.cashAddress = Utils.toCashAddress(thisAddress)

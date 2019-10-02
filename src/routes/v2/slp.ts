@@ -23,7 +23,6 @@ const slp: any = SLP.slpjs
 const utils: any = slp.Utils
 const level: any = require("level")
 const slpTxDb: any = level("./slp-tx-db")
-const slpRESTUrl: string = "http://localhost:3001/v2/slp/"
 
 // Used to convert error messages to strings, to safely pass to users.
 util.inspect.defaultOptions = { depth: 5 }
@@ -198,10 +197,50 @@ async function list(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    const tokenRes: AxiosResponse = await axios.get(`${slpRESTUrl}list`)
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        find: any
+        project: {
+          tokenDetails: number
+          tokenStats: number
+          _id: number
+        }
+        sort: any
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          $query: {}
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        sort: { "tokenStats.block_created": -1 },
+        limit: 10000
+      }
+    }
+
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let formattedTokens: TokenInterface[] = []
+
+    if (tokenRes.data.t.length) {
+      tokenRes.data.t.forEach((token: any) => {
+        token = formatTokenOutput(token)
+        formattedTokens.push(token.tokenDetails)
+      })
+    }
 
     res.status(200)
-    return res.json(tokenRes.data)
+    return res.json(formattedTokens)
   } catch (err) {
     wlogger.error(`Error in slp.ts/list().`, err)
 
@@ -230,11 +269,49 @@ async function listSingleToken(
         error: "tokenId can not be empty"
       })
     }
-    const tokenRes: AxiosResponse = await axios.get(
-      `${slpRESTUrl}list/${tokenId}`
-    )
+
+    const query: {
+      v: number
+      q: {
+        db: string[]
+        find: any
+        project: {
+          tokenDetails: number
+          tokenStats: number
+          _id: number
+        }
+        limit: number
+      }
+    } = {
+      v: 3,
+      q: {
+        db: ["t"],
+        find: {
+          $query: {
+            "tokenDetails.tokenIdHex": tokenId
+          }
+        },
+        project: { tokenDetails: 1, tokenStats: 1, _id: 0 },
+        limit: 1000
+      }
+    }
+
+    const s: string = JSON.stringify(query)
+    const b64: string = Buffer.from(s).toString("base64")
+    const url: string = `${process.env.SLPDB_URL}q/${b64}`
+
+    const tokenRes: AxiosResponse = await axios.get(url)
+
+    let token
     res.status(200)
-    return res.json(tokenRes.data)
+    if (tokenRes.data.t.length) {
+      token = formatTokenOutput(tokenRes.data.t[0])
+      return res.json(token.tokenDetails)
+    } else {
+      return res.json({
+        id: "not found"
+      })
+    }
   } catch (err) {
     wlogger.error(`Error in slp.ts/listSingleToken().`, err)
 

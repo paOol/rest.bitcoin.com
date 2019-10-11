@@ -15,7 +15,10 @@ import logger = require("./logging.js")
 import routeUtils = require("./route-utils")
 import wlogger = require("../../util/winston-logging")
 
+import { BITBOX } from "bitbox-sdk"
+
 // consts
+const bitbox: BITBOX = new BITBOX()
 const router: any = express.Router()
 const SLPSDK: any = require("slp-sdk")
 const SLP: any = new SLPSDK()
@@ -1391,24 +1394,42 @@ async function txDetails(
       return res.json({ error: "This is not a txid" })
     }
 
-    let tmpSLP: any
-    if (process.env.NETWORK === "testnet")
-      tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
-    else tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
+    // let tmpSLP: any
+    // if (process.env.NETWORK === "testnet")
+    //   tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
+    // else tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
 
-    const tmpbitboxNetwork: any = new slp.BitboxNetwork(tmpSLP, slpValidator)
+    // const tmpbitboxNetwork: any = new slp.BitboxNetwork(tmpSLP)
 
-    // Get TX info + token info
-    // Wrapped in a testable function so that it can be stubbed for unit tests.
-    const result: Promise<
-      any
-    > = await module.exports.testableComponents.getSlpjsTxDetails(
-      tmpbitboxNetwork,
-      txid
-    )
+    // // Get TX info + token info
+    // // Wrapped in a testable function so that it can be stubbed for unit tests.
+    // const result: Promise<
+    //   any
+    // > = await module.exports.testableComponents.getSlpjsTxDetails(
+    //   tmpbitboxNetwork,
+    //   txid
+    // )
+
+    const query = {
+      v: 3,
+      q: {
+        find: {
+          "tx.h": txid
+        },
+        limit: 300
+      }
+    }
+
+    const s = JSON.stringify(query)
+    const b64 = Buffer.from(s).toString("base64")
+    const url = `${process.env.SLPDB_URL}q/${b64}`
+
+    // Get data from SLPDB.
+    const tokenRes = await axios.get(url)
+    const formatted = await formatToRestObject(tokenRes)
 
     res.status(200)
-    return res.json(result)
+    return res.json(formatted)
   } catch (err) {
     wlogger.error(`Error in slp.ts/txDetails().`, err)
 
@@ -1419,15 +1440,89 @@ async function txDetails(
       return res.json({ error: msg })
     }
 
-    // Handle corner case of mis-typted txid
-    if (err.error.indexOf("Not found") > -1) {
-      res.status(400)
-      return res.json({ error: "TXID not found" })
-    }
+    // // Handle corner case of mis-typted txid
+    // if (err.error.indexOf("Not found") > -1) {
+    //   res.status(400)
+    //   return res.json({ error: "TXID not found" })
+    // }
 
     res.status(500)
     return res.json({ error: util.inspect(err) })
   }
+}
+
+async function formatToRestObject(slpDBFormat: any) {
+  let transaction = slpDBFormat.data.u.length
+    ? slpDBFormat.data.u[0]
+    : slpDBFormat.data.c[0]
+
+  const inputs: Array<any> = transaction.in
+
+  const outputs: Array<any> = transaction.out
+
+  const vin = inputs.map(x => {
+    const slpAddress = x.e.a
+    const cashAddr: string = utils.toCashAddress(slpAddress)
+
+    let hex: any = bitbox.Script.fromASM(x.str)
+
+    let obj: any = {}
+
+    obj.txid = x.e.h
+    obj.vout = x.e.i
+    obj.sequence = "n/a"
+    obj.n = x.i
+    obj.scriptSig = {
+      hex: hex.toString("hex"),
+      asm: x.str
+    }
+    obj.value = "n/a"
+    obj.slpAddress = slpAddress
+    obj.cashAddress = cashAddr
+    return obj
+  })
+
+  const vout = outputs.map(x => {
+    let obj: any = {}
+    let hex: any = bitbox.Script.fromASM(x.str)
+
+    obj.value = "n/a"
+    obj.n = "n/a"
+    obj.scriptPubKey = {
+      hex: hex.toString("hex"),
+      asm: x.str
+    }
+    obj.spentTxId = "n/a"
+    obj.spentIndex = "n/a"
+    obj.spentHeight = "n/a"
+    return obj
+  })
+
+  let obj = {
+    txid: transaction.tx.h,
+    version: 2,
+    locktime: 0,
+    vin: vin,
+    vout: vout,
+    blockhash: transaction.blk.h,
+    blockheight: transaction.blk.i,
+    confirmations: "n/a",
+    time: transaction.blk.t,
+    blocktime: transaction.blk.t,
+    valueOut: "n/a",
+    size: "n/a",
+    valueIn: "n/a",
+    fees: "n/a",
+    tokenInfo: {
+      versionType: transaction.slp.detail.versionType,
+      transactionType: transaction.slp.detail.transactionType,
+      tokenIdHex: transaction.slp.detail.tokenIdHex,
+      sendOutputs: ["0", "100000000", "1527093873600"]
+    },
+    tokenIsValid: transaction.slp.valid
+  }
+
+  return obj
 }
 
 // This function is a simple wrapper to make unit tests possible.

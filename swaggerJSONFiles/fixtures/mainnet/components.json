@@ -7,6 +7,13 @@
     ]
   },
   {
+    "key": "SLPTokenIds",
+    "value": [
+      "f22483a94e7d2d01d1832de319603abadb581f36c785fa11956330791a3e22b0",
+      "6d518ebe332bb425458b2ff5fdeffccc2bc77651175d6fa6ba82449c2ee660ee"
+    ]
+  },
+  {
     "key": "Hashes",
     "value": [
       "000000000000000005e14d3f9fdfb70745308706615cfa9edca4f4558332b201",

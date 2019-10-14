@@ -11,7 +11,7 @@
 
 .swagger-ui body {
   margin: 0;
-  background: #fafafa;
+  background: #ffffff;
 }
 
 .swagger-ui .wrapper {
@@ -1421,6 +1421,10 @@
   color: #fff;
 }
 
+.swagger-ui .info .title small:last-of-type pre {
+  background-color: #0ac18e;
+}
+
 .swagger-ui .auth-btn-wrapper {
   display: -webkit-box;
   display: -ms-flexbox;
@@ -1666,7 +1670,7 @@
 
 .swagger-ui .topbar {
   padding: 8px 30px;
-  background-color: #2c3e50;
+  background-color: #ffffff;
 }
 
 .swagger-ui .topbar .download-url-wrapper input[type="text"] {

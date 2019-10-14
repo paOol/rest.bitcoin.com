@@ -2,6 +2,17 @@
   "components": {
     "schemas": {
       "Address": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "string"
+          },
+          "tokenIds": {
+            "type": "string"
+          }
+        }
+      },
+      "BalanceAddress": {
         "type": "string"
       },
       "Hash": {
@@ -16,6 +27,12 @@
       "SLPTxid": {
         "type": "string"
       },
+      "SLPTokenId": {
+        "type": "string"
+      },
+      "SLPAddress": {
+        "type": "string"
+      },
       "RawTxid": {
         "type": "string"
       },
@@ -27,6 +44,13 @@
       },
       "Proof": {
         "type": "string"
+      },
+      "BalanceAddresses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BalanceAddress"
+        },
+        "example": []
       },
       "Addresses": {
         "type": "object",
@@ -147,6 +171,30 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SLPTxid"
+            },
+            "example": []
+          }
+        }
+      },
+      "SLPTokenIds": {
+        "type": "object",
+        "properties": {
+          "tokenIds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SLPTokenId"
+            },
+            "example": []
+          }
+        }
+      },
+      "SLPAddresses": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SLPAddress"
             },
             "example": []
           }
@@ -1009,6 +1057,63 @@
             "format": "float"
           },
           "errors": {
+            "type": "string"
+          }
+        }
+      },
+      "NetworkInfo": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number"
+          },
+          "subversion": {
+            "type": "string"
+          },
+          "protocolversion": {
+            "type": "number"
+          },
+          "localservices": {
+            "type": "string"
+          },
+          "localrelay": {
+            "type": "boolean"
+          },
+          "timeoffset": {
+            "type": "number"
+          },
+          "networkactive": {
+            "type": "boolean"
+          },
+          "connections": {
+            "type": "number"
+          },
+          "networks": [
+            {
+              "name": {
+                "type": "string"
+              },
+              "limited": {
+                "type": "boolean"
+              },
+              "reachable": {
+                "type": "boolean"
+              },
+              "proxy": {
+                "type": "string"
+              },
+              "proxy_randomize_credentials": {
+                "type": "boolean"
+              }
+            }
+          ],
+          "relayfee": {
+            "type": "number"
+          },
+          "excessutxocharge": {
+            "type": "number"
+          },
+          "warnings": {
             "type": "string"
           }
         }

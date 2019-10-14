@@ -1001,6 +1001,26 @@
         }
       }
     },
+    "/control/getNetworkInfo": {
+      "get": {
+        "tags": ["control"],
+        "summary": "Various network info.",
+        "description": "Returns an object containing various network info.",
+        "operationId": "getNetworkInfo",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mining/getMiningInfo": {
       "get": {
         "tags": ["mining"],
@@ -1571,9 +1591,9 @@
     "/slp/balancesForAddress/{address}": {
       "get": {
         "tags": ["slp"],
-        "summary": "list slp balances for address",
-        "description": "List SLP token balances for address",
-        "operationId": "balancesForAddress",
+        "summary": "list slp balances for single address",
+        "description": "List SLP token balances for single address",
+        "operationId": "balancesForAddressSingle",
         "parameters": [
           {
             "name": "address",
@@ -1586,6 +1606,30 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
+    "/slp/balancesForAddress": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "list slp balances for bulk addresses",
+        "description": "List SLP token balances for bulk addresses",
+        "operationId": "balancesForAddressBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPAddresses"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "successful response"
@@ -1618,12 +1662,36 @@
         }
       }
     },
+    "/slp/balancesForToken": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "list SLP addresses and balances for bulk tokenIds",
+        "description": "List SLP addresses and balances for bulk tokenIds",
+        "operationId": "balancesForTokenBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPTokenIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/balance/{address}/{tokenId}": {
       "get": {
         "tags": ["slp"],
         "summary": "list single slp token balance for address",
         "description": "List single SLP token balance for address",
-        "operationId": "singleBalanceForAddress",
+        "operationId": "balanceForAddressSingle",
         "parameters": [
           {
             "name": "address",
@@ -1646,6 +1714,30 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
+    "/slp/balance": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "list bulk slp token balances for addresses",
+        "description": "List bulk SLP token balances for addresses",
+        "operationId": "balanceForAddressBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BalanceAddresses"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "successful response"
@@ -1727,6 +1819,30 @@
         }
       }
     },
+    "/slp/tokenStats": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "List stats for multiple slp tokens",
+        "description": "List stats for multiple slp tokens",
+        "operationId": "bulkTokenStats",
+        "requestBody": {
+          "description": "Array of tokenIds",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SLPTokenIds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
     "/slp/txDetails/{txid}": {
       "get": {
         "tags": ["slp"],
@@ -1774,12 +1890,36 @@
             "in": "path",
             "description": "The slp address",
             "required": true,
-            "example": "qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqlsy4gusz",
+            "example": "simpleledger:qrhvcy5xlegs858fjqf8ssl6a4f7wpstaqnt0wauwu",
             "schema": {
               "type": "string"
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
+    "/slp/transactions": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "Bulk SLP transactions by tokenId and address",
+        "description": "Bulk Transactions by tokenId and address.",
+        "operationId": "txsTokenIdAddressBulk",
+        "requestBody": {
+          "description": "",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BalanceAddresses"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "successful response"
@@ -1805,6 +1945,30 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful response"
+          }
+        }
+      }
+    },
+    "/slp/burnTotal": {
+      "post": {
+        "tags": ["slp"],
+        "summary": "Total burn count for slp transactions",
+        "description": "total input, ouput and burn counts by transaction Id.",
+        "operationId": "burnTotalBulk",
+        "requestBody": {
+          "description": "Array of transactionIds",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Txids"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "successful response"

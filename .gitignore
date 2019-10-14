@@ -11,3 +11,5 @@ slp-tx-db/
 logs/
 package-lock.json
 yarn-error.log
+*.DS_Store
+./**/*.DS_STORE

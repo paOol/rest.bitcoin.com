@@ -2,8 +2,6 @@
   Mocks used for unit tests that interact with slpjs.
 */
 
-"use strict"
-
 const sinon = require("sinon")
 const proxyquire = require("proxyquire")
 const BigNumber = require("bignumber.js")

@@ -24,6 +24,7 @@ export interface AddressUTXOsInterface {
   cashAddress: string
   slpAddress: string
   scriptPubKey: string
+  asm: string
 }
 
 export interface UTXOsInterface {
@@ -237,6 +238,30 @@ export interface InfoInterface {
   errors: string
 }
 
+export interface NetworkInfoInterface {
+  version: number
+  subversion: string
+  protocolversion: number
+  localservices: string
+  localrelay: boolean
+  timeoffset: number
+  networkactive: boolean
+  connections: number
+  networks: [
+    {
+      name: string
+      limited: boolean
+      reachable: boolean
+      proxy: string
+      proxy_randomize_credentials: boolean
+    }
+  ]
+  relayfee: number
+  excessutxocharge: number
+  localaddresses?: []
+  warnings: string
+}
+
 export interface MiningInfoInterface {
   blocks: number
   currentblocksize: number
@@ -367,6 +392,9 @@ export interface BalancesForToken {
 }
 
 export interface BalanceForAddressByTokenId {
+  cashAddress: string
+  legacyAddress: string
+  slpAddress: string
   tokenId: string
   balance: number
   balanceString: string

@@ -139,7 +139,9 @@ async function detailsSingle(
     }
 
     // Prevent a common user error. Ensure they are using the correct network address.
-    const networkIsValid: boolean = routeUtils.validateNetwork(address)
+    const networkIsValid: boolean = routeUtils.validateNetwork(
+      Utils.toLegacyAddress(address)
+    )
     if (!networkIsValid) {
       res.status(400)
       return res.json({
@@ -205,7 +207,6 @@ async function detailsBulk(
     // Validate each element in the address array.
     for (let i: number = 0; i < addresses.length; i++) {
       const thisAddress: string = addresses[i]
-
       // Ensure the input is a valid BCH address.
       try {
         bitbox.Address.toLegacyAddress(thisAddress)
@@ -217,7 +218,9 @@ async function detailsBulk(
       }
 
       // Prevent a common user error. Ensure they are using the correct network address.
-      const networkIsValid: boolean = routeUtils.validateNetwork(thisAddress)
+      const networkIsValid: boolean = routeUtils.validateNetwork(
+        Utils.toCashAddress(thisAddress)
+      )
       if (!networkIsValid) {
         res.status(400)
         return res.json({
@@ -265,9 +268,9 @@ async function utxoFromInsight(
     if (
       process.env.BITCOINCOM_BASEURL === "https://bch-insight.bitpay.com/api/"
     ) {
-      addr = bitbox.Address.toCashAddress(thisAddress)
+      addr = Utils.toCashAddress(thisAddress)
     } else {
-      addr = bitbox.Address.toLegacyAddress(thisAddress)
+      addr = Utils.toLegacyAddress(thisAddress)
     }
 
     const path: string = `${process.env.BITCOINCOM_BASEURL}addr/${addr}/utxo`
@@ -281,14 +284,17 @@ async function utxoFromInsight(
       legacyAddress: "",
       cashAddress: "",
       slpAddress: "",
-      scriptPubKey: ""
+      scriptPubKey: "",
+      asm: ""
     }
     if (response.data.length && response.data[0].scriptPubKey) {
       let spk = response.data[0].scriptPubKey
       retData.scriptPubKey = spk
+      let scriptSigBuffer: Buffer = Buffer.from(spk, "hex")
+      retData.asm = bitbox.Script.toASM(scriptSigBuffer)
     }
-    retData.legacyAddress = bitbox.Address.toLegacyAddress(thisAddress)
-    retData.cashAddress = bitbox.Address.toCashAddress(thisAddress)
+    retData.legacyAddress = Utils.toLegacyAddress(thisAddress)
+    retData.cashAddress = Utils.toCashAddress(thisAddress)
     retData.slpAddress = Utils.toSlpAddress(retData.cashAddress)
     retData.utxos = response.data.map(
       (utxo: UTXOsInterface): UTXOsInterface => {
@@ -411,7 +417,9 @@ async function utxoBulk(
       }
 
       // Prevent a common user error. Ensure they are using the correct network address.
-      const networkIsValid: boolean = routeUtils.validateNetwork(thisAddress)
+      const networkIsValid: boolean = routeUtils.validateNetwork(
+        Utils.toCashAddress(thisAddress)
+      )
       if (!networkIsValid) {
         res.status(400)
         return res.json({
@@ -491,7 +499,9 @@ async function unconfirmedSingle(
     }
 
     // Prevent a common user error. Ensure they are using the correct network address.
-    const networkIsValid: boolean = routeUtils.validateNetwork(address)
+    const networkIsValid: boolean = routeUtils.validateNetwork(
+      Utils.toCashAddress(address)
+    )
     if (!networkIsValid) {
       res.status(400)
       return res.json({
@@ -575,7 +585,9 @@ async function unconfirmedBulk(
       }
 
       // Prevent a common user error. Ensure they are using the correct network address.
-      const networkIsValid: boolean = routeUtils.validateNetwork(thisAddress)
+      const networkIsValid: boolean = routeUtils.validateNetwork(
+        Utils.toCashAddress(thisAddress)
+      )
       if (!networkIsValid) {
         res.status(400)
         return res.json({
@@ -637,9 +649,7 @@ async function transactionsFromInsight(
   currentPage: number = 0
 ): Promise<TransactionsInterface> {
   try {
-    const path: string = `${
-      process.env.BITCOINCOM_BASEURL
-    }txs/?address=${thisAddress}&pageNum=${currentPage}`
+    const path: string = `${process.env.BITCOINCOM_BASEURL}txs/?address=${thisAddress}&pageNum=${currentPage}`
 
     // Query the Insight server.
     const response: AxiosResponse = await axios.get(path)
@@ -784,7 +794,9 @@ async function transactionsSingle(
     }
 
     // Prevent a common user error. Ensure they are using the correct network address.
-    const networkIsValid: boolean = routeUtils.validateNetwork(address)
+    const networkIsValid: boolean = routeUtils.validateNetwork(
+      Utils.toCashAddress(address)
+    )
     if (!networkIsValid) {
       res.status(400)
       return res.json({
@@ -845,10 +857,12 @@ async function fromXPubSingle(
 
     let cashAddr: string = bitbox.Address.fromXPub(xpub, hdPath)
     let legacyAddr: string = bitbox.Address.toLegacyAddress(cashAddr)
+    let slpAddr: string = SLP.Address.toSLPAddress(cashAddr)
     res.status(200)
     return res.json({
       cashAddress: cashAddr,
-      legacyAddress: legacyAddr
+      legacyAddress: legacyAddr,
+      slpAddress: slpAddr
     })
   } catch (err) {
     // Attempt to decode the error message.

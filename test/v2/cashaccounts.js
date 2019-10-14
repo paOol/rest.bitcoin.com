@@ -3,18 +3,17 @@
 
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const cashaccountsRoute = require("../../dist/routes/v2/cashaccounts")
 const nock = require("nock") // HTTP mocking
+const sinon = require("sinon")
 
 let originalUrl // Used during transition from integration to unit tests.
 
 // Mocking data.
 const { mockReq, mockRes } = require("./mocks/express-mocks")
-// const mockData = require("./mocks/cashaccounts-mock")
+const mockData = require("./mocks/cashaccounts-mock")
 
 // Used for debugging.
 const util = require("util")
@@ -22,12 +21,13 @@ util.inspect.defaultOptions = { depth: 1 }
 
 describe("#cashaccountsRouter", () => {
   let req, res
+  let sandbox
 
   before(() => {
     originalUrl = process.env.CASHACCOUNT_LOOKUPSERVER
 
     // Set default environment variables for unit tests.
-    if (!process.env.TEST) process.env.TEST = "integration"
+    if (!process.env.TEST) process.env.TEST = "unit"
     if (process.env.TEST === "integration")
       process.env.CASHACCOUNT_LOOKUPSERVER = "https://cashaccounts.bchdata.cash"
   })
@@ -45,12 +45,16 @@ describe("#cashaccountsRouter", () => {
 
     // Activate nock if it's inactive.
     if (!nock.isActive()) nock.activate()
+
+    sandbox = sinon.createSandbox()
   })
 
   afterEach(() => {
     // Clean up HTTP mocks.
     nock.cleanAll() // clear interceptor list.
     nock.restore()
+
+    sandbox.restore()
   })
 
   after(() => {
@@ -90,6 +94,7 @@ describe("#cashaccountsRouter", () => {
     it("should throw 500 if handle is invalid", async () => {
       req.params.account = "test"
       req.params.number = "344a"
+
       const result = await lookup(req, res)
 
       assert.hasAllKeys(result, ["error"])
@@ -100,9 +105,18 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should throw 500 if handle is valid but not found", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          .reply(404)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "111"
+
       const result = await lookup(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       assert.hasAllKeys(result, ["error"])
       assert.include(
@@ -112,6 +126,13 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("return success object if account is valid", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "trustedLookup")
+          .resolves(mockData.lookup)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "100"
       const result = await lookup(req, res)
@@ -151,6 +172,13 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should throw 500 if handle is valid but not found", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          .reply(404)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "111"
       const result = await check(req, res)
@@ -158,14 +186,23 @@ describe("#cashaccountsRouter", () => {
       assert.hasAllKeys(result, ["error"])
       assert.include(
         result.error,
-        "No account matched the requested parameters."
+        "No account could be found with the requested parameters."
       )
     })
 
     it("return success object if account is valid", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "getBatchResults")
+          .resolves(mockData.check)
+      }
+
       req.params.account = "Jonathan"
       req.params.number = "100"
+
       const result = await check(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       // Assert that required fields exist in the returned object.
       assert.exists(result.identifier)
@@ -186,17 +223,36 @@ describe("#cashaccountsRouter", () => {
     })
 
     it("should warn if using a bad address", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`https://cashaccounts.bchdata.cash`)
+          .get(uri => uri.includes("/"))
+          .reply(404)
+      }
+
       req.params.address = "bitcoincash:ljqgqqj64s9la9"
       const result = await reverseLookup(req, res)
 
       assert.hasAllKeys(result, ["error"])
-      assert.include(result.error, "Not a valid BCH address.")
+      assert.include(
+        result.error,
+        "No account could be found with the requested parameters."
+      )
     })
 
     it("should return results with valid address", async () => {
+      // Mock the cashaccounts library for unit tests.
+      if (process.env.TEST === "unit") {
+        sandbox
+          .stub(cashaccountsRoute.testableComponents, "caReverseLookup")
+          .resolves(mockData.reverseLookup)
+      }
+
       req.params.address =
         "bitcoincash:qrhncn6hgkhljqg4fuq4px5qg74sjz9fqqj64s9la9"
+
       const result = await reverseLookup(req, res)
+      //console.log(`result: ${JSON.stringify(result, null, 2)}`)
 
       // Assert that required fields exist in the returned object.
       assert.exists(result.results)

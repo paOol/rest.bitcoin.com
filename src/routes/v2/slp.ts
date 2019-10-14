@@ -11,7 +11,8 @@ import {
   BurnTotalResult,
   ConvertResult,
   TokenInterface,
-  ValidateTxidResult
+  ValidateTxidResult,
+  TransactionInterface
 } from "./interfaces/RESTInterfaces"
 
 import logger = require("./logging.js")
@@ -596,17 +597,13 @@ async function balancesForAddressSingle(
       })
 
       const details: BalancesForAddress[] = await axios.all(promises)
-      tokenRes.data.a = tokenRes.data.a.map(
-        (token: any): any => {
-          details.forEach(
-            (detail: any): any => {
-              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
-                token.decimalCount = detail.t[0].tokenDetails.decimals
-            }
-          )
-          return token
-        }
-      )
+      tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+        details.forEach((detail: any): any => {
+          if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
+            token.decimalCount = detail.t[0].tokenDetails.decimals
+        })
+        return token
+      })
 
       return res.json(tokenRes.data.a)
     }
@@ -768,17 +765,13 @@ async function balancesForAddressBulk(
             }
           })
           const details: BalancesForAddress[] = await axios.all(promises)
-          tokenRes.data.a = tokenRes.data.a.map(
-            (token: any): any => {
-              details.forEach(
-                (detail: any): any => {
-                  if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
-                    token.decimalCount = detail.t[0].tokenDetails.decimals
-                }
-              )
-              return token
-            }
-          )
+          tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
+            details.forEach((detail: any): any => {
+              if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
+                token.decimalCount = detail.t[0].tokenDetails.decimals
+            })
+            return token
+          })
 
           return tokenRes.data.a
         } catch (err) {
@@ -939,18 +932,16 @@ async function balancesForTokenBulk(
           // Get data from SLPDB.
           const tokenRes: AxiosResponse = await axios.get(url)
 
-          const resBalances = tokenRes.data.a.map(
-            (addy: any): any => {
-              delete addy.satoshis_balance
-              addy.tokenBalance = parseFloat(addy.token_balance)
-              addy.tokenBalanceString = addy.token_balance
-              addy.slpAddress = addy.address
-              addy.tokenId = tokenId
-              delete addy.address
-              delete addy.token_balance
-              return addy
-            }
-          )
+          const resBalances = tokenRes.data.a.map((addy: any): any => {
+            delete addy.satoshis_balance
+            addy.tokenBalance = parseFloat(addy.token_balance)
+            addy.tokenBalanceString = addy.token_balance
+            addy.slpAddress = addy.address
+            addy.tokenId = tokenId
+            delete addy.address
+            delete addy.token_balance
+            return addy
+          })
           return resBalances
         } catch (err) {
           throw err
@@ -1054,20 +1045,18 @@ async function balancesForAddressByTokenIDSingle(
       balanceString: "0"
     }
     if (tokenRes.data.a.length > 0) {
-      tokenRes.data.a.forEach(
-        (token: any): any => {
-          if (token.tokenDetails.tokenIdHex === tokenId) {
-            resVal = {
-              cashAddress: utils.toCashAddress(slpAddr),
-              legacyAddress: utils.toLegacyAddress(slpAddr),
-              slpAddress: slpAddr,
-              tokenId: token.tokenDetails.tokenIdHex,
-              balance: parseFloat(token.token_balance),
-              balanceString: token.token_balance
-            }
+      tokenRes.data.a.forEach((token: any): any => {
+        if (token.tokenDetails.tokenIdHex === tokenId) {
+          resVal = {
+            cashAddress: utils.toCashAddress(slpAddr),
+            legacyAddress: utils.toLegacyAddress(slpAddr),
+            slpAddress: slpAddr,
+            tokenId: token.tokenDetails.tokenIdHex,
+            balance: parseFloat(token.token_balance),
+            balanceString: token.token_balance
           }
         }
-      )
+      })
     } else {
       resVal = {
         cashAddress: utils.toCashAddress(slpAddr),
@@ -1121,9 +1110,7 @@ async function balancesForAddressByTokenIDBulk(
       } catch (err) {
         res.status(400)
         return res.json({
-          error: `Invalid BCH address. Double check your address is valid: ${
-            r.address
-          }`
+          error: `Invalid BCH address. Double check your address is valid: ${r.address}`
         })
       }
 
@@ -1917,6 +1904,7 @@ async function txDetails(
       return res.json({ error: "This is not a txid" })
     }
 
+
     // let tmpSLP: any
     // if (process.env.NETWORK === "testnet")
     //   tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
@@ -1952,8 +1940,16 @@ async function txDetails(
 
     const formatted = await formatToRestObject(tokenRes)
 
+    const retData: Promise<any> = await transactionsFromInsight(txid)
+
+
+    const response = {
+      retData,
+      ...formatted
+    }
+
     res.status(200)
-    return res.json(formatted)
+    return res.json(response)
   } catch (err) {
     wlogger.error(`Error in slp.ts/txDetails().`, err)
 
@@ -1975,6 +1971,67 @@ async function txDetails(
   }
 }
 
+// Manipulates and formats the raw data comming from Insight API.
+const processInputs = (tx: TransactionInterface): any => {
+  // Add legacy and cashaddr to tx vin
+  if (tx.vin) {
+    tx.vin.forEach((vin: any): any => {
+      if (!vin.coinbase) {
+        vin.value = vin.valueSat
+        const address: string = vin.addr
+        if (address) {
+          vin.legacyAddress = bitbox.Address.toLegacyAddress(address)
+          vin.cashAddress = bitbox.Address.toCashAddress(address)
+          delete vin.addr
+        }
+        delete vin.valueSat
+        delete vin.doubleSpentTxID
+      }
+    })
+  }
+
+  // Add legacy and cashaddr to tx vout
+  if (tx.vout) {
+    tx.vout.forEach((vout: any): any => {
+      // Overwrite value string with value in satoshis
+      //vout.value = parseFloat(vout.value) * 100000000
+
+      if (vout.scriptPubKey) {
+        if (vout.scriptPubKey.addresses) {
+          const cashAddrs: string[] = []
+          vout.scriptPubKey.addresses.forEach((addr: any) => {
+            const cashAddr = bitbox.Address.toCashAddress(addr)
+            cashAddrs.push(cashAddr)
+          })
+          vout.scriptPubKey.cashAddrs = cashAddrs
+        }
+      }
+    })
+  }
+}
+
+// Retrieve transaction data from the Insight API
+// This function is also used by the SLP route library.
+async function transactionsFromInsight(txid: string): Promise<any> {
+  try {
+    const path: string = `http://localhost:3000/v2/transaction/details/${txid}`
+
+    // Query the Insight server.
+    const response: AxiosResponse = await axios.get(path)
+    //console.log(`Insight output: ${JSON.stringify(response.data, null, 2)}`)
+
+    // Parse the data.
+    const parsed: any = response.data
+    if (parsed) processInputs(parsed)
+
+    return parsed
+  } catch (err) {
+    // Dev Note: Do not log error messages here. Throw them instead and let the
+    // parent function handle it.
+    throw err
+  }
+}
+
 async function formatToRestObject(slpDBFormat: any) {
   BigNumber.set({ DECIMAL_PLACES: 8 })
 
@@ -1987,47 +2044,47 @@ async function formatToRestObject(slpDBFormat: any) {
   const outputs: Array<any> = transaction.out
   const tokenOutputs: Array<any> = transaction.slp.detail.outputs
 
-  const vin = inputs.map(x => {
-    const slpAddress = x.e.a
-    const cashAddr: string = utils.toCashAddress(slpAddress)
-    const legacyAddr: string = utils.toLegacyAddress(slpAddress)
+  // const vin = inputs.map(x => {
+  //   const slpAddress = x.e.a
+  //   const cashAddr: string = utils.toCashAddress(slpAddress)
+  //   const legacyAddr: string = utils.toLegacyAddress(slpAddress)
 
-    const hex: any = bitbox.Script.fromASM(x.str)
+  //   const hex: any = bitbox.Script.fromASM(x.str)
 
-    const obj: any = {}
+  //   const obj: any = {}
 
-    obj.txid = x.e.h
-    obj.vout = x.e.i
-    obj.sequence = "n/a"
-    obj.n = x.i
-    obj.scriptSig = {
-      hex: hex.toString("hex"),
-      asm: x.str
-    }
-    obj.value = "n/a"
-    obj.legacyAddress = legacyAddr
-    obj.cashAddress = cashAddr
-    obj.slpAddress = slpAddress
-    return obj
-  })
+  //   obj.txid = x.e.h
+  //   obj.vout = x.e.i
+  //   obj.sequence = "n/a"
+  //   obj.n = x.i
+  //   obj.scriptSig = {
+  //     hex: hex.toString("hex"),
+  //     asm: x.str
+  //   }
+  //   obj.value = "n/a"
+  //   obj.legacyAddress = legacyAddr
+  //   obj.cashAddress = cashAddr
+  //   obj.slpAddress = slpAddress
+  //   return obj
+  // })
 
-  const vout = outputs.map(x => {
-    const obj: any = {}
-    const hex: any = bitbox.Script.fromASM(x.str)
+  // const vout = outputs.map(x => {
+  //   const obj: any = {}
+  //   const hex: any = bitbox.Script.fromASM(x.str)
 
-    const val = new BigNumber(x.e.v / 100000000)
+  //   const val = new BigNumber(x.e.v / 100000000)
 
-    obj.value = val
-    obj.n = x.i
-    obj.scriptPubKey = {
-      hex: hex.toString("hex"),
-      asm: x.str
-    }
-    obj.spentTxId = "n/a"
-    obj.spentIndex = "n/a"
-    obj.spentHeight = "n/a"
-    return obj
-  })
+  //   obj.value = val
+  //   obj.n = x.i
+  //   obj.scriptPubKey = {
+  //     hex: hex.toString("hex"),
+  //     asm: x.str
+  //   }
+  //   obj.spentTxId = "n/a"
+  //   obj.spentIndex = "n/a"
+  //   obj.spentHeight = "n/a"
+  //   return obj
+  // })
 
   const sendOutputs: Array<string> = ["0"]
   tokenOutputs.map(x => {
@@ -2036,20 +2093,20 @@ async function formatToRestObject(slpDBFormat: any) {
   })
 
   const obj = {
-    txid: transaction.tx.h,
-    version: 2,
-    locktime: 0,
-    vin: vin,
-    vout: vout,
-    blockhash: transaction.blk.h,
-    blockheight: transaction.blk.i,
-    confirmations: "n/a",
-    time: transaction.blk.t,
-    blocktime: transaction.blk.t,
-    valueOut: "n/a",
-    size: "n/a",
-    valueIn: "n/a",
-    fees: "n/a",
+    // txid: transaction.tx.h,
+    // version: 2,
+    // locktime: 0,
+    // vin: vin,
+    // vout: vout,
+    // blockhash: transaction.blk.h,
+    // blockheight: transaction.blk.i,
+    // confirmations: "n/a",
+    // time: transaction.blk.t,
+    // blocktime: transaction.blk.t,
+    // valueOut: "n/a",
+    // size: "n/a",
+    // valueIn: "n/a",
+    // fees: "n/a",
     tokenInfo: {
       versionType: transaction.slp.detail.versionType,
       transactionType: transaction.slp.detail.transactionType,
@@ -2328,9 +2385,7 @@ async function txsTokenIdAddressBulk(
       } catch (err) {
         res.status(400)
         return res.json({
-          error: `Invalid BCH address. Double check your address is valid: ${
-            r.address
-          }`
+          error: `Invalid BCH address. Double check your address is valid: ${r.address}`
         })
       }
 

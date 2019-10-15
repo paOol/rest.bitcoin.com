@@ -21,6 +21,8 @@ import wlogger = require("../../util/winston-logging")
 
 import { BITBOX } from "bitbox-sdk"
 
+const transactions = require('./transaction')
+
 // consts
 const bitbox: BITBOX = new BITBOX()
 const router: any = express.Router()
@@ -1904,23 +1906,6 @@ async function txDetails(
       return res.json({ error: "This is not a txid" })
     }
 
-
-    // let tmpSLP: any
-    // if (process.env.NETWORK === "testnet")
-    //   tmpSLP = new SLPSDK({ restURL: process.env.TREST_URL })
-    // else tmpSLP = new SLPSDK({ restURL: process.env.REST_URL })
-
-    // const tmpbitboxNetwork: any = new slp.BitboxNetwork(tmpSLP)
-
-    // // Get TX info + token info
-    // // Wrapped in a testable function so that it can be stubbed for unit tests.
-    // const result: Promise<
-    //   any
-    // > = await module.exports.testableComponents.getSlpjsTxDetails(
-    //   tmpbitboxNetwork,
-    //   txid
-    // )
-
     const query = {
       v: 3,
       db: ["g"],
@@ -1936,13 +1921,19 @@ async function txDetails(
     const b64 = Buffer.from(s).toString("base64")
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
+    // Get token data from SLPDB
     const tokenRes = await axios.get(url)
+    // console.log(`tokenRes: ${util.inspect(tokenRes)}`)
 
+    // Format the returned data to an object.
     const formatted = await formatToRestObject(tokenRes)
+    // console.log(`formatted: ${JSON.stringify(formatted,null,2)}`)
 
-    const retData: Promise<any> = await transactionsFromInsight(txid)
+    // Get information on the transaction from Insight API.
+    const retData: Promise<any> = await transactions.transactionsFromInsight(txid)
+    // console.log(`retData: ${JSON.stringify(retData,null,2)}`)
 
-
+    // Return both the tx data from Insight and the formatted token information.
     const response = {
       retData,
       ...formatted
@@ -2010,28 +2001,7 @@ const processInputs = (tx: TransactionInterface): any => {
   }
 }
 
-// Retrieve transaction data from the Insight API
-// This function is also used by the SLP route library.
-async function transactionsFromInsight(txid: string): Promise<any> {
-  try {
-    const path: string = `http://localhost:3000/v2/transaction/details/${txid}`
-
-    // Query the Insight server.
-    const response: AxiosResponse = await axios.get(path)
-    //console.log(`Insight output: ${JSON.stringify(response.data, null, 2)}`)
-
-    // Parse the data.
-    const parsed: any = response.data
-    if (parsed) processInputs(parsed)
-
-    return parsed
-  } catch (err) {
-    // Dev Note: Do not log error messages here. Throw them instead and let the
-    // parent function handle it.
-    throw err
-  }
-}
-
+// Format the response from SLPDB into an object.
 async function formatToRestObject(slpDBFormat: any) {
   BigNumber.set({ DECIMAL_PLACES: 8 })
 

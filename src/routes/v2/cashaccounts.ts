@@ -89,11 +89,9 @@ async function lookup(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    const {
-      account,
-      number,
-      collision
-    }: { account: string; number: string; collision: string } = req.params
+    const account: string = req.params.account
+    const number: string = req.params.number
+    const collision: string = req.params.collision
 
     if (!account || account === "") {
       res.status(400)
@@ -172,7 +170,8 @@ async function check(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    const { account, number }: { account: string; number: string } = req.params
+    const account: string = req.params.account
+    const number: string = req.params.number
 
     if (!account || account === "") {
       res.status(400)
@@ -253,7 +252,7 @@ async function reverseLookup(
   next: express.NextFunction
 ): Promise<express.Response> {
   try {
-    const { address }: { address: string } = req.params
+    const address: string = req.params.address
 
     if (!address || address === "") {
       res.status(400)

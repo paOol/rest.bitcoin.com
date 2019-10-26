@@ -98,6 +98,30 @@ describe("#SLP", () => {
     })
   })
 
+  describe("#lookupToken", () => {
+    const lookupToken = slpRoute.testableComponents.lookupToken
+
+    it("should return 'not found' for invalid token ID.", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(process.env.SLPDB_URL)
+          .get(uri => uri.includes("/"))
+          .reply(200, {
+            t: []
+          })
+      }
+
+      const tokenId =
+        "df808a41672a0a0ae6475b44f272a107bc9961b90f29dc918d71301f24fe92fb"
+
+      const result = await lookupToken(tokenId)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.property(result, "id")
+      assert.equal(result.id, "not found")
+    })
+  })
+
   describe("list()", () => {
     // list route handler
     const list = slpRoute.testableComponents.list

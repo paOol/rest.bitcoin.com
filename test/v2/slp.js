@@ -537,6 +537,95 @@ describe("#SLP", () => {
     })
   })
 
+  describe("#balancesForAddressBulk", () => {
+    const balancesForAddressBulk =
+      slpRoute.testableComponents.balancesForAddressBulk
+
+    it("should throw 400 if address is empty", async () => {
+      const result = await balancesForAddressBulk(req, res)
+      //console.log(`result: ${util.inspect(result)}`)
+
+      assert.hasAllKeys(result, ["error"])
+      assert.include(result.error, "addresses needs to be an array")
+    })
+
+    // TO-DO: This test case fails and needs to be fixed.
+    // it("should throw 400 if address is invalid", async () => {
+    //   req.body.addresses = ["badAddress"]
+    //
+    //   const result = await balancesForAddressBulk(req, res)
+    //   console.log(`result: ${util.inspect(result)}`)
+    //
+    //   assert.hasAllKeys(result, ["error"])
+    //   assert.include(result.error, "Invalid BCH address.")
+    // })
+
+    // TO-DO: This test case fails and needs to be fixed.
+    // it("should throw 400 if address network mismatch", async () => {
+    //   req.body.addresses = [
+    //     "simpleledger:qr5agtachyxvrwxu76vzszan5pnvuzy8duhv4lxrsk"
+    //   ]
+    //
+    //   const result = await balancesForAddressBulk(req, res)
+    //   console.log(`result: ${JSON.stringify(result, null, 2)}`)
+    //
+    //   assert.hasAllKeys(result, ["error"])
+    //   assert.include(result.error, "Invalid")
+    // })
+
+    it("should throw 5XX error when network issues", async () => {
+      // Save the existing SLPDB_URL.
+      const savedUrl2 = process.env.SLPDB_URL
+
+      // Manipulate the URL to cause a 500 network error.
+      process.env.SLPDB_URL = "http://fakeurl/api/"
+
+      req.body.addresses = [
+        "slptest:qz35h5mfa8w2pqma2jq06lp7dnv5fxkp2shlcycvd5"
+      ]
+
+      const result = await balancesForAddressBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      // Restore the saved URL.
+      process.env.SLPDB_URL = savedUrl2
+
+      // Dev note: Some systems respond with a 500 or a 503. What matters is the
+      // response is 500 or above.
+      assert.isAbove(
+        res.statusCode,
+        499,
+        "HTTP status code 500 or greater expected."
+      )
+    })
+
+    it("should get token balance for an address", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(mockServerUrl)
+          .get(uri => uri.includes("/"))
+          .times(2)
+          .reply(200, mockData.mockSingleAddress)
+      }
+
+      req.body.addresses = [
+        "slptest:qr7uq765zrmsv2vqtyvh00620ckje2v5ncuculxlmh"
+      ]
+
+      const result = await balancesForAddressBulk(req, res)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0][0], [
+        "tokenId",
+        "balance",
+        "balanceString",
+        "slpAddress",
+        "decimalCount"
+      ])
+    })
+  })
+
   describe("balancesForAddressByTokenIDSingle()", () => {
     const balancesForAddressByTokenIDSingle =
       slpRoute.testableComponents.balancesForAddressByTokenIDSingle
@@ -901,6 +990,46 @@ describe("#SLP", () => {
       // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result[0], [
+        "tokenId",
+        "slpAddress",
+        "tokenBalance",
+        "tokenBalanceString"
+      ])
+    })
+  })
+
+  describe("#balancesForTokenBulk", () => {
+    const balancesForTokenBulk =
+      slpRoute.testableComponents.balancesForTokenBulk
+
+    // TO-DO: This test fails and needs to be fixed.
+    // it("should throw 400 if tokenID is empty", async () => {
+    //   req.body.tokenIds = [""]
+    //   const result = await balancesForTokenBulk(req, res)
+    //   console.log(`result: ${JSON.stringify(result, null, 2)}`)
+    //
+    //   assert.hasAllKeys(result, ["error"])
+    //   assert.include(result.error, "tokenId can not be empty")
+    // })
+
+    it("should get balances for tokenId", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, {
+            a: [mockData.mockBalance]
+          })
+      }
+
+      req.body.tokenIds = [
+        "37279c7dc81ceb34d12f03344b601c582e931e05d0e552c29c428bfa39d39af3"
+      ]
+
+      const result = await balancesForTokenBulk(req, res)
+      // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+      assert.hasAllKeys(result[0][0], [
         "tokenId",
         "slpAddress",
         "tokenBalance",

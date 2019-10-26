@@ -17,7 +17,7 @@
     "test-all": "TEST=integration nyc --reporter=text mocha --require babel-core/register --timeout 15000 test/v2/",
     "test:integration": "mocha test/v2/integration --exit",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "coverage:report": "export NETWORK=testnet && npm run build && nyc --reporter=html mocha --require babel-core/register test/v2/"
+    "coverage:report": "export NETWORK=testnet && npm run build && nyc --reporter=html mocha --require babel-core/register --exit test/v2/"
   },
   "engines": {
     "node": ">=10.15.3"

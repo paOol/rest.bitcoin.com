@@ -467,6 +467,7 @@ async function lookupToken(tokenId: string): Promise<any> {
     const options = generateCredentials()
 
     const tokenRes: AxiosResponse = await axios.get(url, options)
+    // console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
 
     const formattedTokens: any[] = []
 
@@ -2526,6 +2527,7 @@ module.exports = {
     txsTokenIdAddressSingle,
     txsTokenIdAddressBulk,
     burnTotalSingle,
-    burnTotalBulk
+    burnTotalBulk,
+    lookupToken
   }
 }

@@ -857,49 +857,68 @@ describe("#SLP", () => {
       assert.include(result.error, "Array too large")
     })
 
-    if (process.env.TEST === "integration") {
-      it("should validate array with single element", async () => {
-        // Mock the RPC call for unit tests.
-        if (process.env.TEST === "unit") {
-          // TODO: figure out how to mock the response from SLPDB
-          // sandbox
-          //   .stub(slpRoute.testableComponents, "isValidSlpTxid")
-          //   .resolves(true)
-        }
+    it("should validate array with single element", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, mockData.mockSingleValidTxid)
+      }
 
-        req.body.txids = [
-          "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091"
-        ]
+      req.body.txids = [
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091"
+      ]
 
-        const result = await validateBulk(req, res)
-        // console.log(`result: ${util.inspect(result)}`)
+      const result = await validateBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
 
-        assert.isArray(result)
-        assert.hasAllKeys(result[0], ["txid", "valid"])
-      })
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["txid", "valid"])
+    })
 
-      it("should validate array with two elements", async () => {
-        // Mock the RPC call for unit tests.
-        if (process.env.TEST === "unit") {
-          // TODO: figure out how to mock the response from SLPDB
-          // sandbox
-          //   .stub(slpRoute.testableComponents, "isValidSlpTxid")
-          //   .resolves(true)
-        }
+    it("should validate array with two elements", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, mockData.mockTwoValidTxid)
+      }
 
-        req.body.txids = [
-          "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091",
-          "82d996847a861b08b1601284ef7d40a1777d019154a6c4ed11571609dd3555ac"
-        ]
+      req.body.txids = [
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091",
+        "82d996847a861b08b1601284ef7d40a1777d019154a6c4ed11571609dd3555ac"
+      ]
 
-        const result = await validateBulk(req, res)
-        // console.log(`result: ${util.inspect(result)}`)
+      const result = await validateBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
 
-        assert.isArray(result)
-        assert.hasAllKeys(result[0], ["txid", "valid"])
-        assert.equal(result.length, 2)
-      })
-    }
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["txid", "valid"])
+      assert.equal(result.length, 2)
+    })
+
+    // Captures a regression bug that went out to production, captured in this
+    // GitHub Issue: https://github.com/Bitcoin-com/rest.bitcoin.com/issues/518
+    it("should return two elements if given two elements", async () => {
+      // Mock the RPC call for unit tests.
+      if (process.env.TEST === "unit") {
+        nock(`${process.env.SLPDB_URL}`)
+          .get(uri => uri.includes("/"))
+          .reply(200, mockData.mockTwoRedundentTxid)
+      }
+
+      req.body.txids = [
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091",
+        "78d57a82a0dd9930cc17843d9d06677f267777dd6b25055bad0ae43f1b884091"
+      ]
+
+      const result = await validateBulk(req, res)
+      // console.log(`result: ${util.inspect(result)}`)
+
+      assert.isArray(result)
+      assert.hasAllKeys(result[0], ["txid", "valid"])
+      assert.equal(result.length, 2)
+    })
   })
 
   describe("tokenStatsSingle()", () => {

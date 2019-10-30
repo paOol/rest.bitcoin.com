@@ -1378,24 +1378,33 @@ async function validateBulk(
 
     // Get data from SLPDB.
     const tokenRes = await axios.get(url, options)
+    // console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data, null, 2)}`)
 
-    const formattedTokens: any[] = []
+    let formattedTokens: any[] = []
 
+    // Combine confirmed 'c' and unconfirmed 'u' collections.
     const concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
+
     const tokenIds: string[] = []
+
     if (concatArray.length > 0) {
       concatArray.forEach((token: any) => {
         tokenIds.push(token.tx.h)
+
         const validationResult: any = {
           txid: token.tx.h,
           valid: token.slp.valid
         }
+
+        // If the txid is invalid, add the reason it's invalid.
         if (!validationResult.valid)
           validationResult.invalidReason = token.slp.invalidReason
 
         formattedTokens.push(validationResult)
       })
 
+      // If a user-provided txid doesn't exist in the data, add it with
+      // valid:false property.
       txids.forEach((tokenId: string) => {
         if (!tokenIds.includes(tokenId)) {
           formattedTokens.push({
@@ -1404,6 +1413,23 @@ async function validateBulk(
           })
         }
       })
+    }
+
+    // Catch a corner case of repeated txids. SLPDB will remove redundent TXIDs,
+    // which will cause the output array to be smaller than the input array.
+    if (txids.length > formattedTokens.length) {
+      const newOutput = []
+      for (let i = 0; i < txids.length; i++) {
+        const thisTxid = txids[i]
+
+        // Find the element that matches the current txid.
+        const elem = formattedTokens.filter(x => x.txid === thisTxid)
+
+        newOutput.push(elem[0])
+      }
+
+      // Replace the original output object with the new output object.
+      formattedTokens = newOutput
     }
 
     res.status(200)

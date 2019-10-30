@@ -3,6 +3,7 @@ node_modules/
 .env
 start-local-server
 test-local-server
+start-bitcoincom.sh
 coverage
 start-my-infra
 dist/routes/**

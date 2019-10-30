@@ -1343,8 +1343,6 @@ async function validateBulk(
   try {
     const txids: string[] = req.body.txids
 
-    // console.log(`txids: ${JSON.stringify(txids,null,2)}`)
-
     // Reject if txids is not an array.
     if (!Array.isArray(txids)) {
       res.status(400)
@@ -1384,7 +1382,7 @@ async function validateBulk(
 
     let formattedTokens: any[] = []
 
-    // Combine the arrays. Why? Generally there is nothing in the u array.
+    // Combine confirmed 'c' and unconfirmed 'u' collections.
     const concatArray: any[] = tokenRes.data.c.concat(tokenRes.data.u)
 
     const tokenIds: string[] = []

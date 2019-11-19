@@ -6,8 +6,6 @@
   to 'integration' to run the tests against BCH mainnet.
 */
 
-"use strict"
-
 const chai = require("chai")
 const assert = chai.assert
 const utilRoute = require("../../dist/routes/v2/util")
@@ -109,7 +107,7 @@ describe("#Util", () => {
 
       req.params.address = `bchtest:qqqk4y6lsl5da64sg5qc3xezmplyu5kmpyz2ysaa5y`
 
-      const result = await validateAddress(req, res)
+      await validateAddress(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -134,14 +132,12 @@ describe("#Util", () => {
       req.params.address = `bchtest:qqqk4y6lsl5da64sg5qc3xezmplyu5kmpyz2ysaa5y`
 
       const result = await validateAddress(req, res)
-      //console.log(`result: ${util.inspect(result)}`)
+      // console.log(`result: ${util.inspect(result)}`)
 
       assert.hasAllKeys(result, [
         "isvalid",
         "address",
         "scriptPubKey",
-        "ismine",
-        "iswatchonly",
         "isscript"
       ])
     })
@@ -230,7 +226,7 @@ describe("#Util", () => {
         `bchtest:qqqk4y6lsl5da64sg5qc3xezmplyu5kmpyz2ysaa5y`
       ]
 
-      const result = await validateAddressBulk(req, res)
+      await validateAddressBulk(req, res)
       //console.log(`result: ${util.inspect(result)}`)
 
       // Restore the saved URL.
@@ -263,8 +259,6 @@ describe("#Util", () => {
         "isvalid",
         "address",
         "scriptPubKey",
-        "ismine",
-        "iswatchonly",
         "isscript"
       ])
     })
@@ -291,8 +285,6 @@ describe("#Util", () => {
         "isvalid",
         "address",
         "scriptPubKey",
-        "ismine",
-        "iswatchonly",
         "isscript"
       ])
     })

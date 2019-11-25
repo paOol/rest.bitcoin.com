@@ -21,7 +21,7 @@ import wlogger = require("../../util/winston-logging")
 
 import { BITBOX } from "bitbox-sdk"
 
-const transactions = require('./transaction')
+const transactions = require("./transaction")
 
 // consts
 const bitbox: BITBOX = new BITBOX()
@@ -313,7 +313,7 @@ async function listSingleToken(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url,options)
+    const tokenRes: AxiosResponse = await axios.get(url, options)
 
     let token
     res.status(200)
@@ -395,7 +395,7 @@ async function listBulkToken(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url,options)
+    const tokenRes: AxiosResponse = await axios.get(url, options)
 
     const formattedTokens: any[] = []
     const txids: string[] = []
@@ -1990,8 +1990,16 @@ async function txDetails(
     const formatted = await formatToRestObject(tokenRes)
     // console.log(`formatted: ${JSON.stringify(formatted,null,2)}`)
 
+    // Return error if formatted token information is empty.
+    if(!formatted) {
+      res.status(404)
+      return res.json({ error: "SLP transaction not found" })
+    }
+
     // Get information on the transaction from Insight API.
-    const retData: Promise<any> = await transactions.transactionsFromInsight(txid)
+    const retData: Promise<any> = await transactions.transactionsFromInsight(
+      txid
+    )
     // console.log(`retData: ${JSON.stringify(retData,null,2)}`)
 
     // Return both the tx data from Insight and the formatted token information.
@@ -2064,90 +2072,41 @@ const processInputs = (tx: TransactionInterface): any => {
 
 // Format the response from SLPDB into an object.
 async function formatToRestObject(slpDBFormat: any) {
-  BigNumber.set({ DECIMAL_PLACES: 8 })
+  try {
+    BigNumber.set({ DECIMAL_PLACES: 8 })
 
-  const transaction: any = slpDBFormat.data.u.length
-    ? slpDBFormat.data.u[0]
-    : slpDBFormat.data.c[0]
+    // Get the data from the unconfirmed or confirmed collection.
+    const transaction: any = slpDBFormat.data.u.length
+      ? slpDBFormat.data.u[0]
+      : slpDBFormat.data.c[0]
 
-  const inputs: Array<any> = transaction.in
+    const inputs: Array<any> = transaction.in
 
-  const outputs: Array<any> = transaction.out
-  const tokenOutputs: Array<any> = transaction.slp.detail.outputs
+    const outputs: Array<any> = transaction.out
+    const tokenOutputs: Array<any> = transaction.slp.detail.outputs
 
-  // const vin = inputs.map(x => {
-  //   const slpAddress = x.e.a
-  //   const cashAddr: string = utils.toCashAddress(slpAddress)
-  //   const legacyAddr: string = utils.toLegacyAddress(slpAddress)
+    const sendOutputs: Array<string> = ["0"]
+    tokenOutputs.map(x => {
+      const string = parseFloat(x.amount) * 100000000
+      sendOutputs.push(string.toString())
+    })
 
-  //   const hex: any = bitbox.Script.fromASM(x.str)
+    const obj = {
+      tokenInfo: {
+        versionType: transaction.slp.detail.versionType,
+        transactionType: transaction.slp.detail.transactionType,
+        tokenIdHex: transaction.slp.detail.tokenIdHex,
+        sendOutputs: sendOutputs
+      },
+      tokenIsValid: transaction.slp.valid
+    }
 
-  //   const obj: any = {}
+    return obj
+  } catch (err) {
+    wlogger.error(`Error in slp.ts/formatToRestObject().`, err)
 
-  //   obj.txid = x.e.h
-  //   obj.vout = x.e.i
-  //   obj.sequence = "n/a"
-  //   obj.n = x.i
-  //   obj.scriptSig = {
-  //     hex: hex.toString("hex"),
-  //     asm: x.str
-  //   }
-  //   obj.value = "n/a"
-  //   obj.legacyAddress = legacyAddr
-  //   obj.cashAddress = cashAddr
-  //   obj.slpAddress = slpAddress
-  //   return obj
-  // })
-
-  // const vout = outputs.map(x => {
-  //   const obj: any = {}
-  //   const hex: any = bitbox.Script.fromASM(x.str)
-
-  //   const val = new BigNumber(x.e.v / 100000000)
-
-  //   obj.value = val
-  //   obj.n = x.i
-  //   obj.scriptPubKey = {
-  //     hex: hex.toString("hex"),
-  //     asm: x.str
-  //   }
-  //   obj.spentTxId = "n/a"
-  //   obj.spentIndex = "n/a"
-  //   obj.spentHeight = "n/a"
-  //   return obj
-  // })
-
-  const sendOutputs: Array<string> = ["0"]
-  tokenOutputs.map(x => {
-    const string = parseFloat(x.amount) * 100000000
-    sendOutputs.push(string.toString())
-  })
-
-  const obj = {
-    // txid: transaction.tx.h,
-    // version: 2,
-    // locktime: 0,
-    // vin: vin,
-    // vout: vout,
-    // blockhash: transaction.blk.h,
-    // blockheight: transaction.blk.i,
-    // confirmations: "n/a",
-    // time: transaction.blk.t,
-    // blocktime: transaction.blk.t,
-    // valueOut: "n/a",
-    // size: "n/a",
-    // valueIn: "n/a",
-    // fees: "n/a",
-    tokenInfo: {
-      versionType: transaction.slp.detail.versionType,
-      transactionType: transaction.slp.detail.transactionType,
-      tokenIdHex: transaction.slp.detail.tokenIdHex,
-      sendOutputs: sendOutputs
-    },
-    tokenIsValid: transaction.slp.valid
+    return false
   }
-
-  return obj
 }
 
 // This function is a simple wrapper to make unit tests possible.
@@ -2513,8 +2472,8 @@ function generateCredentials() {
   const username = "BITBOX"
   const password = SLPDB_PASS
   const combined = `${username}:${password}`
-  var base64Credential = Buffer.from(combined).toString('base64')
-  var readyCredential = 'Basic '+base64Credential;
+  var base64Credential = Buffer.from(combined).toString("base64")
+  var readyCredential = `Basic ${base64Credential}`
 
   const options = {
     headers: {

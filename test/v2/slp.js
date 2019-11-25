@@ -1117,6 +1117,16 @@ describe("#SLP", () => {
 
         assert.hasAnyKeys(result, ["tokenIsValid", "tokenInfo"])
       })
+
+      it("should throw an error for a non-existent txid", async () => {
+        req.params.txid =
+          "57b3082a2bf269b3d6f40fee7fb9c664e8256a88ca5ee2697c05b9457822d555"
+
+        const result = await txDetails(req, res)
+        // console.log(`result: ${JSON.stringify(result, null, 2)}`)
+
+        assert.equal(result.error, "SLP transaction not found")
+      })
     }
   })
 

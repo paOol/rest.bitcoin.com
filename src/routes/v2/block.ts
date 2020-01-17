@@ -15,6 +15,10 @@ util.inspect.defaultOptions = { depth: 3 }
 const router: express.Router = express.Router()
 //const BitboxHTTP = bitbox.getInstance()
 
+const axiosTimeOut = axios.create({
+  timeout: 15000
+})
+
 router.get("/", root)
 router.get("/detailsByHash/:hash", detailsByHashSingle)
 router.post("/detailsByHash", detailsByHashBulk)
@@ -44,7 +48,7 @@ async function detailsByHashSingle(
       return res.json({ error: "hash must not be empty" })
     }
 
-    const response: AxiosResponse = await axios.get(
+    const response: AxiosResponse = await axiosTimeOut.get(
       `${process.env.BITCOINCOM_BASEURL}block/${hash}`
     )
     //console.log(`response.data: ${JSON.stringify(response.data,null,2)}`)
@@ -114,12 +118,14 @@ async function detailsByHashBulk(
     // Loop through each hash and creates an array of promises
     const axiosPromises: AxiosPromise<BlockInterface>[] = hashes.map(
       async (hash: string): Promise<any> => {
-        return axios.get(`${process.env.BITCOINCOM_BASEURL}block/${hash}`)
+        return axiosTimeOut.get(
+          `${process.env.BITCOINCOM_BASEURL}block/${hash}`
+        )
       }
     )
 
     // Wait for all parallel promises to return.
-    const axiosResult: AxiosResponse<BlockInterface>[] = await axios.all(
+    const axiosResult: AxiosResponse<BlockInterface>[] = await Promise.all(
       axiosPromises
     )
 
@@ -249,7 +255,7 @@ async function detailsByHeightBulk(
 
         const hash: string = response.data.result
 
-        const axiosResult: AxiosResponse = await axios.get(
+        const axiosResult: AxiosResponse = await axiosTimeOut.get(
           `${process.env.BITCOINCOM_BASEURL}block/${hash}`
         )
 
@@ -258,7 +264,7 @@ async function detailsByHeightBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    let result: BlockInterface[] = await axios.all(promises)
+    let result: BlockInterface[] = await Promise.all(promises)
 
     res.status(200)
     return res.json(result)

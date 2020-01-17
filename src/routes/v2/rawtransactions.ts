@@ -123,7 +123,7 @@ async function decodeRawTransactionBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    const axiosResult: any[] = await axios.all(promises)
+    const axiosResult: any[] = await Promise.all(promises)
 
     // Retrieve the data part of the result.
     const result: RawTransactionInterface[] = axiosResult.map(
@@ -156,7 +156,7 @@ async function decodeRawTransactionBulk(
     })
 
     const result: Array<any> = []
-    return axios.all(hexes).then(
+    return Promise.all(hexes).then(
       axios.spread((...args) => {
         args.forEach((arg: any) => {
           if (arg) {
@@ -376,7 +376,7 @@ async function getRawTransactionBulk(
     )
 
     // Wait for all parallel promises to return.
-    const axiosResult: any[] = await axios.all(promises)
+    const axiosResult: any[] = await Promise.all(promises)
 
     res.status(200)
     return res.json(axiosResult)
@@ -494,7 +494,7 @@ async function sendRawTransactionBulk(
           })
 
           // Wait for all parallel Insight requests to return.
-          const axiosResult: Array<any> = await axios.all(promises)
+          const axiosResult: Array<any> = await Promise.all(promises)
 
           // Retrieve the data part of the result.
           const result = axiosResult.map(x => x.data.result)

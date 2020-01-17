@@ -26,6 +26,11 @@ const router: express.Router = express.Router()
 // Used to convert error messages to strings, to safely pass to users.
 util.inspect.defaultOptions = { depth: 1 }
 
+const axiosTimeOut = axios.create({
+  timeout: 15000
+})
+
+
 // Define routes.
 router.get("/", root)
 router.get("/getBestBlockHash", getBestBlockHash)
@@ -250,8 +255,8 @@ async function getBlockHeaderBulk(
       }
     )
 
-    // TODO: properly type these axios.all calls
-    const axiosResult: any[] = await axios.all(promises)
+    // TODO: properly type these Promise.all calls
+    const axiosResult: any[] = await Promise.all(promises)
 
     // Extract the data component from the axios response.
     const result: VerboseBlockHeaderInterface[] | string[] = axiosResult.map(
@@ -435,7 +440,7 @@ async function getMempoolEntryBulk(
       }
     )
 
-    const axiosResult: any[] = await axios.all(promises)
+    const axiosResult: any[] = await Promise.all(promises)
 
     // Extract the data component from the axios response.
     const result: MempoolEntryInterface[] = axiosResult.map(
@@ -676,7 +681,7 @@ async function getTxOutProofBulk(
     )
 
     // Wait for all parallel promisses to resolve.
-    const axiosResult: any[] = await axios.all(promises)
+    const axiosResult: any[] = await Promise.all(promises)
 
     // Extract the data component from the axios response.
     const result: string[] = axiosResult.map(
@@ -867,7 +872,7 @@ async function verifyTxOutProofBulk(
     )
 
     // Wait for all parallel promisses to resolve.
-    const axiosResult: Array<any> = await axios.all(promises)
+    const axiosResult: Array<any> = await Promise.all(promises)
 
     // Extract the data component from the axios response.
     const result = axiosResult.map(x => x.data.result[0])

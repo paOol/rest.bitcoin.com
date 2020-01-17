@@ -46,6 +46,10 @@ if (!process.env.TREST_URL)
 // https://gist.github.com/christroutner/fc717ca704dec3dded8b52fae387eab2
 const SLPDB_PASS = process.env.SLPDB_PASS ? process.env.SLPDB_PASS : "BITBOX"
 
+const axiosTimeOut = axios.create({
+  timeout: 30000
+})
+
 router.get("/", root)
 router.get("/list", list)
 router.get("/list/:tokenId", listSingleToken)
@@ -122,7 +126,7 @@ async function getRawTransactionsFromNode(txids: string[]): Promise<any> {
       }
     )
 
-    const results: any[] = await axios.all(txPromises)
+    const results: any[] = await Promise.all(txPromises)
     return results
   } catch (err) {
     wlogger.error(`Error in slp.ts/getRawTransactionsFromNode().`, err)
@@ -239,7 +243,7 @@ async function list(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     const formattedTokens: TokenInterface[] = []
 
@@ -313,7 +317,7 @@ async function listSingleToken(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     let token
     res.status(200)
@@ -395,7 +399,7 @@ async function listBulkToken(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     const formattedTokens: any[] = []
     const txids: string[] = []
@@ -466,7 +470,7 @@ async function lookupToken(tokenId: string): Promise<any> {
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
     // console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data,null,2)}`)
 
     const formattedTokens: any[] = []
@@ -556,7 +560,7 @@ async function balancesForAddressSingle(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     const tokenIds: string[] = []
     if (tokenRes.data.a.length > 0) {
@@ -606,14 +610,14 @@ async function balancesForAddressSingle(
           const b642: string = Buffer.from(s2).toString("base64")
           const url2: string = `${process.env.SLPDB_URL}q/${b642}`
 
-          const tokenRes2: AxiosResponse = await axios.get(url2)
+          const tokenRes2: AxiosResponse = await axiosTimeOut.get(url2)
           return tokenRes2.data
         } catch (err) {
           throw err
         }
       })
 
-      const details: BalancesForAddress[] = await axios.all(promises)
+      const details: BalancesForAddress[] = await Promise.all(promises)
       tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
         details.forEach((detail: any): any => {
           if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
@@ -726,7 +730,10 @@ async function balancesForAddressBulk(
 
           const options = generateCredentials()
 
-          const tokenRes: AxiosResponse<any> = await axios.get(url, options)
+          const tokenRes: AxiosResponse<any> = await axiosTimeOut.get(
+            url,
+            options
+          )
 
           const tokenIds: string[] = []
 
@@ -777,13 +784,13 @@ async function balancesForAddressBulk(
               const b642: string = Buffer.from(s2).toString("base64")
               const url2: string = `${process.env.SLPDB_URL}q/${b642}`
 
-              const tokenRes2: AxiosResponse = await axios.get(url2)
+              const tokenRes2: AxiosResponse = await axiosTimeOut.get(url2)
               return tokenRes2.data
             } catch (err) {
               throw err
             }
           })
-          const details: BalancesForAddress[] = await axios.all(promises)
+          const details: BalancesForAddress[] = await Promise.all(promises)
           tokenRes.data.a = tokenRes.data.a.map((token: any): any => {
             details.forEach((detail: any): any => {
               if (detail.t[0].tokenDetails.tokenIdHex === token.tokenId)
@@ -798,7 +805,7 @@ async function balancesForAddressBulk(
         }
       }
     )
-    const axiosResult: any[] = await axios.all(balancesPromises)
+    const axiosResult: any[] = await Promise.all(balancesPromises)
     return res.json(axiosResult)
   } catch (err) {
     wlogger.error(`Error in slp.ts/balancesForAddress().`, err)
@@ -857,7 +864,7 @@ async function balancesForTokenSingle(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
     const resBalances: BalancesForToken[] = tokenRes.data.a.map(
       (addy: any): any => {
         delete addy.satoshis_balance
@@ -953,7 +960,7 @@ async function balancesForTokenBulk(
           const options = generateCredentials()
 
           // Get data from SLPDB.
-          const tokenRes: AxiosResponse = await axios.get(url, options)
+          const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
           const resBalances = tokenRes.data.a.map((addy: any): any => {
             delete addy.satoshis_balance
@@ -971,7 +978,7 @@ async function balancesForTokenBulk(
         }
       }
     )
-    const axiosResult: any[] = await axios.all(tokenIdPromises)
+    const axiosResult: any[] = await Promise.all(tokenIdPromises)
     res.status(200)
     return res.json(axiosResult)
   } catch (err) {
@@ -1060,7 +1067,7 @@ async function balancesForAddressByTokenIDSingle(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes: AxiosResponse<any> = await axios.get(url, options)
+    const tokenRes: AxiosResponse<any> = await axiosTimeOut.get(url, options)
     let resVal: BalanceForAddressByTokenId = {
       cashAddress: utils.toCashAddress(slpAddr),
       legacyAddress: utils.toLegacyAddress(slpAddr),
@@ -1181,7 +1188,10 @@ async function balancesForAddressByTokenIDBulk(
         const options = generateCredentials()
 
         // Get data from SLPDB.
-        const tokenRes: AxiosResponse<any> = await axios.get(url, options)
+        const tokenRes: AxiosResponse<any> = await axiosTimeOut.get(
+          url,
+          options
+        )
 
         let resVal: BalanceForAddressByTokenId = {
           cashAddress: utils.toCashAddress(slpAddr),
@@ -1221,7 +1231,7 @@ async function balancesForAddressByTokenIDBulk(
         throw err
       }
     })
-    const axiosResult: any[] = await axios.all(tokenIdPromises)
+    const axiosResult: any[] = await Promise.all(tokenIdPromises)
     res.status(200)
     return res.json(axiosResult)
   } catch (err) {
@@ -1377,7 +1387,7 @@ async function validateBulk(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes = await axios.get(url, options)
+    const tokenRes = await axiosTimeOut.get(url, options)
     // console.log(`tokenRes.data: ${JSON.stringify(tokenRes.data, null, 2)}`)
 
     let formattedTokens: any[] = []
@@ -1484,7 +1494,7 @@ async function validateSingle(
     const url = `${process.env.SLPDB_URL}q/${b64}`
 
     // Get data from SLPDB.
-    const tokenRes = await axios.get(url, options)
+    const tokenRes = await axiosTimeOut.get(url, options)
 
     let result: any = {
       txid: txid,
@@ -1566,7 +1576,7 @@ async function burnTotalSingle(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     const burnTotal: BurnTotalResult = {
       transactionId: txid,
@@ -1659,7 +1669,7 @@ async function burnTotalBulk(
       const options = generateCredentials()
 
       // Get data from SLPDB.
-      const tokenRes = await axios.get(url, options)
+      const tokenRes = await axiosTimeOut.get(url, options)
       const burnTotal: BurnTotalResult = {
         transactionId: txids[0],
         inputTotal: 0,
@@ -1677,7 +1687,7 @@ async function burnTotalBulk(
       }
       return burnTotal
     })
-    const axiosResult = await axios.all(txidPromises)
+    const axiosResult = await Promise.all(txidPromises)
 
     res.status(200)
     return res.json(axiosResult)
@@ -1983,7 +1993,7 @@ async function txDetails(
     const options = generateCredentials()
 
     // Get token data from SLPDB
-    const tokenRes = await axios.get(url, options)
+    const tokenRes = await axiosTimeOut.get(url, options)
     // console.log(`tokenRes: ${util.inspect(tokenRes)}`)
 
     // Format the returned data to an object.
@@ -1991,7 +2001,7 @@ async function txDetails(
     // console.log(`formatted: ${JSON.stringify(formatted,null,2)}`)
 
     // Return error if formatted token information is empty.
-    if(!formatted) {
+    if (!formatted) {
       res.status(404)
       return res.json({ error: "SLP transaction not found" })
     }
@@ -2165,7 +2175,7 @@ async function tokenStatsSingle(
 
     const options = generateCredentials()
 
-    const tokenRes: AxiosResponse<any> = await axios.get(url, options)
+    const tokenRes: AxiosResponse<any> = await axiosTimeOut.get(url, options)
 
     const formattedTokens: any[] = []
 
@@ -2253,7 +2263,10 @@ async function tokenStatsBulk(
 
         const options = generateCredentials()
 
-        const tokenRes: AxiosResponse<any> = await axios.get(url, options)
+        const tokenRes: AxiosResponse<any> = await axiosTimeOut.get(
+          url,
+          options
+        )
 
         const formattedTokens: any[] = []
 
@@ -2272,7 +2285,7 @@ async function tokenStatsBulk(
   )
 
   // Filter array to only valid txid results
-  const statsResults: ValidateTxidResult[] = await axios.all(statsPromises)
+  const statsResults: ValidateTxidResult[] = await Promise.all(statsPromises)
   const validTxids: any[] = statsResults.filter(result => result)
 
   res.status(200)
@@ -2337,7 +2350,7 @@ async function txsTokenIdAddressSingle(
     const options = generateCredentials()
 
     // Get data from SLPDB.
-    const tokenRes: AxiosResponse = await axios.get(url, options)
+    const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
     return res.json(tokenRes.data.c)
   } catch (err) {
@@ -2440,14 +2453,14 @@ async function txsTokenIdAddressBulk(
         const options = generateCredentials()
 
         // Get data from SLPDB.
-        const tokenRes: AxiosResponse = await axios.get(url, options)
+        const tokenRes: AxiosResponse = await axiosTimeOut.get(url, options)
 
         return tokenRes.data.c
       } catch (err) {
         throw err
       }
     })
-    const axiosResult: any[] = await axios.all(tokenIdPromises)
+    const axiosResult: any[] = await Promise.all(tokenIdPromises)
     res.status(200)
     return res.json(axiosResult)
   } catch (err) {

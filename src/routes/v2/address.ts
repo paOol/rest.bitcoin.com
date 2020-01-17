@@ -27,6 +27,10 @@ util.inspect.defaultOptions = { depth: 1 }
 // https://github.com/bitpay/insight-api#notes-on-upgrading-from-v03
 const PAGE_SIZE: number = 1000
 
+const axiosTimeOut = axios.create({
+  timeout: 15000
+})
+
 // Connect the route endpoints to their handler functions.
 router.get("/", root)
 router.get("/details/:address", detailsSingle)
@@ -73,7 +77,7 @@ async function detailsFromInsight(
     path = `${path}?from=${from}&to=${to}`
 
     // Query the Insight server.
-    const axiosResponse: AxiosResponse = await axios.get(path)
+    const axiosResponse: AxiosResponse = await axiosTimeOut.get(path)
     const retData: AddressDetailsInterface = axiosResponse.data
 
     // Calculate pagesTotal from response
@@ -238,7 +242,7 @@ async function detailsBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    let result: AddressDetailsInterface[] = await axios.all(addressPromises)
+    let result: AddressDetailsInterface[] = await Promise.all(addressPromises)
 
     // Return the array of retrieved address information.
     res.status(200)
@@ -276,7 +280,7 @@ async function utxoFromInsight(
     const path: string = `${process.env.BITCOINCOM_BASEURL}addr/${addr}/utxo`
 
     // Query the Insight server.
-    const response: AxiosResponse = await axios.get(path)
+    const response: AxiosResponse = await axiosTimeOut.get(path)
 
     // Append different address formats to the return data.
     const retData: AddressUTXOsInterface = {
@@ -443,7 +447,7 @@ async function utxoBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    let result: AddressUTXOsInterface[] = await axios.all(addressPromises)
+    let result: AddressUTXOsInterface[] = await Promise.all(addressPromises)
 
     res.status(200)
     return res.json(result)
@@ -603,7 +607,7 @@ async function unconfirmedBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    let result: AddressUTXOsInterface[] = await axios.all(promises)
+    let result: AddressUTXOsInterface[] = await Promise.all(promises)
 
     // Loop through each result
     const finalResult: AddressUTXOsInterface[] = result.map(
@@ -652,7 +656,7 @@ async function transactionsFromInsight(
     const path: string = `${process.env.BITCOINCOM_BASEURL}txs/?address=${thisAddress}&pageNum=${currentPage}`
 
     // Query the Insight server.
-    const response: AxiosResponse = await axios.get(path)
+    const response: AxiosResponse = await axiosTimeOut.get(path)
 
     // Append different address formats to the return data.
     const retData: TransactionsInterface = response.data
@@ -727,7 +731,7 @@ async function transactionsBulk(
     )
 
     // Wait for all parallel Insight requests to return.
-    let result: TransactionsInterface[] = await axios.all(addressPromises)
+    let result: TransactionsInterface[] = await Promise.all(addressPromises)
 
     // Return the array of retrieved address information.
     res.status(200)
